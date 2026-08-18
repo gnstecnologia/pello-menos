@@ -1,0 +1,28 @@
+name: Deploy Vercel
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: vercel-prod
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Publish to Vercel via Koruvision Git
+        env:
+          KORU_TOKEN: ${{ secrets.KORU_TOKEN }}
+        run: |
+          rm -rf .github
+          git config user.email "deploy@gnstecnologia"
+          git config user.name "GNS deploy"
+          git checkout --orphan vercel-deploy
+          git add -A
+          git commit -m "Deploy Pello Menos"
+          git remote add koru "https://x-access-token:${KORU_TOKEN}@github.com/koruvision/pello-menos.git"
+          git push koru vercel-deploy:main --force

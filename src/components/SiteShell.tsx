@@ -5,6 +5,9 @@ import { AuthModal } from "@/components/AuthModal";
 import { BottomNav } from "@/components/BottomNav";
 import { Footer } from "@/components/Footer";
 import { Header } from "@/components/Header";
+import { CookieBanner } from "@/components/CookieBanner";
+import { CouponPopup } from "@/components/CouponPopup";
+import { PurchasePopup } from "@/components/PurchasePopup";
 import { Toast } from "@/components/Toast";
 
 export function SiteShell({ children }: { children: React.ReactNode }) {
@@ -16,6 +19,9 @@ export function SiteShell({ children }: { children: React.ReactNode }) {
       <div className="flex-1">{children}</div>
       <Footer onOpenAuth={() => setAuthOpen(true)} />
       <BottomNav />
+      <PurchasePopup />
+      <CouponPopup />
+      <CookieBanner />
       <Toast />
       <AuthModal open={authOpen} onClose={() => setAuthOpen(false)} />
     </div>

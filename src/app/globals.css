@@ -213,6 +213,20 @@ body {
   animation-play-state: paused;
 }
 
+.coupon-3d {
+  animation: coupon-float 4.8s ease-in-out infinite;
+}
+
+@keyframes coupon-float {
+  0%,
+  100% {
+    transform: translateY(0) rotateX(0deg) rotateY(0deg);
+  }
+  50% {
+    transform: translateY(-8px) rotateX(2deg) rotateY(-2deg);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;
@@ -223,7 +237,8 @@ body {
   .btn-lux-gold,
   .btn-lux-ghost,
   .btn-lux::before,
-  .benefits-marquee {
+  .benefits-marquee,
+  .coupon-3d {
     animation: none;
   }
 }
