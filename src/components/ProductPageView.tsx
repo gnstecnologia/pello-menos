@@ -8,6 +8,8 @@ import { Icon } from "@/components/Icon";
 import { useStore } from "@/components/StoreProvider";
 import {
   formatBRL,
+  getInstallment,
+  installmentHint,
   relatedProducts,
   storeUnits,
   type Product,
@@ -25,6 +27,7 @@ export function ProductPageView({ product }: Props) {
 
   const related = useMemo(() => relatedProducts(product), [product]);
   const selectedUnit = storeUnits.find((unit) => unit.id === unitId);
+  const installment = getInstallment(product.priceCents, product.method);
 
   function handleAdd() {
     if (!selectedUnit) {
@@ -85,7 +88,7 @@ export function ProductPageView({ product }: Props) {
           <div className="mt-3 flex flex-wrap items-center gap-3 text-sm text-on-surface-variant">
             <span className="inline-flex items-center gap-1.5">
               <Icon name="clock" size={15} />
-              {product.duration}
+              {product.duration}*
             </span>
             <span>SKU {product.sku}</span>
             <span>Cód. {product.code}</span>
@@ -93,8 +96,15 @@ export function ProductPageView({ product }: Props) {
 
           <div className="mt-5 flex items-end gap-3">
             <p className="font-[family-name:var(--font-display)] text-4xl text-primary">
-              {formatBRL(product.priceCents)}
+              {installment.times > 1
+                ? `${installment.times}x de ${formatBRL(installment.installmentCents)}`
+                : formatBRL(product.priceCents)}
             </p>
+            {installment.times > 1 ? (
+              <p className="pb-1 text-sm text-on-surface-variant">
+                Total {formatBRL(product.priceCents)}
+              </p>
+            ) : null}
             {product.oldPriceCents ? (
               <p className="pb-1 text-sm text-on-surface-variant line-through">
                 {formatBRL(product.oldPriceCents)}
@@ -107,10 +117,13 @@ export function ProductPageView({ product }: Props) {
             ) : null}
           </div>
           <p className="mt-1 text-xs text-on-surface-variant">
-            Até 10x sem juros no cartão (simulação)
+            {installmentHint(product.method)}
           </p>
 
           <p className="mt-5 text-body-md text-on-surface">{product.description}</p>
+          <p className="mt-3 text-xs text-on-surface-variant">
+            * Tempo médio só da execução do serviço; não inclui anamnese.
+          </p>
 
           <div className="mt-6">
             <label
@@ -215,7 +228,12 @@ export function ProductPageView({ product }: Props) {
                     {item.name}
                   </h3>
                   <p className="mt-1 text-sm font-semibold text-primary">
-                    {formatBRL(item.priceCents)}
+                    {(() => {
+                      const parcel = getInstallment(item.priceCents, item.method);
+                      return parcel.times > 1
+                        ? `${parcel.times}x ${formatBRL(parcel.installmentCents)}`
+                        : formatBRL(item.priceCents);
+                    })()}
                   </p>
                 </div>
               </Link>

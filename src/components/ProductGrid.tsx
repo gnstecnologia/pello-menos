@@ -6,7 +6,7 @@ import { useRef } from "react";
 import { CarouselArrows } from "@/components/CarouselArrows";
 import { Icon } from "@/components/Icon";
 import { BadgeTag } from "@/components/BadgeTag";
-import { formatBRL, type Product } from "@/lib/data";
+import { formatBRL, getInstallment, type Product } from "@/lib/data";
 
 type Props = {
   id?: string;
@@ -98,10 +98,27 @@ export function ProductGrid({
                   <Icon name="clock" size={14} />
                   {product.duration}
                 </div>
-                <div className="mt-1 flex items-baseline gap-2">
-                  <span className="text-lg font-semibold text-primary">
-                    {formatBRL(product.priceCents)}
-                  </span>
+                <div className="mt-1 flex flex-wrap items-baseline gap-2">
+                  {(() => {
+                    const parcel = getInstallment(
+                      product.priceCents,
+                      product.method,
+                    );
+                    return parcel.times > 1 ? (
+                      <>
+                        <span className="text-lg font-semibold text-primary">
+                          {parcel.times}x {formatBRL(parcel.installmentCents)}
+                        </span>
+                        <span className="text-xs text-on-surface-variant">
+                          {formatBRL(product.priceCents)}
+                        </span>
+                      </>
+                    ) : (
+                      <span className="text-lg font-semibold text-primary">
+                        {formatBRL(product.priceCents)}
+                      </span>
+                    );
+                  })()}
                   {product.oldPriceCents ? (
                     <span className="text-xs text-on-surface-variant line-through">
                       {formatBRL(product.oldPriceCents)}

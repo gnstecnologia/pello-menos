@@ -34,9 +34,10 @@ type StoreContextValue = {
   subtotalCents: number;
   toast: Toast;
   user: UserAccount | null;
-  addToCart: (product: Product, unit: StoreUnit, qty?: number) => void;
+  addToCart: (product: Product, unit: StoreUnit, qty?: number) => boolean;
   removeFromCart: (lineId: string) => void;
   setQty: (lineId: string, qty: number) => void;
+  clearCart: () => void;
   login: (email: string, password: string) => string | null;
   register: (name: string, email: string, password: string) => string | null;
   logout: () => void;
@@ -74,11 +75,18 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     setToast({ id, message });
     window.setTimeout(() => {
       setToast((current) => (current?.id === id ? null : current));
-    }, 2000);
+    }, 3500);
   }, []);
 
   const addToCart = useCallback(
     (product: Product, unit: StoreUnit, qty = 1) => {
+      const locked = cartItems[0]?.unit;
+      if (locked && locked.id !== unit.id) {
+        showToast(
+          `O carrinho é da unidade ${locked.name}. Esvazie ou finalize para comprar em ${unit.name}.`,
+        );
+        return false;
+      }
       const lineId = cartLineId(product.id, unit.id);
       const amount = Math.max(1, qty);
       setCartItems((current) => {
@@ -92,10 +100,16 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         }
         return [...current, { lineId, product, unit, qty: amount }];
       });
-      showToast(`${product.name} · ${unit.name}`);
+      showToast(`${product.name} adicionado · ${unit.name}`);
+      return true;
     },
-    [showToast],
+    [cartItems, showToast],
   );
+
+  const clearCart = useCallback(() => {
+    setCartItems([]);
+    showToast("Carrinho esvaziado");
+  }, [showToast]);
 
   const removeFromCart = useCallback((lineId: string) => {
     setCartItems((current) =>
@@ -177,6 +191,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       addToCart,
       removeFromCart,
       setQty,
+      clearCart,
       login,
       register,
       logout,
@@ -188,6 +203,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     addToCart,
     removeFromCart,
     setQty,
+    clearCart,
     login,
     register,
     logout,

@@ -4,7 +4,17 @@ export type ProductCategory =
   | "pernas"
   | "rosto"
   | "bracos"
-  | "corpo";
+  | "corpo"
+  | "produtos";
+
+export type ProductMethod =
+  | "cera"
+  | "laser"
+  | "linha"
+  | "esfoliacao"
+  | "produto";
+
+export type ProductAudience = "feminino" | "masculino";
 
 export type StoreUnit = {
   id: string;
@@ -26,12 +36,17 @@ export type Product = {
   image: string;
   imageAlt: string;
   category: ProductCategory;
+  method: ProductMethod;
+  audience: ProductAudience;
   sku: string;
   code: string;
   description: string;
 };
 
-type ProductSeed = Omit<Product, "sku" | "code" | "description">;
+type ProductSeed = Omit<Product, "sku" | "code" | "description" | "method" | "audience"> & {
+  method?: ProductMethod;
+  audience?: ProductAudience;
+};
 
 export type HeroLayout = "split" | "copy-right" | "copy-left" | "copy-top";
 
@@ -58,6 +73,40 @@ export function formatBRL(cents: number) {
     style: "currency",
     currency: "BRL",
   });
+}
+
+export const MIN_INSTALLMENT_CENTS = 5000;
+export const WAX_TEN_X_MIN_CENTS = 18000;
+
+export function inferMethod(id: string, explicit?: ProductMethod): ProductMethod {
+  if (explicit) return explicit;
+  if (id.includes("linha")) return "linha";
+  if (id.includes("esfolia")) return "esfoliacao";
+  if (id.includes("splash") || id.includes("body")) return "produto";
+  if (id.includes("cera") || id.includes("sobrancelha")) return "cera";
+  if (id.includes("laser")) return "laser";
+  return "produto";
+}
+
+export function getInstallment(
+  priceCents: number,
+  method: ProductMethod = "laser",
+) {
+  let maxTimes = 10;
+  if (method === "cera" && priceCents < WAX_TEN_X_MIN_CENTS) {
+    maxTimes = Math.max(1, Math.floor(priceCents / MIN_INSTALLMENT_CENTS));
+  }
+  const byFloor = Math.max(1, Math.floor(priceCents / MIN_INSTALLMENT_CENTS));
+  const times = Math.min(10, maxTimes, byFloor);
+  const installmentCents = Math.ceil(priceCents / times);
+  return { times, installmentCents };
+}
+
+export function installmentHint(method: ProductMethod) {
+  if (method === "cera") {
+    return "Em cera, 10x só acima de R$ 180. Parcela mínima de R$ 50.";
+  }
+  return "Parcele em até 10x, com parcela mínima de R$ 50.";
 }
 
 const catalogItems: ProductSeed[] = [
@@ -326,6 +375,104 @@ const catalogItems: ProductSeed[] = [
     image: "/images/products/sobrancelha-henna-v3.png",
     imageAlt: "Mulher com sobrancelha realçada com henna",
   },
+  {
+    id: "meia-nadega-cera",
+    name: "Meia nádega – Cera",
+    duration: "15 min • Avulso",
+    oldPriceCents: 4990,
+    priceCents: 4491,
+    badge: "Cera",
+    category: "corpo",
+    image: "/images/products/virilha-cera-v3.png",
+    imageAlt: "Mulher em spa após cera na região das nádegas",
+  },
+  {
+    id: "esfoliacao-corpo",
+    name: "Esfoliação corporal",
+    duration: "30 min • Avulso",
+    oldPriceCents: 8900,
+    priceCents: 7900,
+    badge: "Pele",
+    category: "corpo",
+    method: "esfoliacao",
+    image: "/images/products/abdomen-cera-v3.png",
+    imageAlt: "Mulher cuidando da pele do corpo após esfoliação",
+  },
+  {
+    id: "buco-linha",
+    name: "Buço – Linha",
+    duration: "10 min • Avulso",
+    oldPriceCents: 2900,
+    priceCents: 2490,
+    badge: "Linha",
+    category: "rosto",
+    method: "linha",
+    image: "/images/products/buco-cera-v3.png",
+    imageAlt: "Mulher com o buço liso após depilação com linha",
+  },
+  {
+    id: "sobrancelha-linha",
+    name: "Sobrancelha – Linha",
+    duration: "20 min • Avulso",
+    oldPriceCents: 5900,
+    priceCents: 5290,
+    badge: "Linha",
+    category: "rosto",
+    method: "linha",
+    image: "/images/products/design-sobrancelha-v3.png",
+    imageAlt: "Mulher com sobrancelha desenhada com linha",
+  },
+  {
+    id: "body-splash",
+    name: "Body Splash Pello Menos",
+    duration: "Uso diário",
+    oldPriceCents: 6900,
+    priceCents: 5900,
+    badge: "Novo",
+    category: "produtos",
+    method: "produto",
+    image: "/images/hero/destaque-kits.png",
+    imageAlt: "Body Splash Pello Menos — foto oficial em produção",
+  },
+  {
+    id: "peito-laser-masc",
+    name: "Peito Laser – Masculino",
+    duration: "25 min • até 10 sessões",
+    oldPriceCents: 189000,
+    priceCents: 149900,
+    badge: "Masculino",
+    category: "corpo",
+    method: "laser",
+    audience: "masculino",
+    image: "/images/products/abdomen-laser-v3.png",
+    imageAlt: "Peito a laser no catálogo masculino Pello Menos",
+  },
+  {
+    id: "costas-laser-masc",
+    name: "Costas Laser – Masculino",
+    duration: "30 min • até 10 sessões",
+    oldPriceCents: 199000,
+    priceCents: 159900,
+    badge: "Masculino",
+    category: "corpo",
+    method: "laser",
+    audience: "masculino",
+    image: "/images/products/costas-laser-v3.png",
+    imageAlt: "Costas a laser no catálogo masculino Pello Menos",
+  },
+  {
+    id: "barba-laser-masc",
+    name: "Barba Laser – Masculino",
+    duration: "15 min • até 10 sessões",
+    oldPriceCents: 99000,
+    priceCents: 79900,
+    badge: "Masculino",
+    category: "rosto",
+    method: "laser",
+    audience: "masculino",
+    image: "/images/products/queixo-laser-v3.png",
+    imageAlt: "Barba a laser no catálogo masculino Pello Menos",
+  },
 ];
 
 export const storeUnits: StoreUnit[] = [
@@ -422,6 +569,22 @@ const productCopy: Record<string, string> = {
     "Design de sobrancelha com cera e pinça para desenhar o olhar com simetria e acabamento limpo. Sessão avulsa de cerca de 20 minutos: a profissional avalia o formato do seu rosto, remove o excesso e finaliza o traço. Não inclui henna. Atendimento feminino, por ordem de chegada, sem agendamento. Selecione a unidade no pedido — o serviço é realizado apenas na loja escolhida.",
   "sobrancelha-henna":
     "Design de sobrancelha com henna para preencher falhas, intensificar o traço e valorizar o olhar por alguns dias. A sessão avulsa dura cerca de 30 minutos: desenho, cera ou pinça e aplicação da henna com o tom combinado na hora. Indicado para quem quer mais definição do que o design sozinho. Ambiente feminino, por ordem de chegada. O atendimento acontece somente na unidade obrigatória informada no pedido.",
+  "meia-nadega-cera":
+    "Cera na meia nádega em sessão avulsa, para complementar virilha sem tratar a área inteira. Duração aproximada de 15 minutos. Combine com virilha no mesmo pedido. Escolha a unidade obrigatória — o serviço vale só nessa loja.",
+  "esfoliacao-corpo":
+    "Esfoliação corporal avulsa para renovar a pele e potencializar o resultado da cera. Sessão de cerca de 30 minutos. Atendimento feminino, por ordem de chegada. Selecione a unidade no pedido.",
+  "buco-linha":
+    "Depilação com linha no buço, sessão rápida e precisa no contorno da boca. Cerca de 10 minutos. Informe a unidade obrigatória no pedido.",
+  "sobrancelha-linha":
+    "Design de sobrancelha com linha para um traço nítido. Sessão avulsa de cerca de 20 minutos. O atendimento é só na unidade escolhida.",
+  "body-splash":
+    "Body Splash da linha Pello Menos para o cuidado em casa após a depilação. Foto oficial em produção — cadastro liberado para comercialização.",
+  "peito-laser-masc":
+    "Pacote masculino de laser no peito, até 10 sessões. Tempo médio só da execução do serviço. Escolha a unidade no pedido.",
+  "costas-laser-masc":
+    "Pacote masculino de laser nas costas, até 10 sessões. Atendimento na unidade selecionada no carrinho.",
+  "barba-laser-masc":
+    "Laser na barba em até 10 sessões curtas, catálogo masculino. Resgate somente na loja escolhida.",
 };
 
 function catalogSku(index: number) {
@@ -434,11 +597,14 @@ function catalogCode(id: string) {
 
 export const products: Product[] = catalogItems.map((item, index) => ({
   ...item,
+  duration: item.duration.replace(/^(\d+)/, "~$1"),
+  method: inferMethod(item.id, item.method),
+  audience: item.audience ?? "feminino",
   sku: catalogSku(index),
   code: catalogCode(item.id),
   description:
     productCopy[item.id] ??
-    `${item.name} na Pello Menos. Atendimento feminino por ordem de chegada na unidade escolhida.`,
+    `${item.name} na Pello Menos. Atendimento por ordem de chegada na unidade escolhida.`,
 }));
 
 export function getProductById(id: string) {
@@ -449,27 +615,52 @@ export function getStoreUnitById(id: string) {
   return storeUnits.find((item) => item.id === id);
 }
 
+const CROSS_SELL: Record<string, string[]> = {
+  "virilha-cera": ["meia-nadega-cera", "coxa-cera", "axila-cera"],
+  "virilha-laser": ["virilha-comum-laser", "meia-nadega-cera", "coxa-cera"],
+  "virilha-comum-laser": ["virilha-laser", "meia-nadega-cera"],
+};
+
 export function relatedProducts(product: Product, limit = 4) {
-  const sameCategory = products.filter(
-    (item) => item.category === product.category && item.id !== product.id,
-  );
-  if (sameCategory.length >= limit) return sameCategory.slice(0, limit);
-  const extras = products.filter(
+  const mapped = (CROSS_SELL[product.id] ?? [])
+    .map((id) => products.find((item) => item.id === id))
+    .filter((item): item is Product => Boolean(item));
+  const sameMethod = products.filter(
     (item) =>
       item.id !== product.id &&
-      !sameCategory.some((related) => related.id === item.id),
+      item.audience === product.audience &&
+      item.method === product.method &&
+      !mapped.some((related) => related.id === item.id),
   );
-  return [...sameCategory, ...extras].slice(0, limit);
+  const sameCategory = products.filter(
+    (item) =>
+      item.category === product.category &&
+      item.id !== product.id &&
+      !mapped.some((related) => related.id === item.id) &&
+      !sameMethod.some((related) => related.id === item.id),
+  );
+  return [...mapped, ...sameMethod, ...sameCategory].slice(0, limit);
 }
 
 export const heroSlides: HeroSlide[] = [
+  {
+    id: "verao",
+    badge: "Cera 5% OFF",
+    title: "Pernas prontas pra viver",
+    priceReais: "77",
+    priceCents: "31",
+    cta: "Ver cera",
+    image: "/images/hero/hero-campaign-low.png",
+    imageAlt: "Mulher na campanha de pernas com cera Pello Menos",
+    layout: "copy-top",
+  },
   {
     id: "laser-10",
     badge: "Oferta especial",
     title: "10 sessões de laser nas axilas",
     priceReais: "94",
     priceCents: "90",
-    cta: "Ver serviços",
+    cta: "Ver laser",
     image: "/images/hero/hero-campaign-center.png",
     imageAlt: "Mulher no centro da campanha de laser nas axilas Pello Menos",
     layout: "split",
@@ -496,64 +687,47 @@ export const heroSlides: HeroSlide[] = [
     imageAlt: "Mulher à direita na campanha de braços a laser Pello Menos",
     layout: "copy-left",
   },
-  {
-    id: "verao",
-    badge: "Verão 2026",
-    title: "Pernas prontas pra viver",
-    priceReais: "77",
-    priceCents: "31",
-    cta: "Ver cera",
-    image: "/images/hero/hero-campaign-low.png",
-    imageAlt: "Mulher na metade inferior da campanha de pernas Pello Menos",
-    layout: "copy-top",
-  },
 ];
 
 export const categories: Category[] = [
-  { id: "axilas", label: "Axilas", image: "/images/categories/cat-axilas-v2.png" },
+  { id: "cera", label: "Cera", image: "/images/categories/cat-pernas-v2.png" },
+  { id: "laser", label: "Laser", image: "/images/categories/cat-axilas-v2.png" },
+  { id: "linha", label: "Linha", image: "/images/categories/cat-rosto-v2.png" },
+  { id: "produtos", label: "Produtos", image: "/images/hero/destaque-kits.png" },
   { id: "virilha", label: "Virilha", image: "/images/categories/cat-virilha-v2.png" },
   { id: "pernas", label: "Pernas", image: "/images/categories/cat-pernas-v2.png" },
-  { id: "rosto", label: "Rosto", image: "/images/categories/cat-rosto-v2.png" },
-  { id: "bracos", label: "Braços", image: "/images/categories/cat-bracos-v2.png" },
-  { id: "corpo", label: "Corpo", image: "/images/categories/cat-corpo-v2.png" },
 ];
 
 export const productRails = {
-  maisBuscados: products.filter((item) =>
+  ceraOfertas: products.filter(
+    (item) => item.method === "cera" && item.audience === "feminino",
+  ),
+  ceraAreas: products.filter((item) =>
     [
-      "axilas-laser",
-      "virilha-laser",
-      "perna-laser",
-      "meia-perna-laser",
-      "bracos-laser",
-      "rosto-inteiro-laser",
+      "virilha-cera",
+      "axila-cera",
+      "perna-cera",
+      "buco-cera",
+      "meia-nadega-cera",
       "design-sobrancelha",
-      "buco-laser",
     ].includes(item.id),
   ),
-  areas: products.filter((item) =>
-    [
-      "buco-laser",
-      "queixo-laser",
-      "rosto-inteiro-laser",
-      "pescoco-laser",
-      "design-sobrancelha",
-      "sobrancelha-henna",
-    ].includes(item.id),
+  laserRosto: products.filter(
+    (item) =>
+      item.method === "laser" &&
+      item.audience === "feminino" &&
+      item.category === "rosto",
   ),
-  corpo: products.filter((item) =>
-    [
-      "abdomen-laser",
-      "costas-laser",
-      "coxas-laser",
-      "bracos-laser",
-      "antebraco-laser",
-      "meia-perna-laser",
-    ].includes(item.id),
+  laserCorpo: products.filter(
+    (item) =>
+      item.method === "laser" &&
+      item.audience === "feminino" &&
+      item.category !== "rosto",
   ),
-  avulsos: products.filter(
-    (item) => item.id.endsWith("-cera") || item.id.includes("sobrancelha"),
-  ),
+  esfoliacao: products.filter((item) => item.method === "esfoliacao"),
+  linha: products.filter((item) => item.method === "linha"),
+  produtos: products.filter((item) => item.method === "produto"),
+  masculino: products.filter((item) => item.audience === "masculino"),
 };
 
 export const rectangularBanners = [
@@ -613,7 +787,7 @@ export const squareBanners = [
     id: "combo",
     title: "Combos de laser",
     subtitle: "Rosto, braços e corpo",
-    badge: "Pacote",
+    badge: "Combos",
     image: "/images/hero/destaque-combo.png",
     imageAlt: "Mulher cuidando da pele após sessão de laser",
   },
@@ -680,6 +854,7 @@ export const googleBusiness = {
 export const navLinks = [
   { href: "/", label: "Início" },
   { href: "/#produtos", label: "Serviços" },
+  { href: "/masculino", label: "Masculino" },
   { href: "/carrinho", label: "Carrinho" },
-  { href: "/checkout", label: "Checkout" },
+  { href: "/checkout", label: "Pagamento" },
 ];

@@ -30,7 +30,9 @@ function Steps({ current }: { current: 1 | 2 | 3 }) {
             </span>
             <span
               className={
-                active ? "hidden font-semibold text-primary sm:inline" : "hidden text-on-surface-variant sm:inline"
+                active
+                  ? "hidden font-semibold text-primary sm:inline"
+                  : "hidden text-on-surface-variant sm:inline"
               }
             >
               {label}
@@ -45,6 +47,7 @@ function Steps({ current }: { current: 1 | 2 | 3 }) {
 export function CheckoutView() {
   const { cartItems, subtotalCents } = useStore();
   const [done, setDone] = useState(false);
+  const unit = cartItems[0]?.unit;
 
   if (cartItems.length === 0 && !done) {
     return (
@@ -53,7 +56,7 @@ export function CheckoutView() {
           <Icon name="creditCard" size={32} />
         </span>
         <h1 className="mt-6 font-[family-name:var(--font-display)] text-headline-md text-primary">
-          Checkout
+          Pagamento
         </h1>
         <p className="mt-2 text-on-surface-variant">
           Adicione produtos à sacola para ver o visual desta etapa.
@@ -80,7 +83,11 @@ export function CheckoutView() {
           Pedido confirmado
         </h1>
         <p className="mt-2 text-on-surface-variant">
-          Visual de confirmação — sem pagamento real.
+          Unidade: {unit?.name ?? "loja escolhida"}. Cartão final 4242.
+        </p>
+        <p className="mt-3 text-sm text-on-surface-variant">
+          Compareça com documento. O tempo do serviço é só da execução — não
+          inclui anamnese. Um e-mail de confirmação será enviado (simulação).
         </p>
         <Link
           href="/"
@@ -96,7 +103,7 @@ export function CheckoutView() {
     <main className="mx-auto max-w-6xl px-container-margin py-10">
       <Steps current={2} />
       <h1 className="font-[family-name:var(--font-display)] text-headline-md text-primary md:text-headline-lg">
-        Checkout
+        Pagamento
       </h1>
       <div className="mt-8 grid gap-8 lg:grid-cols-[minmax(0,1fr)_340px]">
         <form
@@ -127,11 +134,19 @@ export function CheckoutView() {
                   readOnly
                 />
               </label>
-              <label className="block text-sm text-on-surface-variant md:col-span-2">
+              <label className="block text-sm text-on-surface-variant">
                 E-mail
                 <input
                   className="mt-1.5 w-full rounded-xl border-none bg-surface-container-low px-4 py-3 text-on-surface"
                   defaultValue="ana@email.com"
+                  readOnly
+                />
+              </label>
+              <label className="block text-sm text-on-surface-variant">
+                CPF
+                <input
+                  className="mt-1.5 w-full rounded-xl border-none bg-surface-container-low px-4 py-3 text-on-surface"
+                  defaultValue="000.000.000-00"
                   readOnly
                 />
               </label>
@@ -146,7 +161,7 @@ export function CheckoutView() {
               <span>
                 <span className="block text-sm font-semibold">Cartão</span>
                 <span className="text-xs text-on-surface-variant">
-                  Até 10x sem juros
+                  Parcela mínima de R$ 50. Em cera, 10x só acima de R$ 180.
                 </span>
               </span>
             </div>
@@ -155,7 +170,7 @@ export function CheckoutView() {
             type="submit"
             className="btn-lux btn-lux-gold w-full rounded-full py-3.5 font-label-md text-label-md text-on-secondary-container uppercase"
           >
-            Finalizar pedido
+            Finalizar compra
           </button>
         </form>
         <aside className="h-fit rounded-2xl bg-surface p-6 shadow-[0_18px_40px_rgba(58,10,60,0.08)] lg:sticky lg:top-40">

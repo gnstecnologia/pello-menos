@@ -27,7 +27,7 @@ export function Header({ onOpenAuth }: Props) {
       <header className="fixed top-0 z-[80] w-full border-b border-outline/40 bg-white/95 backdrop-blur-md">
         <TrustBar />
         <div className="mx-auto flex max-w-7xl items-center justify-between px-container-margin py-2.5">
-          <Link href="/" className="flex items-center">
+            <Link href="/" className="flex flex-col items-start leading-none">
             <Image
               src="/brand/logo.png"
               alt="pello menos"
@@ -36,6 +36,9 @@ export function Header({ onOpenAuth }: Props) {
               priority
               className="h-12 w-auto object-contain md:h-14"
             />
+            <span className="mt-1 text-[10px] tracking-[0.18em] text-[#8a5a12] uppercase">
+              depilação avançada
+            </span>
           </Link>
           <nav className="hidden items-center gap-8 md:flex">
             {navLinks.map((link) => {

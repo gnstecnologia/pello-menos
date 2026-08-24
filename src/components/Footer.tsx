@@ -102,6 +102,9 @@ export function Footer({ onOpenAuth }: Props) {
                 className="h-16 w-auto object-contain md:h-24"
               />
             </Link>
+            <p className="mt-1 text-xs tracking-[0.2em] text-[#e8b86d] uppercase">
+              depilação avançada
+            </p>
             <p className="mt-4 max-w-sm text-sm leading-relaxed text-white/70">
               Compras realizadas na loja on-line, são pessoais e
               intransferíveis. Utilização somente após 24h, a contar da

@@ -7,8 +7,10 @@ import { useStore } from "@/components/StoreProvider";
 import { formatBRL } from "@/lib/data";
 
 export function CartView() {
-  const { cartItems, cartCount, subtotalCents, setQty, removeFromCart } =
+  const { cartItems, cartCount, subtotalCents, setQty, removeFromCart, clearCart } =
     useStore();
+  const cartUnit = cartItems[0]?.unit;
+  const mixedUnits = cartItems.some((item) => item.unit.id !== cartUnit?.id);
 
   if (cartItems.length === 0) {
     return (
@@ -43,7 +45,14 @@ export function CartView() {
       </h1>
       <p className="mt-1 text-on-surface-variant">
         {cartCount} {cartCount === 1 ? "item" : "itens"}
+        {cartUnit ? ` · ${cartUnit.name}` : ""}
       </p>
+      {mixedUnits ? (
+        <p className="mt-4 rounded-2xl border border-primary/30 bg-surface-container-low px-4 py-3 text-sm text-primary">
+          Há serviços de unidades diferentes. Esvazie o carrinho ou mantenha só
+          uma loja para finalizar.
+        </p>
+      ) : null}
       <div className="mt-8 grid gap-8 lg:grid-cols-[minmax(0,1fr)_340px]">
         <div className="space-y-4">
           {cartItems.map((item) => (
@@ -134,11 +143,26 @@ export function CartView() {
               {formatBRL(subtotalCents)}
             </span>
           </div>
+          {mixedUnits ? (
+            <button
+              type="button"
+              onClick={clearCart}
+              className="mt-3 w-full text-sm text-primary underline"
+            >
+              Esvaziar carrinho
+            </button>
+          ) : null}
+          <Link
+            href="/"
+            className="mt-4 flex w-full items-center justify-center rounded-full border border-primary/30 py-3 text-sm font-semibold text-primary uppercase"
+          >
+            Continuar comprando
+          </Link>
           <Link
             href="/checkout"
-            className="btn-lux btn-lux-gold mt-6 flex w-full items-center justify-center gap-2 rounded-full py-3.5 font-label-md text-label-md text-on-secondary-container uppercase"
+            className="btn-lux btn-lux-gold mt-3 flex w-full items-center justify-center gap-2 rounded-full py-3.5 font-label-md text-label-md text-on-secondary-container uppercase"
           >
-            Ir para o checkout
+            Ir para o pagamento
             <Icon name="arrowRight" size={16} />
           </Link>
         </aside>

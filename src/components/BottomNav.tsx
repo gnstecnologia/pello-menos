@@ -8,7 +8,7 @@ import { useStore } from "@/components/StoreProvider";
 const items: { href: string; icon: IconName; label: string }[] = [
   { href: "/", icon: "house", label: "Início" },
   { href: "/carrinho", icon: "shoppingCart", label: "Carrinho" },
-  { href: "/checkout", icon: "creditCard", label: "Checkout" },
+  { href: "/checkout", icon: "creditCard", label: "Pagamento" },
 ];
 
 export function BottomNav() {

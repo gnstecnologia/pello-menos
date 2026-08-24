@@ -2,7 +2,7 @@ import { Icon, type IconName } from "@/components/Icon";
 
 const items: { icon: IconName; label: string; detail: string }[] = [
   { icon: "badgePercent", label: "Até 10x", detail: "Sem juros no cartão" },
-  { icon: "sparkles", label: "Resultado em 10 sessões", detail: "Protocolo a laser" },
+  { icon: "sparkles", label: "Cera em primeiro", detail: "O carro-chefe da marca" },
   { icon: "clock", label: "Sem agendamento", detail: "Atendimento por ordem de chegada" },
   { icon: "shieldCheck", label: "Compra segura", detail: "Cartão protegido" },
   { icon: "heart", label: "Cortesia de primeira vez", detail: "Na unidade escolhida" },

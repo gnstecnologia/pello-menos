@@ -55,19 +55,19 @@ export function CouponPopup() {
     }
 
     let delayId = 0;
-    function startTimer() {
+    function armTimer() {
+      window.clearTimeout(delayId);
       delayId = window.setTimeout(() => setOpen(true), 5000);
     }
 
-    if (document.readyState === "complete") {
-      startTimer();
-    } else {
-      window.addEventListener("load", startTimer, { once: true });
-    }
+    armTimer();
+    window.addEventListener("scroll", armTimer, { passive: true });
+    window.addEventListener("pointermove", armTimer);
 
     return () => {
       window.clearTimeout(delayId);
-      window.removeEventListener("load", startTimer);
+      window.removeEventListener("scroll", armTimer);
+      window.removeEventListener("pointermove", armTimer);
     };
   }, []);
 
