@@ -37,6 +37,7 @@ type StoreContextValue = {
   addToCart: (product: Product, unit: StoreUnit, qty?: number) => boolean;
   removeFromCart: (lineId: string) => void;
   setQty: (lineId: string, qty: number) => void;
+  setAllQty: (qty: number) => void;
   clearCart: () => void;
   login: (email: string, password: string) => string | null;
   register: (name: string, email: string, password: string) => string | null;
@@ -128,6 +129,13 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     });
   }, []);
 
+  const setAllQty = useCallback((qty: number) => {
+    const next = Math.max(1, Math.floor(qty) || 1);
+    setCartItems((current) =>
+      current.map((item) => ({ ...item, qty: next })),
+    );
+  }, []);
+
   const login = useCallback(
     (email: string, password: string) => {
       const cleanEmail = email.trim().toLowerCase();
@@ -191,6 +199,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       addToCart,
       removeFromCart,
       setQty,
+      setAllQty,
       clearCart,
       login,
       register,
@@ -203,6 +212,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     addToCart,
     removeFromCart,
     setQty,
+    setAllQty,
     clearCart,
     login,
     register,

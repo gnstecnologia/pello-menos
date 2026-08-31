@@ -43,7 +43,11 @@ export type Product = {
   description: string;
 };
 
-type ProductSeed = Omit<Product, "sku" | "code" | "description" | "method" | "audience"> & {
+type ProductSeed = Omit<
+  Product,
+  "sku" | "code" | "description" | "method" | "audience" | "priceCents" | "oldPriceCents"
+> & {
+  originalCents: number;
   method?: ProductMethod;
   audience?: ProductAudience;
 };
@@ -57,6 +61,7 @@ export type HeroSlide = {
   priceReais: string;
   priceCents: string;
   cta: string;
+  ctaHref: string;
   image: string;
   imageAlt: string;
   layout: HeroLayout;
@@ -66,13 +71,73 @@ export type Category = {
   id: string;
   label: string;
   image: string;
+  href: string;
 };
+
+export type PromoBannerData = {
+  id: string;
+  badge: string;
+  title: string;
+  subtitle: string;
+  image: string;
+  imageAlt: string;
+  textSide?: "left" | "right";
+  overlay?: "black" | "purple";
+};
+
+export type SquareBannerData = {
+  id: string;
+  title: string;
+  subtitle: string;
+  badge?: string;
+  image: string;
+  imageAlt: string;
+};
+
+export type Review = {
+  id: string;
+  name: string;
+  rating: number;
+  text: string;
+  time: string;
+};
+
+export const ECOMMERCE_DISCOUNT = 0.05;
+
+export function withEcommercePrice(originalCents: number) {
+  return {
+    oldPriceCents: originalCents,
+    priceCents: Math.round(originalCents * (1 - ECOMMERCE_DISCOUNT)),
+  };
+}
 
 export function formatBRL(cents: number) {
   return (cents / 100).toLocaleString("pt-BR", {
     style: "currency",
     currency: "BRL",
   });
+}
+
+export function formatHeroPrice(cents: number) {
+  const sale = withEcommercePrice(cents).priceCents;
+  const reais = Math.floor(sale / 100);
+  const cc = sale % 100;
+  return {
+    priceReais: reais.toLocaleString("pt-BR"),
+    priceCents: String(cc).padStart(2, "0"),
+  };
+}
+
+export function audienceFromPath(pathname: string): ProductAudience {
+  return pathname.startsWith("/masculino") ? "masculino" : "feminino";
+}
+
+export function homeHref(audience: ProductAudience) {
+  return audience === "masculino" ? "/masculino" : "/";
+}
+
+export function productsHref(audience: ProductAudience) {
+  return audience === "masculino" ? "/masculino#produtos" : "/#produtos";
 }
 
 export const MIN_INSTALLMENT_CENTS = 5000;
@@ -83,8 +148,17 @@ export function inferMethod(id: string, explicit?: ProductMethod): ProductMethod
   if (id.includes("linha")) return "linha";
   if (id.includes("esfolia")) return "esfoliacao";
   if (id.includes("splash") || id.includes("body")) return "produto";
-  if (id.includes("cera") || id.includes("sobrancelha")) return "cera";
   if (id.includes("laser")) return "laser";
+  if (
+    id.includes("cera") ||
+    id.includes("sobrancelha") ||
+    id.includes("henna") ||
+    id.includes("realce") ||
+    id.includes("tintura") ||
+    id.includes("design")
+  ) {
+    return "cera";
+  }
   return "produto";
 }
 
@@ -109,371 +183,193 @@ export function installmentHint(method: ProductMethod) {
   return "Parcele em até 10x, com parcela mínima de R$ 50.";
 }
 
+const I = {
+  axilasLaser: "/images/products/axilas-laser-v3.png",
+  axilaCera: "/images/products/axila-cera-v3.png",
+  bucoLaser: "/images/products/buco-laser-v3.png",
+  bucoCera: "/images/products/buco-cera-v3.png",
+  virilhaLaser: "/images/products/virilha-laser-v3.png",
+  virilhaCera: "/images/products/virilha-cera-v3.png",
+  virilhaComum: "/images/products/virilha-comum-laser-v3.png",
+  pernaLaser: "/images/products/perna-laser-v3.png",
+  pernaCera: "/images/products/perna-cera-v3.png",
+  meiaPernaLaser: "/images/products/meia-perna-laser-v3.png",
+  meiaPernaCera: "/images/products/meia-perna-cera-v3.png",
+  coxasLaser: "/images/products/coxas-laser-v3.png",
+  coxaCera: "/images/products/coxa-cera-v3.png",
+  bracosLaser: "/images/products/bracos-laser-v3.png",
+  bracosCera: "/images/products/bracos-cera-v3.png",
+  antebracoLaser: "/images/products/antebraco-laser-v3.png",
+  antebracoCera: "/images/products/antebraco-cera-v3.png",
+  abdomenLaser: "/images/products/abdomen-laser-v3.png",
+  abdomenCera: "/images/products/abdomen-cera-v3.png",
+  costasLaser: "/images/products/costas-laser-v3.png",
+  queixoLaser: "/images/products/queixo-laser-v3.png",
+  pescocoLaser: "/images/products/pescoco-laser-v3.png",
+  rostoLaser: "/images/products/rosto-inteiro-laser-v3.png",
+  design: "/images/products/design-sobrancelha-v3.png",
+  henna: "/images/products/sobrancelha-henna-v3.png",
+  kits: "/images/hero/destaque-kits.png",
+  verao: "/images/hero/destaque-verao.png",
+};
+
 const catalogItems: ProductSeed[] = [
-  {
-    id: "axilas-laser",
-    name: "Axilas Laser",
-    duration: "15 min • até 10 sessões",
-    oldPriceCents: 89990,
-    priceCents: 9490,
-    badge: "Oferta",
-    highlight: true,
-    category: "axilas",
-    image: "/images/products/axilas-laser-v3.png",
-    imageAlt: "Mulher alisando a pele da axila após depilação",
-  },
-  {
-    id: "buco-laser",
-    name: "Buço Laser",
-    duration: "10 min • até 10 sessões",
-    priceCents: 42590,
-    category: "rosto",
-    image: "/images/products/buco-laser-v3.png",
-    imageAlt: "Mulher alisando a pele do buço após depilação",
-  },
-  {
-    id: "virilha-laser",
-    name: "Virilha Total Laser",
-    duration: "20 min • até 10 sessões",
-    oldPriceCents: 209000,
-    priceCents: 135850,
-    badge: "Mais vendido",
-    highlight: true,
-    category: "virilha",
-    image: "/images/products/virilha-laser-v3.png",
-    imageAlt: "Mulher alisando a pele da região da virilha após depilação",
-  },
-  {
-    id: "perna-laser",
-    name: "Perna Inteira Laser",
-    duration: "40 min • até 10 sessões",
-    oldPriceCents: 423500,
-    priceCents: 275275,
-    badge: "Verão",
-    category: "pernas",
-    image: "/images/products/perna-laser-v3.png",
-    imageAlt: "Mulher alisando a pele das pernas após depilação",
-  },
-  {
-    id: "virilha-cera",
-    name: "Virilha Total – Cera",
-    duration: "25 min • Avulso",
-    oldPriceCents: 8500,
-    priceCents: 7650,
-    category: "virilha",
-    image: "/images/products/virilha-cera-v3.png",
-    imageAlt: "Mulher negra com cabelo natural alisando a pele da virilha após cera",
-  },
-  {
-    id: "perna-cera",
-    name: "Perna Inteira – Cera",
-    duration: "40 min • Avulso",
-    oldPriceCents: 8590,
-    priceCents: 7731,
-    category: "pernas",
-    image: "/images/products/perna-cera-v3.png",
-    imageAlt: "Mulher loira com a perna inteira lisa após cera",
-  },
-  {
-    id: "buco-cera",
-    name: "Buço – Cera",
-    duration: "10 min • Avulso",
-    oldPriceCents: 2690,
-    priceCents: 2421,
-    category: "rosto",
-    image: "/images/products/buco-cera-v3.png",
-    imageAlt: "Mulher negra com cabelo liso tocando o buço após cera",
-  },
-  {
-    id: "axila-cera",
-    name: "Axila – Cera",
-    duration: "15 min • Avulso",
-    oldPriceCents: 3300,
-    priceCents: 2970,
-    badge: "Cera",
-    category: "axilas",
-    image: "/images/products/axila-cera-v3.png",
-    imageAlt: "Mulher alisando a axila lisa após cera",
-  },
-  {
-    id: "meia-perna-laser",
-    name: "Meia Perna Laser",
-    duration: "20 min • até 10 sessões",
-    oldPriceCents: 203000,
-    priceCents: 131950,
-    badge: "Verão",
-    highlight: true,
-    category: "pernas",
-    image: "/images/products/meia-perna-laser-v3.png",
-    imageAlt: "Mulher com as panturrilhas lisas após laser",
-  },
-  {
-    id: "coxas-laser",
-    name: "Coxas Laser",
-    duration: "25 min • até 10 sessões",
-    oldPriceCents: 219990,
-    priceCents: 142994,
-    category: "pernas",
-    image: "/images/products/coxas-laser-v3.png",
-    imageAlt: "Mulher alisando as coxas após depilação a laser",
-  },
-  {
-    id: "bracos-laser",
-    name: "Braços Inteiros Laser",
-    duration: "20 min • até 10 sessões",
-    oldPriceCents: 144000,
-    priceCents: 93600,
-    badge: "Novo",
-    highlight: true,
-    category: "bracos",
-    image: "/images/products/bracos-laser-v3.png",
-    imageAlt: "Mulher mostrando os braços lisos após laser",
-  },
-  {
-    id: "antebraco-laser",
-    name: "Antebraço Laser",
-    duration: "15 min • até 10 sessões",
-    oldPriceCents: 108000,
-    priceCents: 70200,
-    category: "bracos",
-    image: "/images/products/antebraco-laser-v3.png",
-    imageAlt: "Mulher com o antebraço liso após laser",
-  },
-  {
-    id: "abdomen-laser",
-    name: "Abdômen Laser",
-    duration: "20 min • até 10 sessões",
-    oldPriceCents: 102000,
-    priceCents: 66300,
-    badge: "Corpo",
-    category: "corpo",
-    image: "/images/products/abdomen-laser-v3.png",
-    imageAlt: "Mulher alisando o abdômen após laser",
-  },
-  {
-    id: "costas-laser",
-    name: "Costas Laser",
-    duration: "25 min • até 10 sessões",
-    oldPriceCents: 149500,
-    priceCents: 97175,
-    category: "corpo",
-    image: "/images/products/costas-laser-v3.png",
-    imageAlt: "Mulher de costas com a pele lisa após laser",
-  },
-  {
-    id: "queixo-laser",
-    name: "Queixo Laser",
-    duration: "10 min • até 10 sessões",
-    oldPriceCents: 73300,
-    priceCents: 47645,
-    category: "rosto",
-    image: "/images/products/queixo-laser-v3.png",
-    imageAlt: "Mulher alisando o queixo após laser",
-  },
-  {
-    id: "pescoco-laser",
-    name: "Pescoço Laser",
-    duration: "10 min • até 10 sessões",
-    oldPriceCents: 70300,
-    priceCents: 45695,
-    category: "rosto",
-    image: "/images/products/pescoco-laser-v3.png",
-    imageAlt: "Mulher com o pescoço liso após laser",
-  },
-  {
-    id: "rosto-inteiro-laser",
-    name: "Rosto Inteiro Laser",
-    duration: "20 min • até 10 sessões",
-    oldPriceCents: 144500,
-    priceCents: 93925,
-    badge: "Combo",
-    highlight: true,
-    category: "rosto",
-    image: "/images/products/rosto-inteiro-laser-v3.png",
-    imageAlt: "Mulher com o rosto liso após laser",
-  },
-  {
-    id: "virilha-comum-laser",
-    name: "Virilha Comum Laser",
-    duration: "15 min • até 10 sessões",
-    oldPriceCents: 132000,
-    priceCents: 85800,
-    category: "virilha",
-    image: "/images/products/virilha-comum-laser-v3.png",
-    imageAlt: "Mulher em spa roxo claro com shorts e top brancos",
-  },
-  {
-    id: "meia-perna-cera",
-    name: "Meia Perna – Cera",
-    duration: "20 min • Avulso",
-    oldPriceCents: 4990,
-    priceCents: 4491,
-    category: "pernas",
-    image: "/images/products/meia-perna-cera-v3.png",
-    imageAlt: "Mulher negra com tranças mostrando a meia perna lisa após cera",
-  },
-  {
-    id: "coxa-cera",
-    name: "Coxa – Cera",
-    duration: "20 min • Avulso",
-    oldPriceCents: 4990,
-    priceCents: 4491,
-    category: "pernas",
-    image: "/images/products/coxa-cera-v3.png",
-    imageAlt: "Mulher de cabelo liso alisando a coxa após cera",
-  },
-  {
-    id: "bracos-cera",
-    name: "Braços – Cera",
-    duration: "20 min • Avulso",
-    oldPriceCents: 6990,
-    priceCents: 6291,
-    category: "bracos",
-    image: "/images/products/bracos-cera-v3.png",
-    imageAlt: "Mulher negra com cabelo black mostrando os braços lisos após cera",
-  },
-  {
-    id: "antebraco-cera",
-    name: "Antebraço – Cera",
-    duration: "15 min • Avulso",
-    oldPriceCents: 4990,
-    priceCents: 4491,
-    category: "bracos",
-    image: "/images/products/antebraco-cera-v3.png",
-    imageAlt: "Mulher loira alisando o antebraço após cera",
-  },
-  {
-    id: "abdomen-cera",
-    name: "Abdômen – Cera",
-    duration: "15 min • Avulso",
-    oldPriceCents: 5800,
-    priceCents: 5220,
-    category: "corpo",
-    image: "/images/products/abdomen-cera-v3.png",
-    imageAlt: "Mulher de cabelo liso com o abdômen liso após cera",
-  },
-  {
-    id: "design-sobrancelha",
-    name: "Design de Sobrancelha",
-    duration: "20 min • Avulso",
-    oldPriceCents: 5850,
-    priceCents: 5265,
-    badge: "Olhar",
-    highlight: true,
-    category: "rosto",
-    image: "/images/products/design-sobrancelha-v3.png",
-    imageAlt: "Mulher com design de sobrancelha",
-  },
-  {
-    id: "sobrancelha-henna",
-    name: "Sobrancelha + Henna",
-    duration: "30 min • Avulso",
-    oldPriceCents: 8650,
-    priceCents: 7785,
-    badge: "Combo",
-    category: "rosto",
-    image: "/images/products/sobrancelha-henna-v3.png",
-    imageAlt: "Mulher com sobrancelha realçada com henna",
-  },
-  {
-    id: "meia-nadega-cera",
-    name: "Meia nádega – Cera",
-    duration: "15 min • Avulso",
-    oldPriceCents: 4990,
-    priceCents: 4491,
-    badge: "Cera",
-    category: "corpo",
-    image: "/images/products/virilha-cera-v3.png",
-    imageAlt: "Mulher em spa após cera na região das nádegas",
-  },
-  {
-    id: "esfoliacao-corpo",
-    name: "Esfoliação corporal",
-    duration: "30 min • Avulso",
-    oldPriceCents: 8900,
-    priceCents: 7900,
-    badge: "Pele",
-    category: "corpo",
-    method: "esfoliacao",
-    image: "/images/products/abdomen-cera-v3.png",
-    imageAlt: "Mulher cuidando da pele do corpo após esfoliação",
-  },
-  {
-    id: "buco-linha",
-    name: "Buço – Linha",
-    duration: "10 min • Avulso",
-    oldPriceCents: 2900,
-    priceCents: 2490,
-    badge: "Linha",
-    category: "rosto",
-    method: "linha",
-    image: "/images/products/buco-cera-v3.png",
-    imageAlt: "Mulher com o buço liso após depilação com linha",
-  },
-  {
-    id: "sobrancelha-linha",
-    name: "Sobrancelha – Linha",
-    duration: "20 min • Avulso",
-    oldPriceCents: 5900,
-    priceCents: 5290,
-    badge: "Linha",
-    category: "rosto",
-    method: "linha",
-    image: "/images/products/design-sobrancelha-v3.png",
-    imageAlt: "Mulher com sobrancelha desenhada com linha",
-  },
-  {
-    id: "body-splash",
-    name: "Body Splash Pello Menos",
-    duration: "Uso diário",
-    oldPriceCents: 6900,
-    priceCents: 5900,
-    badge: "Novo",
-    category: "produtos",
-    method: "produto",
-    image: "/images/hero/destaque-kits.png",
-    imageAlt: "Body Splash Pello Menos — foto oficial em produção",
-  },
-  {
-    id: "peito-laser-masc",
-    name: "Peito Laser – Masculino",
-    duration: "25 min • até 10 sessões",
-    oldPriceCents: 189000,
-    priceCents: 149900,
-    badge: "Masculino",
-    category: "corpo",
-    method: "laser",
-    audience: "masculino",
-    image: "/images/products/abdomen-laser-v3.png",
-    imageAlt: "Peito a laser no catálogo masculino Pello Menos",
-  },
-  {
-    id: "costas-laser-masc",
-    name: "Costas Laser – Masculino",
-    duration: "30 min • até 10 sessões",
-    oldPriceCents: 199000,
-    priceCents: 159900,
-    badge: "Masculino",
-    category: "corpo",
-    method: "laser",
-    audience: "masculino",
-    image: "/images/products/costas-laser-v3.png",
-    imageAlt: "Costas a laser no catálogo masculino Pello Menos",
-  },
-  {
-    id: "barba-laser-masc",
-    name: "Barba Laser – Masculino",
-    duration: "15 min • até 10 sessões",
-    oldPriceCents: 99000,
-    priceCents: 79900,
-    badge: "Masculino",
-    category: "rosto",
-    method: "laser",
-    audience: "masculino",
-    image: "/images/products/queixo-laser-v3.png",
-    imageAlt: "Barba a laser no catálogo masculino Pello Menos",
-  },
+  // Cera feminino — preço cartão da tabela RJ-SP (original)
+  { id: "abdomen-cera", name: "Abdômen – Cera", duration: "15 min • Avulso", originalCents: 5990, category: "corpo", image: I.abdomenCera, imageAlt: "Abdômen após cera" },
+  { id: "axila-cera", name: "Axila – Cera", duration: "15 min • Avulso", originalCents: 3500, badge: "Cera", highlight: true, category: "axilas", image: I.axilaCera, imageAlt: "Axila lisa após cera" },
+  { id: "antebraco-cera", name: "Antebraço – Cera", duration: "15 min • Avulso", originalCents: 5190, category: "bracos", image: I.antebracoCera, imageAlt: "Antebraço após cera" },
+  { id: "bracos-cera", name: "Braços – Cera", duration: "20 min • Avulso", originalCents: 7190, category: "bracos", image: I.bracosCera, imageAlt: "Braços lisos após cera" },
+  { id: "buco-cera", name: "Buço – Cera", duration: "10 min • Avulso", originalCents: 2800, highlight: true, category: "rosto", image: I.bucoCera, imageAlt: "Buço após cera" },
+  { id: "costas-cera", name: "Costas – Cera", duration: "25 min • Avulso", originalCents: 5800, category: "corpo", image: I.costasLaser, imageAlt: "Costas após cera" },
+  { id: "coxa-cera", name: "Coxa – Cera", duration: "20 min • Avulso", originalCents: 5190, category: "pernas", image: I.coxaCera, imageAlt: "Coxa após cera" },
+  { id: "faixa-cera", name: "Faixa – Cera", duration: "10 min • Avulso", originalCents: 2800, category: "corpo", image: I.abdomenCera, imageAlt: "Faixa de cera no corpo" },
+  { id: "intergluteos-cera", name: "Interglúteos – Cera", duration: "15 min • Avulso", originalCents: 3390, category: "corpo", image: I.virilhaCera, imageAlt: "Cera na região dos interglúteos" },
+  { id: "nariz-cera", name: "Nariz – Cera", duration: "10 min • Avulso", originalCents: 3000, category: "rosto", image: I.queixoLaser, imageAlt: "Nariz após cera" },
+  { id: "nadegas-cera", name: "Nádegas – Cera", duration: "20 min • Avulso", originalCents: 5190, category: "corpo", image: I.virilhaCera, imageAlt: "Nádegas após cera" },
+  { id: "meia-nadega-cera", name: "Meia nádega – Cera", duration: "15 min • Avulso", originalCents: 2600, badge: "Cera", category: "corpo", image: I.virilhaCera, imageAlt: "Meia nádega após cera" },
+  { id: "perna-cera", name: "Perna Inteira – Cera", duration: "40 min • Avulso", originalCents: 8700, badge: "5% OFF", highlight: true, category: "pernas", image: I.pernaCera, imageAlt: "Perna inteira após cera" },
+  { id: "meia-perna-cera", name: "Meia Perna – Cera", duration: "20 min • Avulso", originalCents: 5190, category: "pernas", image: I.meiaPernaCera, imageAlt: "Meia perna após cera" },
+  { id: "queixo-cera", name: "Queixo – Cera", duration: "10 min • Avulso", originalCents: 2800, badge: "Cera", category: "rosto", image: I.queixoLaser, imageAlt: "Queixo após cera" },
+  { id: "seios-cera", name: "Seios – Cera", duration: "10 min • Avulso", originalCents: 2900, category: "corpo", image: I.abdomenCera, imageAlt: "Seios após cera" },
+  { id: "virilha-comum-cera", name: "Virilha comum – Cera", duration: "15 min • Avulso", originalCents: 3999, badge: "Cera", category: "virilha", image: I.virilhaComum, imageAlt: "Virilha comum após cera" },
+  { id: "virilha-comum-faixa-cera", name: "Virilha comum + faixa – Cera", duration: "20 min • Avulso", originalCents: 5399, category: "virilha", image: I.virilhaComum, imageAlt: "Virilha comum com faixa após cera" },
+  { id: "virilha-cavada-cera", name: "Virilha cavada – Cera", duration: "20 min • Avulso", originalCents: 7390, category: "virilha", image: I.virilhaCera, imageAlt: "Virilha cavada após cera" },
+  { id: "virilha-cavada-faixa-cera", name: "Virilha cavada + faixa – Cera", duration: "25 min • Avulso", originalCents: 8790, category: "virilha", image: I.virilhaCera, imageAlt: "Virilha cavada com faixa após cera" },
+  { id: "virilha-modelada-cera", name: "Virilha modelada – Cera", duration: "25 min • Avulso", originalCents: 8700, category: "virilha", image: I.virilhaCera, imageAlt: "Virilha modelada após cera" },
+  { id: "virilha-cera", name: "Virilha Total – Cera", duration: "25 min • Avulso", originalCents: 8890, highlight: true, category: "virilha", image: I.virilhaCera, imageAlt: "Virilha total após cera" },
+  { id: "labios-genitais-cera", name: "Lábios genitais – Cera", duration: "15 min • Avulso", originalCents: 3990, category: "virilha", image: I.virilhaCera, imageAlt: "Cera nos lábios genitais" },
+  { id: "tintura-pelos-pubianos", name: "Tintura dos pelos pubianos", duration: "20 min • Avulso", originalCents: 4600, category: "virilha", method: "cera", image: I.virilhaCera, imageAlt: "Tintura dos pelos pubianos" },
+  { id: "sobrancelha-cera", name: "Sobrancelha – Cera", duration: "15 min • Avulso", originalCents: 4990, category: "rosto", image: I.design, imageAlt: "Sobrancelha com cera" },
+  { id: "sobrancelha-realce-cera", name: "Sobrancelha + realce – Cera", duration: "25 min • Avulso", originalCents: 7790, category: "rosto", image: I.henna, imageAlt: "Sobrancelha com realce" },
+  { id: "sobrancelha-henna-simples", name: "Sobrancelha simples + henna", duration: "25 min • Avulso", originalCents: 8590, category: "rosto", image: I.henna, imageAlt: "Sobrancelha simples com henna" },
+  { id: "design-sobrancelha", name: "Design de Sobrancelha", duration: "20 min • Avulso", originalCents: 6000, badge: "Olhar", highlight: true, category: "rosto", image: I.design, imageAlt: "Design de sobrancelha" },
+  { id: "design-sobrancelha-realce", name: "Design de sobrancelha + realce", duration: "30 min • Avulso", originalCents: 7990, category: "rosto", image: I.henna, imageAlt: "Design de sobrancelha com realce" },
+  { id: "sobrancelha-henna", name: "Design de sobrancelha + henna", duration: "30 min • Avulso", originalCents: 8790, badge: "Combo", category: "rosto", image: I.henna, imageAlt: "Design de sobrancelha com henna" },
+  { id: "realce", name: "Realce", duration: "15 min • Avulso", originalCents: 3390, category: "rosto", method: "cera", image: I.henna, imageAlt: "Realce de sobrancelha" },
+  { id: "henna", name: "Henna", duration: "20 min • Avulso", originalCents: 4290, category: "rosto", method: "cera", image: I.henna, imageAlt: "Henna nas sobrancelhas" },
+
+  // Linha feminino — tabela RJ-SP
+  { id: "buco-linha", name: "Buço – Linha", duration: "10 min • Avulso", originalCents: 3190, badge: "Linha", category: "rosto", method: "linha", image: I.bucoCera, imageAlt: "Buço após linha" },
+  { id: "queixo-linha", name: "Queixo – Linha", duration: "10 min • Avulso", originalCents: 3190, badge: "Linha", category: "rosto", method: "linha", image: I.queixoLaser, imageAlt: "Queixo após linha" },
+  { id: "faixa-linha", name: "Faixa – Linha", duration: "10 min • Avulso", originalCents: 2950, badge: "Linha", category: "rosto", method: "linha", image: I.rostoLaser, imageAlt: "Faixa após linha" },
+
+  // Esfoliação feminino — tabela RJ-SP
+  { id: "esfoliacao-faixa", name: "Esfoliação de faixa", duration: "10 min • Avulso", originalCents: 1400, category: "corpo", method: "esfoliacao", image: I.abdomenCera, imageAlt: "Esfoliação de faixa" },
+  { id: "esfoliacao-meio-braco", name: "Esfoliação de meio braço", duration: "15 min • Avulso", originalCents: 2595, category: "bracos", method: "esfoliacao", image: I.antebracoCera, imageAlt: "Esfoliação de meio braço" },
+  { id: "esfoliacao-braco", name: "Esfoliação de braço", duration: "20 min • Avulso", originalCents: 3595, category: "bracos", method: "esfoliacao", image: I.bracosCera, imageAlt: "Esfoliação de braço" },
+  { id: "esfoliacao-meia-perna", name: "Esfoliação de meia perna", duration: "20 min • Avulso", originalCents: 2595, category: "pernas", method: "esfoliacao", image: I.meiaPernaCera, imageAlt: "Esfoliação de meia perna" },
+  { id: "esfoliacao-abdomen", name: "Esfoliação de abdômen", duration: "15 min • Avulso", originalCents: 2995, category: "corpo", method: "esfoliacao", image: I.abdomenCera, imageAlt: "Esfoliação de abdômen" },
+  { id: "esfoliacao-axilas", name: "Esfoliação de axilas", duration: "15 min • Avulso", originalCents: 1750, badge: "Pele", category: "axilas", method: "esfoliacao", image: I.axilaCera, imageAlt: "Esfoliação de axilas" },
+  { id: "esfoliacao-nadegas", name: "Esfoliação de nádegas", duration: "15 min • Avulso", originalCents: 2595, category: "corpo", method: "esfoliacao", image: I.virilhaCera, imageAlt: "Esfoliação de nádegas" },
+  { id: "esfoliacao-meia-nadega", name: "Esfoliação de meia nádega", duration: "10 min • Avulso", originalCents: 1300, category: "corpo", method: "esfoliacao", image: I.virilhaCera, imageAlt: "Esfoliação de meia nádega" },
+  { id: "esfoliacao-coxa", name: "Esfoliação de coxa", duration: "20 min • Avulso", originalCents: 2595, category: "pernas", method: "esfoliacao", image: I.coxaCera, imageAlt: "Esfoliação de coxa" },
+  { id: "esfoliacao-costas", name: "Esfoliação de costas", duration: "20 min • Avulso", originalCents: 2900, category: "corpo", method: "esfoliacao", image: I.costasLaser, imageAlt: "Esfoliação de costas" },
+  { id: "esfoliacao-perna", name: "Esfoliação de perna inteira", duration: "25 min • Avulso", originalCents: 4350, badge: "Pele", highlight: true, category: "pernas", method: "esfoliacao", image: I.pernaCera, imageAlt: "Esfoliação de perna inteira" },
+  { id: "esfoliacao-virilha", name: "Esfoliação de virilha", duration: "15 min • Avulso", originalCents: 2000, category: "virilha", method: "esfoliacao", image: I.virilhaCera, imageAlt: "Esfoliação de virilha" },
+  { id: "esfoliacao-virilha-faixa", name: "Esfoliação de virilha + faixa", duration: "20 min • Avulso", originalCents: 2699, category: "virilha", method: "esfoliacao", image: I.virilhaCera, imageAlt: "Esfoliação de virilha com faixa" },
+  { id: "esfoliacao-seios", name: "Esfoliação de seios", duration: "10 min • Avulso", originalCents: 1450, category: "corpo", method: "esfoliacao", image: I.abdomenCera, imageAlt: "Esfoliação de seios" },
+
+  // Laser feminino — preço riscado da loja oficial (pacote original)
+  { id: "axilas-laser", name: "Axilas Laser", duration: "15 min • até 10 sessões", originalCents: 89990, badge: "5% OFF", highlight: true, category: "axilas", image: I.axilasLaser, imageAlt: "Axilas após laser" },
+  { id: "areola-laser", name: "Aréola Laser", duration: "10 min • até 10 sessões", originalCents: 38090, category: "corpo", image: I.abdomenLaser, imageAlt: "Aréola após laser" },
+  { id: "buco-laser", name: "Buço Laser", duration: "10 min • até 10 sessões", originalCents: 42590, category: "rosto", image: I.bucoLaser, imageAlt: "Buço após laser" },
+  { id: "virilha-laser", name: "Virilha Total Laser", duration: "20 min • até 10 sessões", originalCents: 209000, badge: "Mais vendido", highlight: true, category: "virilha", image: I.virilhaLaser, imageAlt: "Virilha total após laser" },
+  { id: "virilha-comum-laser", name: "Virilha Comum Laser", duration: "15 min • até 10 sessões", originalCents: 132000, category: "virilha", image: I.virilhaComum, imageAlt: "Virilha comum após laser" },
+  { id: "virilha-cavada-laser", name: "Virilha Cavada Laser", duration: "20 min • até 10 sessões", originalCents: 179000, category: "virilha", image: I.virilhaLaser, imageAlt: "Virilha cavada após laser" },
+  { id: "virilha-cavada-faixa-laser", name: "Virilha Cavada c/ Faixa Laser", duration: "20 min • até 10 sessões", originalCents: 203500, category: "virilha", image: I.virilhaLaser, imageAlt: "Virilha cavada com faixa após laser" },
+  { id: "virilha-faixa-laser", name: "Virilha c/ Faixa Laser", duration: "15 min • até 10 sessões", originalCents: 156000, category: "virilha", image: I.virilhaComum, imageAlt: "Virilha com faixa após laser" },
+  { id: "perna-laser", name: "Perna Inteira Laser", duration: "40 min • até 10 sessões", originalCents: 423500, badge: "Verão", category: "pernas", image: I.pernaLaser, imageAlt: "Perna inteira após laser" },
+  { id: "meia-perna-laser", name: "Meia Perna Laser", duration: "20 min • até 10 sessões", originalCents: 203000, badge: "Verão", highlight: true, category: "pernas", image: I.meiaPernaLaser, imageAlt: "Meia perna após laser" },
+  { id: "coxas-laser", name: "Coxas Laser", duration: "25 min • até 10 sessões", originalCents: 219990, category: "pernas", image: I.coxasLaser, imageAlt: "Coxas após laser" },
+  { id: "bracos-laser", name: "Braços Inteiros Laser", duration: "20 min • até 10 sessões", originalCents: 144000, badge: "Novo", highlight: true, category: "bracos", image: I.bracosLaser, imageAlt: "Braços após laser" },
+  { id: "antebraco-laser", name: "Antebraço Laser", duration: "15 min • até 10 sessões", originalCents: 108000, category: "bracos", image: I.antebracoLaser, imageAlt: "Antebraço após laser" },
+  { id: "abdomen-laser", name: "Abdômen Laser", duration: "20 min • até 10 sessões", originalCents: 102000, badge: "Corpo", category: "corpo", image: I.abdomenLaser, imageAlt: "Abdômen após laser" },
+  { id: "costas-laser", name: "Costas Laser", duration: "25 min • até 10 sessões", originalCents: 149500, category: "corpo", image: I.costasLaser, imageAlt: "Costas após laser" },
+  { id: "queixo-laser", name: "Queixo Laser", duration: "10 min • até 10 sessões", originalCents: 73300, category: "rosto", image: I.queixoLaser, imageAlt: "Queixo após laser" },
+  { id: "pescoco-laser", name: "Pescoço Laser", duration: "10 min • até 10 sessões", originalCents: 70300, category: "rosto", image: I.pescocoLaser, imageAlt: "Pescoço após laser" },
+  { id: "nariz-laser", name: "Nariz Laser", duration: "10 min • até 10 sessões", originalCents: 34000, category: "rosto", image: I.queixoLaser, imageAlt: "Nariz após laser" },
+  { id: "orelhas-laser", name: "Orelhas Laser", duration: "10 min • até 10 sessões", originalCents: 43990, category: "rosto", image: I.pescocoLaser, imageAlt: "Orelhas após laser" },
+  { id: "rosto-inteiro-laser", name: "Rosto Inteiro Laser", duration: "20 min • até 10 sessões", originalCents: 144500, badge: "Combo", highlight: true, category: "rosto", image: I.rostoLaser, imageAlt: "Rosto inteiro após laser" },
+  { id: "intergluteos-laser", name: "Interglúteos Laser", duration: "15 min • até 10 sessões", originalCents: 47000, category: "corpo", image: I.virilhaLaser, imageAlt: "Interglúteos após laser" },
+  { id: "meia-nadega-laser", name: "Meia Nádega Laser", duration: "15 min • até 10 sessões", originalCents: 70300, category: "corpo", image: I.virilhaLaser, imageAlt: "Meia nádega após laser" },
+  { id: "nadegas-laser", name: "Nádegas Laser", duration: "20 min • até 10 sessões", originalCents: 123090, category: "corpo", image: I.virilhaLaser, imageAlt: "Nádegas após laser" },
+  { id: "psd-p-laser", name: "PSD P Laser", duration: "10 min • até 10 sessões", originalCents: 43000, category: "corpo", image: I.abdomenLaser, imageAlt: "Área sem definição P após laser" },
+  { id: "psd-m-laser", name: "PSD M Laser", duration: "15 min • até 10 sessões", originalCents: 49500, category: "corpo", image: I.abdomenLaser, imageAlt: "Área sem definição M após laser" },
+  { id: "psd-g-laser", name: "PSD G Laser", duration: "20 min • até 10 sessões", originalCents: 76900, category: "corpo", image: I.abdomenLaser, imageAlt: "Área sem definição G após laser" },
+
+  // Produto oficial
+  { id: "body-splash", name: "Body Splash Pello Menos", duration: "Uso diário", originalCents: 6900, badge: "Oficial", category: "produtos", method: "produto", image: I.kits, imageAlt: "Body Splash oficial Pello Menos" },
+
+  // Laser masculino — original da tabela/loja para a área equivalente; sem cera e sem esfoliação
+  { id: "axilas-laser-masc", name: "Axilas Laser", duration: "15 min • até 10 sessões", originalCents: 89990, badge: "5% OFF", highlight: true, category: "axilas", method: "laser", audience: "masculino", image: I.axilasLaser, imageAlt: "Axilas a laser no catálogo masculino" },
+  { id: "peito-laser-masc", name: "Peito Laser", duration: "25 min • até 10 sessões", originalCents: 149500, badge: "Masculino", highlight: true, category: "corpo", method: "laser", audience: "masculino", image: I.abdomenLaser, imageAlt: "Peito a laser no catálogo masculino" },
+  { id: "costas-laser-masc", name: "Costas Laser", duration: "30 min • até 10 sessões", originalCents: 149500, badge: "Masculino", highlight: true, category: "corpo", method: "laser", audience: "masculino", image: I.costasLaser, imageAlt: "Costas a laser no catálogo masculino" },
+  { id: "abdomen-laser-masc", name: "Abdômen Laser", duration: "20 min • até 10 sessões", originalCents: 102000, category: "corpo", method: "laser", audience: "masculino", image: I.abdomenLaser, imageAlt: "Abdômen a laser no catálogo masculino" },
+  { id: "barba-laser-masc", name: "Barba Laser", duration: "15 min • até 10 sessões", originalCents: 99000, badge: "Rosto", highlight: true, category: "rosto", method: "laser", audience: "masculino", image: I.queixoLaser, imageAlt: "Barba a laser no catálogo masculino" },
+  { id: "nuca-laser-masc", name: "Nuca Laser", duration: "10 min • até 10 sessões", originalCents: 70300, category: "rosto", method: "laser", audience: "masculino", image: I.pescocoLaser, imageAlt: "Nuca a laser no catálogo masculino" },
+  { id: "pescoco-laser-masc", name: "Pescoço Laser", duration: "10 min • até 10 sessões", originalCents: 70300, category: "rosto", method: "laser", audience: "masculino", image: I.pescocoLaser, imageAlt: "Pescoço a laser no catálogo masculino" },
+  { id: "orelhas-laser-masc", name: "Orelhas Laser", duration: "10 min • até 10 sessões", originalCents: 43990, category: "rosto", method: "laser", audience: "masculino", image: I.pescocoLaser, imageAlt: "Orelhas a laser no catálogo masculino" },
+  { id: "nariz-laser-masc", name: "Nariz Laser", duration: "10 min • até 10 sessões", originalCents: 34000, category: "rosto", method: "laser", audience: "masculino", image: I.queixoLaser, imageAlt: "Nariz a laser no catálogo masculino" },
+  { id: "bracos-laser-masc", name: "Braços Inteiros Laser", duration: "20 min • até 10 sessões", originalCents: 144000, category: "bracos", method: "laser", audience: "masculino", image: I.bracosLaser, imageAlt: "Braços a laser no catálogo masculino" },
+  { id: "antebraco-laser-masc", name: "Antebraço Laser", duration: "15 min • até 10 sessões", originalCents: 108000, category: "bracos", method: "laser", audience: "masculino", image: I.antebracoLaser, imageAlt: "Antebraço a laser no catálogo masculino" },
+  { id: "perna-laser-masc", name: "Perna Inteira Laser", duration: "40 min • até 10 sessões", originalCents: 423500, badge: "Verão", category: "pernas", method: "laser", audience: "masculino", image: I.pernaLaser, imageAlt: "Perna inteira a laser no catálogo masculino" },
+  { id: "meia-perna-laser-masc", name: "Meia Perna Laser", duration: "20 min • até 10 sessões", originalCents: 203000, category: "pernas", method: "laser", audience: "masculino", image: I.meiaPernaLaser, imageAlt: "Meia perna a laser no catálogo masculino" },
+  { id: "virilha-laser-masc", name: "Virilha Laser", duration: "20 min • até 10 sessões", originalCents: 209000, category: "virilha", method: "laser", audience: "masculino", image: I.virilhaLaser, imageAlt: "Virilha a laser no catálogo masculino" },
 ];
+
+function defaultDescription(item: ProductSeed, method: ProductMethod, audience: ProductAudience) {
+  const who =
+    audience === "masculino"
+      ? "Atendimento masculino, por ordem de chegada."
+      : "Atendimento feminino, por ordem de chegada.";
+  if (method === "laser") {
+    return `${item.name} em pacote de até 10 sessões na Pello Menos. ${who} Informe a unidade no pedido: o pacote só pode ser usado na loja escolhida.`;
+  }
+  if (method === "cera") {
+    return `${item.name} em sessão avulsa na Pello Menos. Resultado no mesmo dia. ${who} Escolha a unidade obrigatória no pedido.`;
+  }
+  if (method === "linha") {
+    return `${item.name} com precisão no contorno. Sessão avulsa. ${who} Selecione a loja no pedido.`;
+  }
+  if (method === "esfoliacao") {
+    return `${item.name} para renovar a pele e potencializar a cera. Sessão avulsa, só no catálogo feminino. ${who} Selecione a unidade no pedido.`;
+  }
+  return "Body Splash oficial da linha Pello Menos para o cuidado em casa após a depilação.";
+}
+
+function catalogSku(index: number) {
+  return `PM-${String(index + 1).padStart(4, "0")}`;
+}
+
+function catalogCode(id: string) {
+  return `PEL-${id.replace(/-/g, "").toUpperCase()}`;
+}
+
+export const products: Product[] = catalogItems.map((item, index) => {
+  const { originalCents, method: explicitMethod, audience: explicitAudience, ...rest } = item;
+  const method = inferMethod(item.id, explicitMethod);
+  const audience = explicitAudience ?? "feminino";
+  return {
+    ...rest,
+    ...withEcommercePrice(originalCents),
+    duration: item.duration.replace(/^(\d+)/, "~$1"),
+    method,
+    audience,
+    sku: catalogSku(index),
+    code: catalogCode(item.id),
+    description: defaultDescription(item, method, audience),
+  };
+});
+
+export function getProductById(id: string) {
+  return products.find((item) => item.id === id);
+}
+
+export function productsForAudience(audience: ProductAudience) {
+  return products.filter(
+    (item) => item.audience === audience || item.method === "produto",
+  );
+}
 
 export const storeUnits: StoreUnit[] = [
   {
@@ -518,99 +414,6 @@ export const storeUnits: StoreUnit[] = [
   },
 ];
 
-const productCopy: Record<string, string> = {
-  "axilas-laser":
-    "Pacote de até 10 sessões de depilação a laser nas axilas, pensado para quem quer reduzir o pelo de forma duradoura sem agendamento. Cada visita dura cerca de 15 minutos: a profissional avalia a pele, aplica o protocolo e você sai no mesmo fluxo, por ordem de chegada. A pele fica mais lisa a cada sessão, com menos irritação do que a cera repetida. Atendimento 100% feminino. Escolha a unidade no pedido — o serviço só é resgatado na loja selecionada.",
-  "buco-laser":
-    "Até 10 sessões de laser no buço para tratar o pelo fino da região acima da boca, com cuidado específico para a pele do rosto. A sessão é curta, cerca de 10 minutos, e o protocolo respeita a sensibilidade da área para um resultado mais uniforme ao longo do pacote. Ideal para quem quer reduzir a necessidade de cera ou pinça no dia a dia. Atendimento feminino, por ordem de chegada. Informe a unidade obrigatória no pedido para usar o serviço na loja escolhida.",
-  "virilha-laser":
-    "Virilha total a laser em pacote de até 10 sessões, indicado para quem busca resultado duradouro na região íntima com higiene e protocolo de clínica. A sessão leva cerca de 20 minutos e cobre a área completa, não só a linha do biquíni. A pele tende a ficar mais lisa e confortável a cada visita, com menos foliculite do que a cera frequente. Ambiente exclusivo feminino, sem hora marcada. O resgate é só na unidade selecionada no carrinho.",
-  "perna-laser":
-    "Perna inteira a laser, da coxa ao tornozelo, em até 10 sessões. É a sessão mais longa do catálogo de pernas (cerca de 40 minutos) para garantir cobertura uniforme nas duas pernas. Indicado para quem quer pele lisa o ano todo, principalmente no verão, sem depender de cera a cada duas semanas. Atendimento feminino por ordem de chegada. Escolha a loja no pedido: o pacote só pode ser usado na unidade informada.",
-  "virilha-cera":
-    "Sessão avulsa de cera na virilha total, para quem quer resultado imediato sem fechar pacote de laser. A técnica é feita com produto adequado à região íntima, visando menos irritação e acabamento limpo no mesmo dia. Duração aproximada de 25 minutos, em ambiente feminino e por ordem de chegada. Não inclui sessões futuras: é um atendimento avulso. Compareça na unidade escolhida no pedido — o campo de loja é obrigatório.",
-  "perna-cera":
-    "Cera na perna inteira em sessão avulsa, da coxa ao tornozelo. Ideal para quem precisa da pele lisa no mesmo dia — evento, viagem ou rotina — sem compromisso de pacote. A sessão dura cerca de 40 minutos, com produto pensado para área grande e menos desconforto. Atendimento exclusivo feminino, sem agendamento. Escolha a unidade obrigatória no pedido e realize o serviço somente nessa loja.",
-  "buco-cera":
-    "Cera no buço em sessão rápida e avulsa, com precisão no contorno da boca. Remove o pelo da região na hora, em cerca de 10 minutos, com cuidado para não marcar a pele fina do rosto. Boa opção entre uma sessão e outra de laser ou para quem prefere só a cera. Atendimento feminino por ordem de chegada. Selecione a loja no pedido: o serviço é prestado apenas na unidade escolhida.",
-  "axila-cera":
-    "Cera nas axilas em sessão avulsa, para pele lisa na hora sem pacote de laser. Usamos produto adequado à região, que costuma ser mais sensível e sujeita a foliculite. A sessão leva cerca de 15 minutos: rápida, objetiva e feita em ambiente exclusivo feminino, por ordem de chegada. Perfeita para o dia a dia ou para completar outro serviço na mesma visita. Escolha a loja onde deseja ser atendida — o campo de unidade é obrigatório.",
-  "meia-perna-laser":
-    "Meia perna a laser, do joelho ao tornozelo, em até 10 sessões. Equilíbrio entre tempo de cadeira (cerca de 20 minutos) e resultado duradouro na parte que mais aparece no dia a dia. Indicado para quem não precisa tratar a coxa agora, mas quer panturrilha e canela mais lisas ao longo do protocolo. Atendimento feminino, sem hora marcada. O pacote é resgatado somente na unidade selecionada no pedido.",
-  "coxas-laser":
-    "Laser nas coxas em pacote de até 10 sessões, com foco na uniformidade da pele da parte superior das pernas. Cada visita dura cerca de 25 minutos e trata as duas coxas no mesmo protocolo. Combina bem com meia perna ou perna inteira para quem monta o tratamento por etapa. Ambiente feminino, atendimento por ordem de chegada. Informe a unidade no carrinho: o serviço só é usado na loja escolhida.",
-  "bracos-laser":
-    "Braços inteiros a laser, do ombro ao pulso, em até 10 sessões. Sessões ágeis (cerca de 20 minutos) com cobertura completa das duas laterais, para reduzir o pelo escuro e deixar a pele mais uniforme. Indicado para quem usa manga curta e quer resultado que dure além da cera. Atendimento 100% feminino, sem agendamento. Escolha a unidade obrigatória no pedido para resgatar o pacote na loja.",
-  "antebraco-laser":
-    "Laser no antebraço em até 10 sessões, para quem quer tratar só a parte inferior do braço — do cotovelo ao pulso — sem incluir o braço inteiro. A sessão dura cerca de 15 minutos e segue o mesmo protocolo de clínica das demais áreas. Atendimento feminino por ordem de chegada. Selecione a loja no pedido: o serviço fica vinculado à unidade escolhida e não pode ser usado em outra.",
-  "abdomen-laser":
-    "Abdômen a laser em até 10 sessões, com protocolo objetivo para a região da barriga. Cada visita leva cerca de 20 minutos e busca reduzir o pelo e deixar a pele mais lisa ao longo do pacote. Indicado para quem combina com outros tratamentos de corpo ou quer só essa área. Ambiente exclusivo feminino, sem hora marcada. O resgate é feito apenas na unidade informada no pedido.",
-  "costas-laser":
-    "Costas a laser em até 10 sessões, cobrindo a região posterior com protocolo de clínica. A sessão dura cerca de 25 minutos e é feita em ambiente feminino, com higiene e cuidado para a pele das costas, que costuma ser mais ampla. Indicado para quem busca menos pelo e pele mais uniforme nessa área. Atendimento por ordem de chegada. Escolha a loja no carrinho — o pacote só vale na unidade selecionada.",
-  "queixo-laser":
-    "Laser no queixo em até 10 sessões curtas, com cuidado específico para pelos da face inferior. Cada atendimento dura cerca de 10 minutos e respeita a pele mais fina do rosto. Boa opção isolada ou em conjunto com buço e rosto inteiro. Atendimento exclusivo feminino, por ordem de chegada. Informe a unidade obrigatória no pedido para usar o serviço na loja escolhida.",
-  "pescoco-laser":
-    "Pescoço a laser em até 10 sessões rápidas, tratando a linha do pescoço e a transição com o queixo. A sessão leva cerca de 10 minutos e usa protocolo adequado a uma área visível e sensível. Ideal para quem quer o contorno do pescoço mais limpo, sozinho ou junto com o rosto. Atendimento feminino, sem agendamento. O pacote é resgatado somente na unidade selecionada.",
-  "rosto-inteiro-laser":
-    "Rosto inteiro a laser em até 10 sessões: buço, queixo e laterais no mesmo protocolo, para um resultado mais uniforme em toda a face. A sessão dura cerca de 20 minutos e evita tratar só um ponto enquanto o restante do rosto fica com pelo aparente. Combo indicado para quem quer reduzir pinça e cera no dia a dia. Ambiente feminino, por ordem de chegada. Escolha a loja no pedido — o uso é só nessa unidade.",
-  "virilha-comum-laser":
-    "Virilha comum a laser (não total) em até 10 sessões. Trata uma área menor que a virilha total, com sessão mais curta (cerca de 15 minutos) e preço mais acessível. Indicado para quem quer a linha do biquíni mais limpa sem cobrir a região completa. Atendimento feminino, higiene de clínica, sem hora marcada. Unidade obrigatória no pedido: o serviço só pode ser realizado na loja escolhida.",
-  "meia-perna-cera":
-    "Cera na meia perna em sessão avulsa, do joelho para baixo. Resultado no mesmo dia, em cerca de 20 minutos, para panturrilha e canela lisas sem fechar pacote. Boa escolha para o verão, um evento ou para manter entre sessões de laser. Atendimento exclusivo feminino, por ordem de chegada. Selecione a unidade no pedido e compareça apenas nessa loja para o serviço.",
-  "coxa-cera":
-    "Cera na coxa em sessão avulsa, com pele lisa na hora na parte superior da perna. A sessão dura cerca de 20 minutos e usa produto adequado a uma área maior e mais sensível. Pode ser combinada com meia perna no mesmo dia, se você quiser montar o atendimento. Ambiente feminino, sem agendamento. Escolha a loja obrigatória no carrinho — o serviço vale só na unidade selecionada.",
-  "bracos-cera":
-    "Cera nos braços inteiros em sessão avulsa, do ombro ao pulso, sem pacote de laser. Resultado imediato em cerca de 20 minutos, para quem quer os braços lisos no mesmo dia. Indicada para rotina, viagem ou para complementar outro serviço avulso. Atendimento 100% feminino, por ordem de chegada. Informe a unidade no pedido: o atendimento acontece somente na loja escolhida.",
-  "antebraco-cera":
-    "Cera no antebraço em sessão avulsa, opção rápida para a parte inferior do braço — do cotovelo ao pulso. Dura cerca de 15 minutos e entrega pele lisa na hora, sem compromisso de pacote. Ideal para quem não precisa tratar o braço inteiro. Atendimento feminino, sem hora marcada. Selecione a unidade obrigatória no pedido para ser atendida na loja informada.",
-  "abdomen-cera":
-    "Cera no abdômen em sessão avulsa, com resultado imediato na barriga e sem pacote de laser. A sessão leva cerca de 15 minutos, com produto adequado à região. Boa para o dia a dia ou para unir a outro avulso na mesma visita. Ambiente exclusivo feminino, atendimento por ordem de chegada. Escolha a loja no pedido — o serviço só é prestado na unidade selecionada.",
-  "design-sobrancelha":
-    "Design de sobrancelha com cera e pinça para desenhar o olhar com simetria e acabamento limpo. Sessão avulsa de cerca de 20 minutos: a profissional avalia o formato do seu rosto, remove o excesso e finaliza o traço. Não inclui henna. Atendimento feminino, por ordem de chegada, sem agendamento. Selecione a unidade no pedido — o serviço é realizado apenas na loja escolhida.",
-  "sobrancelha-henna":
-    "Design de sobrancelha com henna para preencher falhas, intensificar o traço e valorizar o olhar por alguns dias. A sessão avulsa dura cerca de 30 minutos: desenho, cera ou pinça e aplicação da henna com o tom combinado na hora. Indicado para quem quer mais definição do que o design sozinho. Ambiente feminino, por ordem de chegada. O atendimento acontece somente na unidade obrigatória informada no pedido.",
-  "meia-nadega-cera":
-    "Cera na meia nádega em sessão avulsa, para complementar virilha sem tratar a área inteira. Duração aproximada de 15 minutos. Combine com virilha no mesmo pedido. Escolha a unidade obrigatória — o serviço vale só nessa loja.",
-  "esfoliacao-corpo":
-    "Esfoliação corporal avulsa para renovar a pele e potencializar o resultado da cera. Sessão de cerca de 30 minutos. Atendimento feminino, por ordem de chegada. Selecione a unidade no pedido.",
-  "buco-linha":
-    "Depilação com linha no buço, sessão rápida e precisa no contorno da boca. Cerca de 10 minutos. Informe a unidade obrigatória no pedido.",
-  "sobrancelha-linha":
-    "Design de sobrancelha com linha para um traço nítido. Sessão avulsa de cerca de 20 minutos. O atendimento é só na unidade escolhida.",
-  "body-splash":
-    "Body Splash da linha Pello Menos para o cuidado em casa após a depilação. Foto oficial em produção — cadastro liberado para comercialização.",
-  "peito-laser-masc":
-    "Pacote masculino de laser no peito, até 10 sessões. Tempo médio só da execução do serviço. Escolha a unidade no pedido.",
-  "costas-laser-masc":
-    "Pacote masculino de laser nas costas, até 10 sessões. Atendimento na unidade selecionada no carrinho.",
-  "barba-laser-masc":
-    "Laser na barba em até 10 sessões curtas, catálogo masculino. Resgate somente na loja escolhida.",
-};
-
-function catalogSku(index: number) {
-  return `PM-${String(index + 1).padStart(4, "0")}`;
-}
-
-function catalogCode(id: string) {
-  return `PEL-${id.replace(/-/g, "").toUpperCase()}`;
-}
-
-export const products: Product[] = catalogItems.map((item, index) => ({
-  ...item,
-  duration: item.duration.replace(/^(\d+)/, "~$1"),
-  method: inferMethod(item.id, item.method),
-  audience: item.audience ?? "feminino",
-  sku: catalogSku(index),
-  code: catalogCode(item.id),
-  description:
-    productCopy[item.id] ??
-    `${item.name} na Pello Menos. Atendimento por ordem de chegada na unidade escolhida.`,
-}));
-
-export function getProductById(id: string) {
-  return products.find((item) => item.id === id);
-}
-
 export function getStoreUnitById(id: string) {
   return storeUnits.find((item) => item.id === id);
 }
@@ -618,7 +421,9 @@ export function getStoreUnitById(id: string) {
 const CROSS_SELL: Record<string, string[]> = {
   "virilha-cera": ["meia-nadega-cera", "coxa-cera", "axila-cera"],
   "virilha-laser": ["virilha-comum-laser", "meia-nadega-cera", "coxa-cera"],
-  "virilha-comum-laser": ["virilha-laser", "meia-nadega-cera"],
+  "virilha-comum-laser": ["virilha-laser", "virilha-cavada-laser"],
+  "peito-laser-masc": ["costas-laser-masc", "abdomen-laser-masc", "axilas-laser-masc"],
+  "barba-laser-masc": ["nuca-laser-masc", "pescoco-laser-masc", "orelhas-laser-masc"],
 };
 
 export function relatedProducts(product: Product, limit = 4) {
@@ -635,6 +440,7 @@ export function relatedProducts(product: Product, limit = 4) {
   const sameCategory = products.filter(
     (item) =>
       item.category === product.category &&
+      item.audience === product.audience &&
       item.id !== product.id &&
       !mapped.some((related) => related.id === item.id) &&
       !sameMethod.some((related) => related.id === item.id),
@@ -642,25 +448,33 @@ export function relatedProducts(product: Product, limit = 4) {
   return [...mapped, ...sameMethod, ...sameCategory].slice(0, limit);
 }
 
+const pernaCeraHero = formatHeroPrice(8700);
+const axilasLaserHero = formatHeroPrice(89990);
+const virilhaLaserHero = formatHeroPrice(209000);
+const bracosLaserHero = formatHeroPrice(144000);
+const peitoHero = formatHeroPrice(149500);
+const costasHero = formatHeroPrice(149500);
+const barbaHero = formatHeroPrice(99000);
+
 export const heroSlides: HeroSlide[] = [
   {
     id: "verao",
     badge: "Cera 5% OFF",
     title: "Pernas prontas pra viver",
-    priceReais: "77",
-    priceCents: "31",
+    ...pernaCeraHero,
     cta: "Ver cera",
+    ctaHref: "/#cera",
     image: "/images/hero/hero-campaign-low.png",
     imageAlt: "Mulher na campanha de pernas com cera Pello Menos",
     layout: "copy-top",
   },
   {
     id: "laser-10",
-    badge: "Oferta especial",
+    badge: "5% OFF no e-commerce",
     title: "10 sessões de laser nas axilas",
-    priceReais: "94",
-    priceCents: "90",
+    ...axilasLaserHero,
     cta: "Ver laser",
+    ctaHref: "/#laser",
     image: "/images/hero/hero-campaign-center.png",
     imageAlt: "Mulher no centro da campanha de laser nas axilas Pello Menos",
     layout: "split",
@@ -669,9 +483,9 @@ export const heroSlides: HeroSlide[] = [
     id: "virilha",
     badge: "Mais vendido",
     title: "Virilha total a laser",
-    priceReais: "1.358",
-    priceCents: "50",
+    ...virilhaLaserHero,
     cta: "Ver serviços",
+    ctaHref: "/#produtos",
     image: "/images/hero/hero-campaign-left.png",
     imageAlt: "Mulher à esquerda na campanha de virilha a laser Pello Menos",
     layout: "copy-right",
@@ -680,29 +494,87 @@ export const heroSlides: HeroSlide[] = [
     id: "bracos",
     badge: "Novo no laser",
     title: "Braços inteiros a laser",
-    priceReais: "936",
-    priceCents: "00",
+    ...bracosLaserHero,
     cta: "Ver braços",
+    ctaHref: "/#laser",
     image: "/images/hero/hero-campaign-right.png",
     imageAlt: "Mulher à direita na campanha de braços a laser Pello Menos",
     layout: "copy-left",
   },
 ];
 
-export const categories: Category[] = [
-  { id: "cera", label: "Cera", image: "/images/categories/cat-pernas-v2.png" },
-  { id: "laser", label: "Laser", image: "/images/categories/cat-axilas-v2.png" },
-  { id: "linha", label: "Linha", image: "/images/categories/cat-rosto-v2.png" },
-  { id: "produtos", label: "Produtos", image: "/images/hero/destaque-kits.png" },
-  { id: "virilha", label: "Virilha", image: "/images/categories/cat-virilha-v2.png" },
-  { id: "pernas", label: "Pernas", image: "/images/categories/cat-pernas-v2.png" },
+export const heroSlidesMasculino: HeroSlide[] = [
+  {
+    id: "peito",
+    badge: "Laser 5% OFF",
+    title: "Peito liso, rotina leve",
+    ...peitoHero,
+    cta: "Ver laser",
+    ctaHref: "/masculino#laser",
+    image: "/images/hero/hero-campaign-center.png",
+    imageAlt: "Campanha masculina de laser no peito Pello Menos",
+    layout: "copy-top",
+  },
+  {
+    id: "costas",
+    badge: "Masculino",
+    title: "Costas a laser",
+    ...costasHero,
+    cta: "Ver costas",
+    ctaHref: "/masculino#laser",
+    image: "/images/hero/hero-campaign-right.png",
+    imageAlt: "Campanha masculina de laser nas costas Pello Menos",
+    layout: "split",
+  },
+  {
+    id: "axilas-m",
+    badge: "5% OFF no e-commerce",
+    title: "10 sessões de laser nas axilas",
+    ...axilasLaserHero,
+    cta: "Ver axilas",
+    ctaHref: "/masculino#produtos",
+    image: "/images/hero/hero-campaign-left.png",
+    imageAlt: "Campanha masculina de laser nas axilas Pello Menos",
+    layout: "copy-right",
+  },
+  {
+    id: "barba",
+    badge: "Rosto",
+    title: "Barba a laser",
+    ...barbaHero,
+    cta: "Ver barba",
+    ctaHref: "/masculino#laser",
+    image: "/images/hero/hero-campaign-low.png",
+    imageAlt: "Campanha masculina de laser na barba Pello Menos",
+    layout: "copy-left",
+  },
 ];
 
+export const categories: Category[] = [
+  { id: "cera", label: "Cera", image: "/images/categories/cat-pernas-v2.png", href: "#cera" },
+  { id: "laser", label: "Laser", image: "/images/categories/cat-axilas-v2.png", href: "#laser" },
+  { id: "linha", label: "Linha", image: "/images/categories/cat-rosto-v2.png", href: "#linha" },
+  { id: "esfoliacao", label: "Esfoliação", image: "/images/categories/cat-pernas-v2.png", href: "#esfoliacao" },
+  { id: "produtos", label: "Produtos", image: "/images/hero/destaque-kits.png", href: "#produtos-loja" },
+  { id: "virilha", label: "Virilha", image: "/images/categories/cat-virilha-v2.png", href: "#produtos" },
+];
+
+export const categoriesMasculino: Category[] = [
+  { id: "laser", label: "Laser", image: "/images/categories/cat-axilas-v2.png", href: "#laser" },
+  { id: "produtos", label: "Produtos", image: "/images/hero/destaque-kits.png", href: "#produtos-loja" },
+  { id: "axilas", label: "Axilas", image: "/images/categories/cat-axilas-v2.png", href: "#produtos" },
+  { id: "corpo", label: "Corpo", image: "/images/hero/destaque-combo.png", href: "#produtos" },
+  { id: "rosto", label: "Rosto", image: "/images/categories/cat-rosto-v2.png", href: "#laser" },
+  { id: "pernas", label: "Pernas", image: "/images/categories/cat-pernas-v2.png", href: "#produtos" },
+];
+
+const female = products.filter((item) => item.audience === "feminino");
+const male = products.filter((item) => item.audience === "masculino");
+const officialProducts = products.filter((item) => item.method === "produto");
+
 export const productRails = {
-  ceraOfertas: products.filter(
-    (item) => item.method === "cera" && item.audience === "feminino",
-  ),
-  ceraAreas: products.filter((item) =>
+  ceraOfertas: female.filter((item) => item.method === "cera"),
+  ceraAreas: female.filter((item) =>
     [
       "virilha-cera",
       "axila-cera",
@@ -710,32 +582,36 @@ export const productRails = {
       "buco-cera",
       "meia-nadega-cera",
       "design-sobrancelha",
+      "meia-perna-cera",
+      "coxa-cera",
+      "bracos-cera",
+      "virilha-comum-cera",
+      "nadegas-cera",
+      "queixo-cera",
+      "costas-cera",
+      "virilha-cavada-cera",
     ].includes(item.id),
   ),
-  laserRosto: products.filter(
-    (item) =>
-      item.method === "laser" &&
-      item.audience === "feminino" &&
-      item.category === "rosto",
+  laserRosto: female.filter(
+    (item) => item.method === "laser" && item.category === "rosto",
   ),
-  laserCorpo: products.filter(
-    (item) =>
-      item.method === "laser" &&
-      item.audience === "feminino" &&
-      item.category !== "rosto",
+  laserCorpo: female.filter(
+    (item) => item.method === "laser" && item.category !== "rosto",
   ),
-  esfoliacao: products.filter((item) => item.method === "esfoliacao"),
-  linha: products.filter((item) => item.method === "linha"),
-  produtos: products.filter((item) => item.method === "produto"),
-  masculino: products.filter((item) => item.audience === "masculino"),
+  esfoliacao: female.filter((item) => item.method === "esfoliacao"),
+  linha: female.filter((item) => item.method === "linha"),
+  produtos: officialProducts,
+  masculino: male,
+  laserRostoMasc: male.filter((item) => item.category === "rosto"),
+  laserCorpoMasc: male.filter((item) => item.category !== "rosto"),
 };
 
-export const rectangularBanners = [
+export const rectangularBanners: PromoBannerData[] = [
   {
     id: "semana",
     badge: "Novidade",
     title: "Semana da Beleza",
-    subtitle: "Ofertas nos serviços mais pedidos da casa.",
+    subtitle: "5% OFF em todos os serviços no e-commerce.",
     image: "/images/hero/promo-semana-v2.png",
     imageAlt: "Mulher com axilas lisas na Semana da Beleza",
   },
@@ -746,8 +622,8 @@ export const rectangularBanners = [
     subtitle: "Sessões mais rápidas e resultado duradouro.",
     image: "/images/hero/promo-laser-v3.png",
     imageAlt: "Mulher em sessão de laser em clínica com luz natural",
-    textSide: "right" as const,
-    overlay: "purple" as const,
+    textSide: "right",
+    overlay: "purple",
   },
   {
     id: "olhar",
@@ -756,23 +632,45 @@ export const rectangularBanners = [
     subtitle: "Cera, henna e realce para valorizar o olhar.",
     image: "/images/hero/promo-olhar-v2.png",
     imageAlt: "Mulher com design de sobrancelha em spa com luz e textura",
-    overlay: "purple" as const,
+    overlay: "purple",
   },
 ];
 
-export const squareBanners = [
+export const rectangularBannersMasculino: PromoBannerData[] = [
+  {
+    id: "laser-m",
+    badge: "Tecnologia",
+    title: "Laser masculino",
+    subtitle: "Peito, costas, barba e corpo com 5% OFF no site.",
+    image: "/images/hero/promo-laser-v3.png",
+    imageAlt: "Campanha de laser masculino Pello Menos",
+    textSide: "right",
+    overlay: "purple",
+  },
+  {
+    id: "corpo-m",
+    badge: "Corpo",
+    title: "Costas e peito",
+    subtitle: "As áreas mais pedidas do público masculino.",
+    image: "/images/hero/promo-semana-v2.png",
+    imageAlt: "Campanha de corpo masculino Pello Menos",
+    overlay: "purple",
+  },
+];
+
+export const squareBanners: SquareBannerData[] = [
   {
     id: "kits",
-    title: "Kits Home Care",
-    subtitle: "Cuide-se em casa",
-    badge: "Lançamento",
+    title: "Body Splash",
+    subtitle: "Produto oficial",
+    badge: "Oficial",
     image: "/images/hero/destaque-kits.png",
-    imageAlt: "Mulher cuidando da pele em casa após depilação",
+    imageAlt: "Body Splash oficial Pello Menos",
   },
   {
     id: "verao",
     title: "Pacotes Verão",
-    subtitle: "Até 40% OFF",
+    subtitle: "5% OFF no site",
     image: "/images/hero/destaque-verao.png",
     imageAlt: "Mulher alisando as pernas para o verão",
   },
@@ -800,7 +698,40 @@ export const squareBanners = [
   },
 ];
 
-export const googleReviews = [
+export const squareBannersMasculino: SquareBannerData[] = [
+  {
+    id: "peito",
+    title: "Peito a laser",
+    subtitle: "5% OFF no site",
+    badge: "Destaque",
+    image: "/images/hero/destaque-combo.png",
+    imageAlt: "Destaque de laser no peito",
+  },
+  {
+    id: "verao-m",
+    title: "Pernas e corpo",
+    subtitle: "Pacotes verão",
+    image: "/images/hero/destaque-verao.png",
+    imageAlt: "Destaque de pernas no catálogo masculino",
+  },
+  {
+    id: "barba",
+    title: "Barba a laser",
+    subtitle: "Rosto definido",
+    image: "/images/hero/destaque-olhar.png",
+    imageAlt: "Destaque de barba a laser",
+  },
+  {
+    id: "splash",
+    title: "Body Splash",
+    subtitle: "Produto oficial",
+    badge: "Oficial",
+    image: "/images/hero/destaque-kits.png",
+    imageAlt: "Body Splash oficial Pello Menos",
+  },
+];
+
+export const googleReviews: Review[] = [
   {
     id: "r1",
     name: "Camila R.",
@@ -845,16 +776,64 @@ export const googleReviews = [
   },
 ];
 
+export const googleReviewsMasculino: Review[] = [
+  {
+    id: "m1",
+    name: "Rafael C.",
+    rating: 5,
+    text: "Fiz peito e costas a laser. Atendimento rápido e resultado nítido.",
+    time: "há 2 semanas",
+  },
+  {
+    id: "m2",
+    name: "Bruno M.",
+    rating: 5,
+    text: "Barba a laser mudou a rotina. Ambiente discreto e profissional.",
+    time: "há 1 mês",
+  },
+  {
+    id: "m3",
+    name: "Pedro S.",
+    rating: 4,
+    text: "Axilas a laser valeram o pacote. Comprei pelo site com 5% OFF.",
+    time: "há 3 semanas",
+  },
+  {
+    id: "m4",
+    name: "Lucas T.",
+    rating: 5,
+    text: "Costas lisas depois de poucas sessões. Recomendo a unidade da Tijuca.",
+    time: "há 5 dias",
+  },
+  {
+    id: "m5",
+    name: "Thiago P.",
+    rating: 5,
+    text: "Nuca e pescoço a laser. Saiu no mesmo fluxo, sem hora marcada.",
+    time: "há 4 dias",
+  },
+  {
+    id: "m6",
+    name: "Marcelo L.",
+    rating: 5,
+    text: "Pernas a laser para o verão. Compra pelo e-commerce foi simples.",
+    time: "há 1 semana",
+  },
+];
+
 export const googleBusiness = {
   name: "Pello Menos",
   rating: 4.9,
   count: "2.148",
 };
 
+export const audienceLinks = [
+  { href: "/", label: "Feminino", audience: "feminino" as const },
+  { href: "/masculino", label: "Masculino", audience: "masculino" as const },
+];
+
 export const navLinks = [
-  { href: "/", label: "Início" },
   { href: "/#produtos", label: "Serviços" },
-  { href: "/masculino", label: "Masculino" },
   { href: "/carrinho", label: "Carrinho" },
   { href: "/checkout", label: "Pagamento" },
 ];

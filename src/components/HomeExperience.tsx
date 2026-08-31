@@ -3,40 +3,68 @@
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import Link from "next/link";
 import { useMemo, useRef, useState } from "react";
 import { CategoryCircles } from "@/components/CategoryCircles";
 import { GoogleReviews } from "@/components/GoogleReviews";
 import { HeroBanner } from "@/components/HeroBanner";
-import { Icon } from "@/components/Icon";
 import { ProductGrid } from "@/components/ProductGrid";
 import { PromoBanner } from "@/components/PromoBanner";
 import { SquareBannerRail } from "@/components/SquareBannerRail";
-import { productRails, rectangularBanners, type ProductMethod } from "@/lib/data";
+import {
+  categories,
+  categoriesMasculino,
+  googleReviews,
+  googleReviewsMasculino,
+  heroSlides,
+  heroSlidesMasculino,
+  productRails,
+  productsHref,
+  rectangularBanners,
+  rectangularBannersMasculino,
+  squareBanners,
+  squareBannersMasculino,
+  type ProductAudience,
+  type ProductMethod,
+} from "@/lib/data";
 
 gsap.registerPlugin(useGSAP, ScrollTrigger);
 
-const filters: { id: "todos" | ProductMethod; label: string }[] = [
+const femaleFilters: { id: "todos" | ProductMethod; label: string }[] = [
   { id: "todos", label: "Todos" },
   { id: "cera", label: "Cera" },
   { id: "laser", label: "Laser" },
   { id: "linha", label: "Linha" },
+  { id: "esfoliacao", label: "Esfoliação" },
   { id: "produto", label: "Produtos" },
 ];
 
-export function HomeExperience() {
+const maleFilters: { id: "todos" | ProductMethod; label: string }[] = [
+  { id: "todos", label: "Todos" },
+  { id: "laser", label: "Laser" },
+  { id: "produto", label: "Produtos" },
+];
+
+type Props = {
+  audience?: ProductAudience;
+};
+
+export function HomeExperience({ audience = "feminino" }: Props) {
   const root = useRef<HTMLDivElement>(null);
+  const isMale = audience === "masculino";
+  const filters = isMale ? maleFilters : femaleFilters;
   const [filter, setFilter] = useState<(typeof filters)[number]["id"]>("todos");
+  const catalogHref = productsHref(audience);
 
   const show = useMemo(
     () => ({
-      cera: filter === "todos" || filter === "cera",
+      cera: !isMale && (filter === "todos" || filter === "cera"),
       laser: filter === "todos" || filter === "laser",
-      linha: filter === "todos" || filter === "linha",
+      linha: !isMale && (filter === "todos" || filter === "linha"),
+      esfoliacao: !isMale && (filter === "todos" || filter === "esfoliacao"),
       produto: filter === "todos" || filter === "produto",
       extra: filter === "todos",
     }),
-    [filter],
+    [filter, isMale],
   );
 
   useGSAP(
@@ -73,8 +101,8 @@ export function HomeExperience() {
 
   return (
     <div ref={root}>
-      <HeroBanner />
-      <CategoryCircles />
+      <HeroBanner slides={isMale ? heroSlidesMasculino : heroSlides} />
+      <CategoryCircles items={isMale ? categoriesMasculino : categories} />
       <div
         id="produtos"
         className="mx-auto flex max-w-7xl scroll-mt-28 flex-wrap gap-2 px-container-margin pb-2"
@@ -99,7 +127,7 @@ export function HomeExperience() {
           id="cera"
           eyebrow="Cera 5% OFF"
           title="Cera em destaque"
-          subtitle="O que mais vende na rede, com desconto de 5%"
+          subtitle="Preço da tabela com 5% de desconto no e-commerce"
           items={productRails.ceraOfertas}
           muted
         />
@@ -108,14 +136,15 @@ export function HomeExperience() {
         <section className="js-reveal mx-auto max-w-7xl px-container-margin py-8">
           <div className="rounded-3xl bg-primary px-6 py-8 text-on-primary md:px-10">
             <p className="font-label-md text-label-md text-[#e8b86d] uppercase">
-              Clube Pello Menos
+              {isMale ? "E-commerce masculino" : "Clube Pello Menos"}
             </p>
             <h2 className="mt-2 font-[family-name:var(--font-display)] text-headline-md md:text-headline-lg">
-              Planos de assinatura
+              {isMale ? "5% OFF em todo o catálogo" : "5% OFF no e-commerce"}
             </h2>
             <p className="mt-2 max-w-2xl text-on-primary/80">
-              Recorrência para a cliente voltar todo mês. O clube entra no
-              pagamento na etapa seguinte — aqui o destaque já fica na home.
+              {isMale
+                ? "Laser para peito, costas, barba e corpo com o preço original da tabela e 5% de desconto na compra pelo site."
+                : "Compre pelo site e pague 5% a menos que o preço original da tabela. Cera e esfoliação continuam exclusivas do público feminino."}
             </p>
           </div>
         </section>
@@ -124,35 +153,55 @@ export function HomeExperience() {
         <ProductGrid
           eyebrow="Áreas mais pedidas"
           title="Cera por região"
-          subtitle="Virilha, axila, pernas e olhar — sempre separados do laser"
+          subtitle="Virilha, axila, pernas, corpo e olhar — todos os serviços da tabela"
           items={productRails.ceraAreas}
         />
       ) : null}
-      {show.laser ? <PromoBanner banner={rectangularBanners[1]} /> : null}
+      {show.laser ? (
+        <PromoBanner
+          banner={
+            isMale ? rectangularBannersMasculino[0]! : rectangularBanners[1]!
+          }
+        />
+      ) : null}
       {show.laser ? (
         <ProductGrid
           id="laser"
           eyebrow="Laser"
-          title="Laser no rosto"
-          subtitle="Pacotes nas áreas do rosto, depois da cera"
-          items={productRails.laserRosto}
+          title={isMale ? "Laser no rosto" : "Laser no rosto"}
+          subtitle={
+            isMale
+              ? "Barba, nuca, pescoço, orelhas e nariz"
+              : "Pacotes nas áreas do rosto, depois da cera"
+          }
+          items={isMale ? productRails.laserRostoMasc : productRails.laserRosto}
         />
       ) : null}
       {show.laser ? (
         <ProductGrid
           eyebrow="Laser"
-          title="Laser no corpo"
-          subtitle="Braços, pernas e corpo em carrossel próprio"
-          items={productRails.laserCorpo}
+          title={isMale ? "Laser no corpo" : "Laser no corpo"}
+          subtitle={
+            isMale
+              ? "Peito, costas, axilas, braços, pernas e virilha"
+              : "Braços, pernas e corpo em carrossel próprio"
+          }
+          items={isMale ? productRails.laserCorpoMasc : productRails.laserCorpo}
           muted
         />
       ) : null}
-      {show.extra ? <SquareBannerRail /> : null}
-      {show.extra && productRails.esfoliacao.length > 0 ? (
+      {show.extra ? (
+        <SquareBannerRail
+          banners={isMale ? squareBannersMasculino : squareBanners}
+          productsHref={catalogHref}
+        />
+      ) : null}
+      {show.esfoliacao ? (
         <ProductGrid
+          id="esfoliacao"
           eyebrow="Esfoliação"
           title="Pele pronta para a cera"
-          subtitle="Serviço de esfoliação para completar o atendimento"
+          subtitle="Todas as áreas da tabela — só no catálogo feminino"
           items={productRails.esfoliacao}
         />
       ) : null}
@@ -161,7 +210,7 @@ export function HomeExperience() {
           id="linha"
           eyebrow="Linha"
           title="Depilação com linha"
-          subtitle="Buço e sobrancelha com precisão"
+          subtitle="Buço, queixo e faixa — valores da tabela com 5% OFF"
           items={productRails.linha}
           muted
         />
@@ -170,34 +219,19 @@ export function HomeExperience() {
         <ProductGrid
           id="produtos-loja"
           eyebrow="Produtos"
-          title="Body Splash"
-          subtitle="Linha para casa — foto oficial em produção"
+          title="Produto oficial"
+          subtitle="Body Splash Pello Menos para usar em casa"
           items={productRails.produtos}
         />
       ) : null}
-      {show.extra ? <PromoBanner banner={rectangularBanners[2]} /> : null}
       {show.extra ? (
-        <section className="js-reveal mx-auto max-w-7xl px-container-margin py-8">
-          <Link
-            href="/masculino"
-            className="flex items-center justify-between rounded-3xl border border-primary/20 bg-surface px-6 py-6 shadow-[0_18px_40px_rgba(58,10,60,0.08)]"
-          >
-            <div>
-              <p className="font-label-md text-label-md text-secondary uppercase">
-                Masculino
-              </p>
-              <h2 className="mt-1 font-[family-name:var(--font-display)] text-headline-md text-primary">
-                Catálogo masculino
-              </h2>
-              <p className="mt-1 text-sm text-on-surface-variant">
-                Serviços de teste para o público masculino, como na apresentação.
-              </p>
-            </div>
-            <Icon name="arrowRight" size={22} className="text-primary" />
-          </Link>
-        </section>
+        <PromoBanner
+          banner={
+            isMale ? rectangularBannersMasculino[1]! : rectangularBanners[2]!
+          }
+        />
       ) : null}
-      <GoogleReviews />
+      <GoogleReviews reviews={isMale ? googleReviewsMasculino : googleReviews} />
     </div>
   );
 }

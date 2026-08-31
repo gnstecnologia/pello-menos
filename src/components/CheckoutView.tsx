@@ -48,6 +48,7 @@ export function CheckoutView() {
   const { cartItems, subtotalCents } = useStore();
   const [done, setDone] = useState(false);
   const unit = cartItems[0]?.unit;
+  const qtyInvalid = cartItems.some((item) => item.qty > 1);
 
   if (cartItems.length === 0 && !done) {
     return (
@@ -66,6 +67,27 @@ export function CheckoutView() {
           className="btn-lux btn-lux-primary mt-8 inline-flex items-center gap-2 rounded-full px-8 py-3 font-label-md text-label-md text-on-primary uppercase"
         >
           Ver produtos
+          <Icon name="arrowRight" size={16} />
+        </Link>
+      </main>
+    );
+  }
+
+  if (qtyInvalid) {
+    return (
+      <main className="mx-auto flex max-w-lg flex-col items-center px-container-margin py-20 text-center">
+        <h1 className="font-[family-name:var(--font-display)] text-headline-md text-primary">
+          Ajuste a quantidade
+        </h1>
+        <p className="mt-2 text-on-surface-variant">
+          Não dá para pagar com mais de 1 unidade por serviço. Volte ao carrinho
+          e altere todos os itens de uma vez.
+        </p>
+        <Link
+          href="/carrinho"
+          className="btn-lux btn-lux-primary mt-8 inline-flex items-center gap-2 rounded-full px-8 py-3 font-label-md text-label-md text-on-primary uppercase"
+        >
+          Ir ao carrinho
           <Icon name="arrowRight" size={16} />
         </Link>
       </main>

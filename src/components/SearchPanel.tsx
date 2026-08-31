@@ -2,9 +2,17 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Icon } from "@/components/Icon";
-import { categories, formatBRL, products } from "@/lib/data";
+import {
+  audienceFromPath,
+  categories,
+  categoriesMasculino,
+  formatBRL,
+  productsForAudience,
+  productsHref,
+} from "@/lib/data";
 
 type Props = {
   open: boolean;
@@ -12,6 +20,10 @@ type Props = {
 };
 
 export function SearchPanel({ open, onClose }: Props) {
+  const pathname = usePathname();
+  const audience = audienceFromPath(pathname);
+  const catalog = useMemo(() => productsForAudience(audience), [audience]);
+  const categoryList = audience === "masculino" ? categoriesMasculino : categories;
   const inputRef = useRef<HTMLInputElement>(null);
   const [query, setQuery] = useState("");
   const [recent, setRecent] = useState<string[]>([]);
@@ -41,7 +53,7 @@ export function SearchPanel({ open, onClose }: Props) {
 
   const results = useMemo(() => {
     if (!normalized) return [];
-    return products.filter((product) => {
+    return catalog.filter((product) => {
       const haystack = [
         product.name,
         product.duration,
@@ -56,14 +68,14 @@ export function SearchPanel({ open, onClose }: Props) {
         .toLowerCase();
       return haystack.includes(normalized);
     });
-  }, [normalized]);
+  }, [catalog, normalized]);
 
   const categoryHits = useMemo(() => {
     if (!normalized) return [];
-    return categories.filter((category) =>
+    return categoryList.filter((category) =>
       category.label.toLowerCase().includes(normalized),
     );
-  }, [normalized]);
+  }, [categoryList, normalized]);
 
   function remember(term: string) {
     const clean = term.trim();
@@ -75,7 +87,11 @@ export function SearchPanel({ open, onClose }: Props) {
 
   function goToProducts() {
     onClose();
-    document.getElementById("produtos")?.scrollIntoView({ behavior: "smooth" });
+    if (pathname === "/" || pathname === "/masculino") {
+      document.getElementById("produtos")?.scrollIntoView({ behavior: "smooth" });
+      return;
+    }
+    window.location.href = productsHref(audience);
   }
 
   if (!open) return null;
@@ -88,7 +104,7 @@ export function SearchPanel({ open, onClose }: Props) {
         aria-label="Fechar busca"
         onClick={onClose}
       />
-      <div className="absolute inset-x-0 top-[132px] max-h-[min(calc(88vh-132px),720px)] overflow-y-auto rounded-b-3xl bg-white shadow-2xl md:top-[152px] md:max-h-[min(calc(88vh-152px),720px)]">
+      <div className="absolute inset-x-0 top-[168px] max-h-[min(calc(88vh-168px),720px)] overflow-y-auto rounded-b-3xl bg-white shadow-2xl md:top-[188px] md:max-h-[min(calc(88vh-188px),720px)]">
         <div className="mx-auto max-w-7xl px-container-margin py-6">
           <div className="flex items-center gap-3 rounded-full border border-primary/20 bg-surface-container-low px-4 py-3">
             <Icon name="search" size={20} className="text-primary" />
@@ -120,7 +136,10 @@ export function SearchPanel({ open, onClose }: Props) {
                 Sugestões
               </p>
               <div className="mt-3 flex flex-wrap gap-2">
-                {["Axilas", "Virilha", "Pernas", "Braços", "Abdômen", "Sobrancelha", "Laser", "Cera"].map((term) => (
+                {(audience === "masculino"
+                  ? ["Axilas", "Peito", "Costas", "Barba", "Pernas", "Laser"]
+                  : ["Axilas", "Virilha", "Pernas", "Braços", "Abdômen", "Sobrancelha", "Laser", "Cera"]
+                ).map((term) => (
                   <button
                     key={term}
                     type="button"

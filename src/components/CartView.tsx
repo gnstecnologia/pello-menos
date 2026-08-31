@@ -2,15 +2,26 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { useState } from "react";
 import { Icon } from "@/components/Icon";
 import { useStore } from "@/components/StoreProvider";
 import { formatBRL } from "@/lib/data";
 
 export function CartView() {
-  const { cartItems, cartCount, subtotalCents, setQty, removeFromCart, clearCart } =
-    useStore();
+  const {
+    cartItems,
+    cartCount,
+    subtotalCents,
+    setQty,
+    setAllQty,
+    removeFromCart,
+    clearCart,
+  } = useStore();
+  const [bulkQty, setBulkQty] = useState("1");
   const cartUnit = cartItems[0]?.unit;
   const mixedUnits = cartItems.some((item) => item.unit.id !== cartUnit?.id);
+  const qtyInvalid = cartItems.some((item) => item.qty > 1);
+  const canCheckout = !mixedUnits && !qtyInvalid;
 
   if (cartItems.length === 0) {
     return (
@@ -52,6 +63,39 @@ export function CartView() {
           Há serviços de unidades diferentes. Esvazie o carrinho ou mantenha só
           uma loja para finalizar.
         </p>
+      ) : null}
+      {qtyInvalid ? (
+        <div className="mt-4 rounded-2xl border border-primary/30 bg-surface-container-low px-4 py-4 text-sm text-primary">
+          <p>
+            Não dá para finalizar com mais de 1 unidade por serviço. Cada item
+            precisa ficar com quantidade 1.
+          </p>
+          <label className="mt-3 block text-xs font-semibold uppercase tracking-wide text-on-surface">
+            Alterar a quantidade de todos os itens
+          </label>
+          <div className="mt-2 flex flex-wrap items-center gap-2">
+            <input
+              type="number"
+              min={1}
+              step={1}
+              value={bulkQty}
+              onChange={(event) => setBulkQty(event.target.value)}
+              className="w-24 rounded-xl border border-outline/50 bg-surface px-3 py-2 text-on-surface outline-none"
+              aria-label="Quantidade para todos os itens"
+            />
+            <button
+              type="button"
+              onClick={() => {
+                const next = Math.max(1, Number.parseInt(bulkQty, 10) || 1);
+                setBulkQty(String(next));
+                setAllQty(next);
+              }}
+              className="rounded-full bg-primary px-4 py-2 text-xs font-semibold text-on-primary uppercase"
+            >
+              Aplicar em todos
+            </button>
+          </div>
+        </div>
       ) : null}
       <div className="mt-8 grid gap-8 lg:grid-cols-[minmax(0,1fr)_340px]">
         <div className="space-y-4">
@@ -158,13 +202,19 @@ export function CartView() {
           >
             Continuar comprando
           </Link>
-          <Link
-            href="/checkout"
-            className="btn-lux btn-lux-gold mt-3 flex w-full items-center justify-center gap-2 rounded-full py-3.5 font-label-md text-label-md text-on-secondary-container uppercase"
-          >
-            Ir para o pagamento
-            <Icon name="arrowRight" size={16} />
-          </Link>
+          {canCheckout ? (
+            <Link
+              href="/checkout"
+              className="btn-lux btn-lux-gold mt-3 flex w-full items-center justify-center gap-2 rounded-full py-3.5 font-label-md text-label-md text-on-secondary-container uppercase"
+            >
+              Ir para o pagamento
+              <Icon name="arrowRight" size={16} />
+            </Link>
+          ) : (
+            <p className="mt-3 rounded-2xl bg-surface-container-low px-3 py-3 text-center text-xs text-primary">
+              Ajuste a quantidade para 1 em todos os itens para ir ao pagamento.
+            </p>
+          )}
         </aside>
       </div>
     </main>

@@ -1,14 +1,12 @@
-import { ProductGrid } from "@/components/ProductGrid";
-import { productRails } from "@/lib/data";
+import type { Metadata } from "next";
+import { HomeExperience } from "@/components/HomeExperience";
 
-export default function MaleCatalogPage() {
-  return (
-    <ProductGrid
-      id="masculino"
-      eyebrow="Masculino"
-      title="Catálogo masculino"
-      subtitle="Serviços de teste para o público masculino, como na apresentação."
-      items={productRails.masculino}
-    />
-  );
+export const metadata: Metadata = {
+  title: "Masculino | Pello Menos",
+  description:
+    "Depilação a laser masculina com 5% de desconto no e-commerce. Peito, costas, barba e corpo.",
+};
+
+export default function MaleHomePage() {
+  return <HomeExperience audience="masculino" />;
 }

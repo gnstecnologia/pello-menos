@@ -9,7 +9,9 @@ import { useStore } from "@/components/StoreProvider";
 import {
   formatBRL,
   getInstallment,
+  homeHref,
   installmentHint,
+  productsHref,
   relatedProducts,
   storeUnits,
   type Product,
@@ -48,11 +50,11 @@ export function ProductPageView({ product }: Props) {
   return (
     <main className="mx-auto max-w-6xl px-container-margin py-8 md:py-12">
       <nav className="text-xs text-on-surface-variant">
-        <Link href="/" className="hover:text-primary">
+        <Link href={homeHref(product.audience)} className="hover:text-primary">
           Início
         </Link>
         <span className="px-2">/</span>
-        <Link href="/#produtos" className="hover:text-primary">
+        <Link href={productsHref(product.audience)} className="hover:text-primary">
           Serviços
         </Link>
         <span className="px-2">/</span>

@@ -4,9 +4,14 @@ import Image from "next/image";
 import { useRef } from "react";
 import { BadgeTag } from "@/components/BadgeTag";
 import { CarouselArrows } from "@/components/CarouselArrows";
-import { squareBanners } from "@/lib/data";
+import type { SquareBannerData } from "@/lib/data";
 
-export function SquareBannerRail() {
+type Props = {
+  banners: SquareBannerData[];
+  productsHref: string;
+};
+
+export function SquareBannerRail({ banners, productsHref }: Props) {
   const scroller = useRef<HTMLDivElement>(null);
 
   function scroll(direction: number) {
@@ -35,10 +40,10 @@ export function SquareBannerRail() {
           ref={scroller}
           className="flex snap-x snap-mandatory gap-4 overflow-x-auto px-12 pb-2 hide-scrollbar sm:px-14 md:px-16"
         >
-          {squareBanners.map((banner) => (
+          {banners.map((banner) => (
             <a
               key={banner.id}
-              href="#produtos"
+              href={productsHref}
               data-carousel-card
               data-square-banner
               className="group relative aspect-square w-[min(72vw,300px)] shrink-0 snap-start overflow-hidden rounded-2xl sm:w-[calc((100%-4.5rem-16px)/2)] lg:w-[calc((100%-5rem-32px)/3)]"

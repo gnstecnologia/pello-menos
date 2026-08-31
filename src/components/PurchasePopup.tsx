@@ -4,11 +4,13 @@ import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
 import Image from "next/image";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import { audienceFromPath } from "@/lib/data";
 
 gsap.registerPlugin(useGSAP);
 
-const purchases = [
+const femalePurchases = [
   {
     name: "Camila R.",
     city: "Copacabana, RJ",
@@ -51,13 +53,64 @@ const purchases = [
   },
 ];
 
+const malePurchases = [
+  {
+    name: "Rafael C.",
+    city: "Copacabana, RJ",
+    product: "Peito Laser",
+    href: "/produto/peito-laser-masc",
+    image: "/images/social/cliente-1.png",
+    when: "há 2 minutos",
+  },
+  {
+    name: "Bruno M.",
+    city: "Tijuca, RJ",
+    product: "Costas Laser",
+    href: "/produto/costas-laser-masc",
+    image: "/images/social/cliente-2.png",
+    when: "há 6 minutos",
+  },
+  {
+    name: "Pedro S.",
+    city: "Barra da Tijuca, RJ",
+    product: "Axilas Laser",
+    href: "/produto/axilas-laser-masc",
+    image: "/images/social/cliente-3.png",
+    when: "há 11 minutos",
+  },
+  {
+    name: "Lucas T.",
+    city: "Avenida Paulista, SP",
+    product: "Barba Laser",
+    href: "/produto/barba-laser-masc",
+    image: "/images/social/cliente-4.png",
+    when: "há 18 minutos",
+  },
+  {
+    name: "Thiago P.",
+    city: "Campo Grande, RJ",
+    product: "Nuca Laser",
+    href: "/produto/nuca-laser-masc",
+    image: "/images/social/cliente-5.png",
+    when: "há 24 minutos",
+  },
+];
+
 const CYCLE_MS = 13000;
 const VISIBLE_MS = 8000;
 
 export function PurchasePopup() {
+  const pathname = usePathname();
+  const audience = audienceFromPath(pathname);
+  const purchases = audience === "masculino" ? malePurchases : femalePurchases;
   const [index, setIndex] = useState(0);
   const [visible, setVisible] = useState(true);
   const cardRef = useRef<HTMLAnchorElement>(null);
+
+  useEffect(() => {
+    setIndex(0);
+    setVisible(true);
+  }, [audience]);
 
   useEffect(() => {
     const hide = window.setTimeout(() => setVisible(false), VISIBLE_MS);
@@ -70,7 +123,7 @@ export function PurchasePopup() {
       window.clearTimeout(hide);
       window.clearTimeout(next);
     };
-  }, [index]);
+  }, [index, purchases.length]);
 
   useGSAP(
     () => {
@@ -104,6 +157,7 @@ export function PurchasePopup() {
   );
 
   const item = purchases[index];
+  if (!item) return null;
 
   return (
     <div className="fixed bottom-24 left-4 z-[60] w-[min(calc(100vw-2rem),320px)] md:bottom-8">

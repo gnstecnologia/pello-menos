@@ -5,7 +5,7 @@ import gsap from "gsap";
 import Image from "next/image";
 import { useRef, useState } from "react";
 import { Icon } from "@/components/Icon";
-import { heroSlides, type HeroSlide } from "@/lib/data";
+import { type HeroSlide } from "@/lib/data";
 import { BadgeTag } from "@/components/BadgeTag";
 
 gsap.registerPlugin(useGSAP);
@@ -25,7 +25,7 @@ function PriceBlock({ slide, align = "end" }: { slide: HeroSlide; align?: "start
 function Cta({ slide }: { slide: HeroSlide }) {
   return (
     <a
-      href="#produtos"
+      href={slide.ctaHref}
       className="btn-lux btn-lux-gold inline-flex w-fit items-center gap-2 rounded-full px-7 py-3 font-label-md text-label-md text-on-secondary-container uppercase"
     >
       {slide.cta}
@@ -92,10 +92,14 @@ function HeroCopy({ slide }: { slide: HeroSlide }) {
   );
 }
 
-export function HeroBanner() {
+type Props = {
+  slides: HeroSlide[];
+};
+
+export function HeroBanner({ slides }: Props) {
   const root = useRef<HTMLElement>(null);
   const [index, setIndex] = useState(0);
-  const slide = heroSlides[index];
+  const slide = slides[index] ?? slides[0];
 
   useGSAP(
     () => {
@@ -111,12 +115,12 @@ export function HeroBanner() {
       });
 
       const timer = window.setInterval(() => {
-        setIndex((current) => (current + 1) % heroSlides.length);
+        setIndex((current) => (current + 1) % slides.length);
       }, 6400);
 
       return () => window.clearInterval(timer);
     },
-    { scope: root },
+    { scope: root, dependencies: [slides.length] },
   );
 
   useGSAP(
@@ -133,6 +137,8 @@ export function HeroBanner() {
     { scope: root, dependencies: [index] },
   );
 
+  if (!slide) return null;
+
   const arrowClass =
     "absolute top-1/2 z-20 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-[#e8b86d]/50 bg-black/25 text-[#e8b86d] backdrop-blur-sm md:h-12 md:w-12";
 
@@ -142,7 +148,7 @@ export function HeroBanner() {
       id="inicio"
       className="relative h-[420px] w-full overflow-hidden bg-[#3a0628] md:h-[640px]"
     >
-      {heroSlides.map((item, slideIndex) => (
+      {slides.map((item, slideIndex) => (
         <div
           key={item.id}
           className={`absolute inset-0 transition-opacity duration-700 ${slideIndex === index ? "opacity-100" : "opacity-0"}`}
@@ -161,7 +167,7 @@ export function HeroBanner() {
       <button
         type="button"
         aria-label="Banner anterior"
-        onClick={() => setIndex((current) => (current - 1 + heroSlides.length) % heroSlides.length)}
+        onClick={() => setIndex((current) => (current - 1 + slides.length) % slides.length)}
         className={`${arrowClass} left-2 md:left-5`}
       >
         <Icon name="chevronLeft" size={22} />
@@ -169,13 +175,13 @@ export function HeroBanner() {
       <button
         type="button"
         aria-label="Próximo banner"
-        onClick={() => setIndex((current) => (current + 1) % heroSlides.length)}
+        onClick={() => setIndex((current) => (current + 1) % slides.length)}
         className={`${arrowClass} right-2 md:right-5`}
       >
         <Icon name="chevronRight" size={22} />
       </button>
       <div className="absolute bottom-5 left-1/2 z-10 flex -translate-x-1/2 gap-2">
-        {heroSlides.map((item, slideIndex) => (
+        {slides.map((item, slideIndex) => (
           <button
             key={item.id}
             type="button"

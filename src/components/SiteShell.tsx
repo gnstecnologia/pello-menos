@@ -14,7 +14,7 @@ export function SiteShell({ children }: { children: React.ReactNode }) {
   const [authOpen, setAuthOpen] = useState(false);
 
   return (
-    <div className="flex min-h-screen flex-col overflow-x-hidden bg-background pt-[118px] pb-24 font-sans text-on-background md:pt-[128px] md:pb-0">
+    <div className="flex min-h-screen flex-col overflow-x-hidden bg-background pt-[154px] pb-24 font-sans text-on-background md:pt-[164px] md:pb-0">
       <Header onOpenAuth={() => setAuthOpen(true)} />
       <div className="flex-1">{children}</div>
       <Footer onOpenAuth={() => setAuthOpen(true)} />

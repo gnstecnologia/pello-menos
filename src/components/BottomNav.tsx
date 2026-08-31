@@ -4,16 +4,18 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Icon, type IconName } from "@/components/Icon";
 import { useStore } from "@/components/StoreProvider";
-
-const items: { href: string; icon: IconName; label: string }[] = [
-  { href: "/", icon: "house", label: "Início" },
-  { href: "/carrinho", icon: "shoppingCart", label: "Carrinho" },
-  { href: "/checkout", icon: "creditCard", label: "Pagamento" },
-];
+import { audienceFromPath, homeHref } from "@/lib/data";
 
 export function BottomNav() {
   const pathname = usePathname();
   const { cartCount } = useStore();
+  const home = homeHref(audienceFromPath(pathname));
+
+  const items: { href: string; icon: IconName; label: string }[] = [
+    { href: home, icon: "house", label: "Início" },
+    { href: "/carrinho", icon: "shoppingCart", label: "Carrinho" },
+    { href: "/checkout", icon: "creditCard", label: "Pagamento" },
+  ];
 
   return (
     <nav className="fixed bottom-0 left-0 z-50 flex w-full items-center justify-around border-t border-outline/40 bg-surface/95 px-2 py-2.5 backdrop-blur-md md:hidden">
