@@ -741,7 +741,7 @@ export const rectangularBannersMasculino: PromoBannerData[] = [
 export const squareBanners: SquareBannerData[] = [
   {
     id: "verao",
-    title: "Pacotes Verão",
+    title: "Combos Verão",
     subtitle: "5% OFF no site",
     image: "/images/hero/destaque-verao.png",
     imagePosition: "50% 30%",
@@ -787,7 +787,7 @@ export const squareBannersMasculino: SquareBannerData[] = [
   {
     id: "verao-m",
     title: "Pernas e corpo",
-    subtitle: "Pacotes verão",
+    subtitle: "Combos verão",
     image: M.destaqueVerao,
     imagePosition: "50% 30%",
     imageAlt: "Destaque de pernas no catálogo masculino",
