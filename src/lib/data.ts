@@ -213,6 +213,36 @@ const I = {
   verao: "/images/hero/destaque-verao.png",
 };
 
+const M = {
+  heroPeito: "/images/hero/male/hero-peito.png",
+  heroCostas: "/images/hero/male/hero-costas.png",
+  heroAxilas: "/images/hero/male/hero-axilas.png",
+  heroBarba: "/images/hero/male/hero-barba.png",
+  promoLaser: "/images/hero/male/promo-laser.png",
+  promoCorpo: "/images/hero/male/promo-corpo.png",
+  destaquePeito: "/images/hero/male/destaque-peito.png",
+  destaqueVerao: "/images/hero/male/destaque-verao.png",
+  destaqueBarba: "/images/hero/male/destaque-barba.png",
+  destaqueSplash: "/images/hero/male/destaque-splash.png",
+  catLaser: "/images/categories/male/cat-laser.png",
+  catProdutos: "/images/categories/male/cat-produtos.png",
+  catAxilas: "/images/categories/male/cat-axilas.png",
+  catCorpo: "/images/categories/male/cat-corpo.png",
+  catRosto: "/images/categories/male/cat-rosto.png",
+  catPernas: "/images/categories/male/cat-pernas.png",
+  peito: "/images/products/male/peito.png",
+  costas: "/images/products/male/costas.png",
+  barba: "/images/products/male/barba.png",
+  axilas: "/images/products/male/axilas.png",
+  abdomen: "/images/products/male/abdomen.png",
+  bracos: "/images/products/male/bracos.png",
+  pernas: "/images/products/male/pernas.png",
+  nuca: "/images/products/male/nuca.png",
+  virilha: "/images/products/male/virilha.png",
+  pescoco: "/images/products/male/pescoco.png",
+  antebraco: "/images/products/male/antebraco.png",
+};
+
 const catalogItems: ProductSeed[] = [
   // Cera feminino — preço cartão da tabela RJ-SP (original)
   { id: "abdomen-cera", name: "Abdômen – Cera", duration: "15 min • Avulso", originalCents: 5990, category: "corpo", image: I.abdomenCera, imageAlt: "Abdômen após cera" },
@@ -301,20 +331,20 @@ const catalogItems: ProductSeed[] = [
   { id: "body-splash", name: "Body Splash Pello Menos", duration: "Uso diário", originalCents: 6900, badge: "Oficial", category: "produtos", method: "produto", image: I.kits, imageAlt: "Body Splash oficial Pello Menos" },
 
   // Laser masculino — original da tabela/loja para a área equivalente; sem cera e sem esfoliação
-  { id: "axilas-laser-masc", name: "Axilas Laser", duration: "15 min • até 10 sessões", originalCents: 89990, badge: "5% OFF", highlight: true, category: "axilas", method: "laser", audience: "masculino", image: I.axilasLaser, imageAlt: "Axilas a laser no catálogo masculino" },
-  { id: "peito-laser-masc", name: "Peito Laser", duration: "25 min • até 10 sessões", originalCents: 149500, badge: "Masculino", highlight: true, category: "corpo", method: "laser", audience: "masculino", image: I.abdomenLaser, imageAlt: "Peito a laser no catálogo masculino" },
-  { id: "costas-laser-masc", name: "Costas Laser", duration: "30 min • até 10 sessões", originalCents: 149500, badge: "Masculino", highlight: true, category: "corpo", method: "laser", audience: "masculino", image: I.costasLaser, imageAlt: "Costas a laser no catálogo masculino" },
-  { id: "abdomen-laser-masc", name: "Abdômen Laser", duration: "20 min • até 10 sessões", originalCents: 102000, category: "corpo", method: "laser", audience: "masculino", image: I.abdomenLaser, imageAlt: "Abdômen a laser no catálogo masculino" },
-  { id: "barba-laser-masc", name: "Barba Laser", duration: "15 min • até 10 sessões", originalCents: 99000, badge: "Rosto", highlight: true, category: "rosto", method: "laser", audience: "masculino", image: I.queixoLaser, imageAlt: "Barba a laser no catálogo masculino" },
-  { id: "nuca-laser-masc", name: "Nuca Laser", duration: "10 min • até 10 sessões", originalCents: 70300, category: "rosto", method: "laser", audience: "masculino", image: I.pescocoLaser, imageAlt: "Nuca a laser no catálogo masculino" },
-  { id: "pescoco-laser-masc", name: "Pescoço Laser", duration: "10 min • até 10 sessões", originalCents: 70300, category: "rosto", method: "laser", audience: "masculino", image: I.pescocoLaser, imageAlt: "Pescoço a laser no catálogo masculino" },
-  { id: "orelhas-laser-masc", name: "Orelhas Laser", duration: "10 min • até 10 sessões", originalCents: 43990, category: "rosto", method: "laser", audience: "masculino", image: I.pescocoLaser, imageAlt: "Orelhas a laser no catálogo masculino" },
-  { id: "nariz-laser-masc", name: "Nariz Laser", duration: "10 min • até 10 sessões", originalCents: 34000, category: "rosto", method: "laser", audience: "masculino", image: I.queixoLaser, imageAlt: "Nariz a laser no catálogo masculino" },
-  { id: "bracos-laser-masc", name: "Braços Inteiros Laser", duration: "20 min • até 10 sessões", originalCents: 144000, category: "bracos", method: "laser", audience: "masculino", image: I.bracosLaser, imageAlt: "Braços a laser no catálogo masculino" },
-  { id: "antebraco-laser-masc", name: "Antebraço Laser", duration: "15 min • até 10 sessões", originalCents: 108000, category: "bracos", method: "laser", audience: "masculino", image: I.antebracoLaser, imageAlt: "Antebraço a laser no catálogo masculino" },
-  { id: "perna-laser-masc", name: "Perna Inteira Laser", duration: "40 min • até 10 sessões", originalCents: 423500, badge: "Verão", category: "pernas", method: "laser", audience: "masculino", image: I.pernaLaser, imageAlt: "Perna inteira a laser no catálogo masculino" },
-  { id: "meia-perna-laser-masc", name: "Meia Perna Laser", duration: "20 min • até 10 sessões", originalCents: 203000, category: "pernas", method: "laser", audience: "masculino", image: I.meiaPernaLaser, imageAlt: "Meia perna a laser no catálogo masculino" },
-  { id: "virilha-laser-masc", name: "Virilha Laser", duration: "20 min • até 10 sessões", originalCents: 209000, category: "virilha", method: "laser", audience: "masculino", image: I.virilhaLaser, imageAlt: "Virilha a laser no catálogo masculino" },
+  { id: "axilas-laser-masc", name: "Axilas Laser", duration: "15 min • até 10 sessões", originalCents: 89990, badge: "5% OFF", highlight: true, category: "axilas", method: "laser", audience: "masculino", image: M.axilas, imageAlt: "Homem em campanha de laser nas axilas Pello Menos" },
+  { id: "peito-laser-masc", name: "Peito Laser", duration: "25 min • até 10 sessões", originalCents: 149500, badge: "Masculino", highlight: true, category: "corpo", method: "laser", audience: "masculino", image: M.peito, imageAlt: "Homem em campanha de laser no peito Pello Menos" },
+  { id: "costas-laser-masc", name: "Costas Laser", duration: "30 min • até 10 sessões", originalCents: 149500, badge: "Masculino", highlight: true, category: "corpo", method: "laser", audience: "masculino", image: M.costas, imageAlt: "Homem em campanha de laser nas costas Pello Menos" },
+  { id: "abdomen-laser-masc", name: "Abdômen Laser", duration: "20 min • até 10 sessões", originalCents: 102000, category: "corpo", method: "laser", audience: "masculino", image: M.abdomen, imageAlt: "Homem em campanha de laser no abdômen Pello Menos" },
+  { id: "barba-laser-masc", name: "Barba Laser", duration: "15 min • até 10 sessões", originalCents: 99000, badge: "Rosto", highlight: true, category: "rosto", method: "laser", audience: "masculino", image: M.barba, imageAlt: "Homem em campanha de laser na barba Pello Menos" },
+  { id: "nuca-laser-masc", name: "Nuca Laser", duration: "10 min • até 10 sessões", originalCents: 70300, category: "rosto", method: "laser", audience: "masculino", image: M.nuca, imageAlt: "Homem em campanha de laser na nuca Pello Menos" },
+  { id: "pescoco-laser-masc", name: "Pescoço Laser", duration: "10 min • até 10 sessões", originalCents: 70300, category: "rosto", method: "laser", audience: "masculino", image: M.pescoco, imageAlt: "Homem em campanha de laser no pescoço Pello Menos" },
+  { id: "orelhas-laser-masc", name: "Orelhas Laser", duration: "10 min • até 10 sessões", originalCents: 43990, category: "rosto", method: "laser", audience: "masculino", image: M.barba, imageAlt: "Homem em campanha de laser nas orelhas Pello Menos" },
+  { id: "nariz-laser-masc", name: "Nariz Laser", duration: "10 min • até 10 sessões", originalCents: 34000, category: "rosto", method: "laser", audience: "masculino", image: M.pescoco, imageAlt: "Homem em campanha de laser no nariz Pello Menos" },
+  { id: "bracos-laser-masc", name: "Braços Inteiros Laser", duration: "20 min • até 10 sessões", originalCents: 144000, category: "bracos", method: "laser", audience: "masculino", image: M.bracos, imageAlt: "Homem em campanha de laser nos braços Pello Menos" },
+  { id: "antebraco-laser-masc", name: "Antebraço Laser", duration: "15 min • até 10 sessões", originalCents: 108000, category: "bracos", method: "laser", audience: "masculino", image: M.antebraco, imageAlt: "Homem em campanha de laser no antebraço Pello Menos" },
+  { id: "perna-laser-masc", name: "Perna Inteira Laser", duration: "40 min • até 10 sessões", originalCents: 423500, badge: "Verão", category: "pernas", method: "laser", audience: "masculino", image: M.pernas, imageAlt: "Homem em campanha de laser nas pernas Pello Menos" },
+  { id: "meia-perna-laser-masc", name: "Meia Perna Laser", duration: "20 min • até 10 sessões", originalCents: 203000, category: "pernas", method: "laser", audience: "masculino", image: M.pernas, imageAlt: "Homem em campanha de laser na meia perna Pello Menos" },
+  { id: "virilha-laser-masc", name: "Virilha Laser", duration: "20 min • até 10 sessões", originalCents: 209000, category: "virilha", method: "laser", audience: "masculino", image: M.virilha, imageAlt: "Homem em campanha de laser na virilha Pello Menos" },
 ];
 
 function defaultDescription(item: ProductSeed, method: ProductMethod, audience: ProductAudience) {
@@ -511,8 +541,8 @@ export const heroSlidesMasculino: HeroSlide[] = [
     ...peitoHero,
     cta: "Ver laser",
     ctaHref: "/masculino#laser",
-    image: "/images/hero/hero-campaign-center.png",
-    imageAlt: "Campanha masculina de laser no peito Pello Menos",
+    image: M.heroPeito,
+    imageAlt: "Homem na campanha de laser no peito Pello Menos",
     layout: "copy-top",
   },
   {
@@ -522,8 +552,8 @@ export const heroSlidesMasculino: HeroSlide[] = [
     ...costasHero,
     cta: "Ver costas",
     ctaHref: "/masculino#laser",
-    image: "/images/hero/hero-campaign-right.png",
-    imageAlt: "Campanha masculina de laser nas costas Pello Menos",
+    image: M.heroCostas,
+    imageAlt: "Homem na campanha de laser nas costas Pello Menos",
     layout: "split",
   },
   {
@@ -533,8 +563,8 @@ export const heroSlidesMasculino: HeroSlide[] = [
     ...axilasLaserHero,
     cta: "Ver axilas",
     ctaHref: "/masculino#produtos",
-    image: "/images/hero/hero-campaign-left.png",
-    imageAlt: "Campanha masculina de laser nas axilas Pello Menos",
+    image: M.heroAxilas,
+    imageAlt: "Homem na campanha de laser nas axilas Pello Menos",
     layout: "copy-right",
   },
   {
@@ -544,8 +574,8 @@ export const heroSlidesMasculino: HeroSlide[] = [
     ...barbaHero,
     cta: "Ver barba",
     ctaHref: "/masculino#laser",
-    image: "/images/hero/hero-campaign-low.png",
-    imageAlt: "Campanha masculina de laser na barba Pello Menos",
+    image: M.heroBarba,
+    imageAlt: "Homem na campanha de laser na barba Pello Menos",
     layout: "copy-left",
   },
 ];
@@ -560,12 +590,12 @@ export const categories: Category[] = [
 ];
 
 export const categoriesMasculino: Category[] = [
-  { id: "laser", label: "Laser", image: "/images/categories/cat-axilas-v2.png", href: "#laser" },
-  { id: "produtos", label: "Produtos", image: "/images/hero/destaque-kits.png", href: "#produtos-loja" },
-  { id: "axilas", label: "Axilas", image: "/images/categories/cat-axilas-v2.png", href: "#produtos" },
-  { id: "corpo", label: "Corpo", image: "/images/hero/destaque-combo.png", href: "#produtos" },
-  { id: "rosto", label: "Rosto", image: "/images/categories/cat-rosto-v2.png", href: "#laser" },
-  { id: "pernas", label: "Pernas", image: "/images/categories/cat-pernas-v2.png", href: "#produtos" },
+  { id: "laser", label: "Laser", image: M.catLaser, href: "#laser" },
+  { id: "produtos", label: "Produtos", image: M.catProdutos, href: "#produtos-loja" },
+  { id: "axilas", label: "Axilas", image: M.catAxilas, href: "#produtos" },
+  { id: "corpo", label: "Corpo", image: M.catCorpo, href: "#produtos" },
+  { id: "rosto", label: "Rosto", image: M.catRosto, href: "#laser" },
+  { id: "pernas", label: "Pernas", image: M.catPernas, href: "#produtos" },
 ];
 
 const female = products.filter((item) => item.audience === "feminino");
@@ -642,8 +672,8 @@ export const rectangularBannersMasculino: PromoBannerData[] = [
     badge: "Tecnologia",
     title: "Laser masculino",
     subtitle: "Peito, costas, barba e corpo com 5% OFF no site.",
-    image: "/images/hero/promo-laser-v3.png",
-    imageAlt: "Campanha de laser masculino Pello Menos",
+    image: M.promoLaser,
+    imageAlt: "Sessão de laser masculino na clínica Pello Menos",
     textSide: "right",
     overlay: "purple",
   },
@@ -652,8 +682,8 @@ export const rectangularBannersMasculino: PromoBannerData[] = [
     badge: "Corpo",
     title: "Costas e peito",
     subtitle: "As áreas mais pedidas do público masculino.",
-    image: "/images/hero/promo-semana-v2.png",
-    imageAlt: "Campanha de corpo masculino Pello Menos",
+    image: M.promoCorpo,
+    imageAlt: "Homem na campanha de corpo masculino Pello Menos",
     overlay: "purple",
   },
 ];
@@ -704,21 +734,21 @@ export const squareBannersMasculino: SquareBannerData[] = [
     title: "Peito a laser",
     subtitle: "5% OFF no site",
     badge: "Destaque",
-    image: "/images/hero/destaque-combo.png",
-    imageAlt: "Destaque de laser no peito",
+    image: M.destaquePeito,
+    imageAlt: "Destaque de laser no peito masculino",
   },
   {
     id: "verao-m",
     title: "Pernas e corpo",
     subtitle: "Pacotes verão",
-    image: "/images/hero/destaque-verao.png",
+    image: M.destaqueVerao,
     imageAlt: "Destaque de pernas no catálogo masculino",
   },
   {
     id: "barba",
     title: "Barba a laser",
     subtitle: "Rosto definido",
-    image: "/images/hero/destaque-olhar.png",
+    image: M.destaqueBarba,
     imageAlt: "Destaque de barba a laser",
   },
   {
@@ -726,8 +756,8 @@ export const squareBannersMasculino: SquareBannerData[] = [
     title: "Body Splash",
     subtitle: "Produto oficial",
     badge: "Oficial",
-    image: "/images/hero/destaque-kits.png",
-    imageAlt: "Body Splash oficial Pello Menos",
+    image: M.destaqueSplash,
+    imageAlt: "Body Splash na rotina masculina Pello Menos",
   },
 ];
 

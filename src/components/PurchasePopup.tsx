@@ -59,7 +59,7 @@ const malePurchases = [
     city: "Copacabana, RJ",
     product: "Peito Laser",
     href: "/produto/peito-laser-masc",
-    image: "/images/social/cliente-1.png",
+    image: "/images/products/male/peito.png",
     when: "há 2 minutos",
   },
   {
@@ -67,7 +67,7 @@ const malePurchases = [
     city: "Tijuca, RJ",
     product: "Costas Laser",
     href: "/produto/costas-laser-masc",
-    image: "/images/social/cliente-2.png",
+    image: "/images/products/male/costas.png",
     when: "há 6 minutos",
   },
   {
@@ -75,7 +75,7 @@ const malePurchases = [
     city: "Barra da Tijuca, RJ",
     product: "Axilas Laser",
     href: "/produto/axilas-laser-masc",
-    image: "/images/social/cliente-3.png",
+    image: "/images/products/male/axilas.png",
     when: "há 11 minutos",
   },
   {
@@ -83,7 +83,7 @@ const malePurchases = [
     city: "Avenida Paulista, SP",
     product: "Barba Laser",
     href: "/produto/barba-laser-masc",
-    image: "/images/social/cliente-4.png",
+    image: "/images/products/male/barba.png",
     when: "há 18 minutos",
   },
   {
@@ -91,7 +91,7 @@ const malePurchases = [
     city: "Campo Grande, RJ",
     product: "Nuca Laser",
     href: "/produto/nuca-laser-masc",
-    image: "/images/social/cliente-5.png",
+    image: "/images/products/male/nuca.png",
     when: "há 24 minutos",
   },
 ];
