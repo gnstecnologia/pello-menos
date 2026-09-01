@@ -37,7 +37,7 @@ export function SplitOffer({
             src={image}
             alt={imageAlt}
             fill
-            className="object-cover object-[78%_center] transition-transform duration-700 group-hover:scale-[1.03] md:object-[72%_center]"
+            className="object-cover object-[68%_center] transition-transform duration-700 group-hover:scale-[1.03] md:object-[62%_center]"
             sizes="(max-width: 768px) 100vw, 1280px"
           />
           <div className="absolute inset-0 bg-gradient-to-b from-primary via-primary/75 to-primary/20 md:hidden" />

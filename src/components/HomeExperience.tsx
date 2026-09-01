@@ -147,8 +147,8 @@ export function HomeExperience({ audience = "feminino" }: Props) {
           }
           imageAlt={
             isMale
-              ? "Homem na campanha de assinatura mensal Pello Menos"
-              : "Mulher na campanha de assinatura mensal Pello Menos"
+              ? "Recepcionista atendendo um cliente na assinatura mensal Pello Menos"
+              : "Recepcionista atendendo uma cliente na assinatura mensal Pello Menos"
           }
           ctaHref={isMale ? "/masculino#laser" : "/#cera"}
           ctaLabel="Quero assinar"
