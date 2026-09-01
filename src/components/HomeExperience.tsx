@@ -133,23 +133,25 @@ export function HomeExperience({ audience = "feminino" }: Props) {
       ) : null}
       {show.extra ? (
         <SplitOffer
-          eyebrow={isMale ? "E-commerce masculino" : "Clube Pello Menos"}
-          title={isMale ? "5% OFF em todo o catálogo" : "5% OFF no e-commerce"}
+          eyebrow="Assinatura mensal"
+          title={isMale ? "Sua sessão todo mês" : "Volte todo mês"}
           subtitle={
             isMale
-              ? "Laser para peito, costas, barba e corpo com o preço original da tabela e 5% de desconto na compra pelo site."
-              : "Compre pelo site e pague 5% a menos que o preço original da tabela. Cera e esfoliação continuam exclusivas do público feminino."
+              ? "O cliente assina e faz o laser no mês, no horário dele — peito, costas, barba e corpo com cuidado contínuo."
+              : "A cliente assina e faz a sessão no mês, no horário dela — cera, laser e o cuidado contínuo que a pele pede."
           }
           image={
             isMale
-              ? "/images/hero/clube-off-male.jpg"
-              : "/images/hero/clube-off-female.jpg"
+              ? "/images/hero/assinatura-male.jpg"
+              : "/images/hero/assinatura-female.jpg"
           }
           imageAlt={
             isMale
-              ? "Homem na campanha de 5% OFF Pello Menos"
-              : "Mulher na campanha de 5% OFF Pello Menos"
+              ? "Homem na campanha de assinatura mensal Pello Menos"
+              : "Mulher na campanha de assinatura mensal Pello Menos"
           }
+          ctaHref={isMale ? "/masculino#laser" : "/#cera"}
+          ctaLabel="Quero assinar"
         />
       ) : null}
       {show.cera ? (
