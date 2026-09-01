@@ -17,14 +17,18 @@ export function CouponPopup() {
   const overlayRef = useRef<HTMLButtonElement>(null);
   const cardRef = useRef<HTMLDivElement>(null);
 
-  const close = useCallback(() => {
-    const overlay = overlayRef.current;
-    const card = cardRef.current;
+  const rememberSeen = useCallback(() => {
     try {
-      sessionStorage.setItem(STORAGE_KEY, "1");
+      localStorage.setItem(STORAGE_KEY, "1");
     } catch {
       /* ignore */
     }
+  }, []);
+
+  const close = useCallback(() => {
+    rememberSeen();
+    const overlay = overlayRef.current;
+    const card = cardRef.current;
     if (!overlay || !card) {
       setOpen(false);
       return;
@@ -45,31 +49,22 @@ export function CouponPopup() {
       0,
     );
     tl.to(overlay, { opacity: 0, duration: 0.35, ease: "power2.in" }, 0);
-  }, []);
+  }, [rememberSeen]);
 
   useEffect(() => {
     try {
-      if (sessionStorage.getItem(STORAGE_KEY)) return;
+      if (localStorage.getItem(STORAGE_KEY)) return;
     } catch {
       /* ignore */
     }
 
-    let delayId = 0;
-    function armTimer() {
-      window.clearTimeout(delayId);
-      delayId = window.setTimeout(() => setOpen(true), 5000);
-    }
+    const delayId = window.setTimeout(() => {
+      rememberSeen();
+      setOpen(true);
+    }, 5000);
 
-    armTimer();
-    window.addEventListener("scroll", armTimer, { passive: true });
-    window.addEventListener("pointermove", armTimer);
-
-    return () => {
-      window.clearTimeout(delayId);
-      window.removeEventListener("scroll", armTimer);
-      window.removeEventListener("pointermove", armTimer);
-    };
-  }, []);
+    return () => window.clearTimeout(delayId);
+  }, [rememberSeen]);
 
   useEffect(() => {
     if (!open) return;
