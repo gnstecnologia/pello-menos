@@ -627,7 +627,6 @@ export const categories: Category[] = [
 
 export const categoriesMasculino: Category[] = [
   { id: "laser", label: "Laser", image: M.catLaser, href: "#laser" },
-  { id: "cera", label: "Cera", image: M.catCera, href: "/#cera" },
   { id: "axilas", label: "Axilas", image: M.catAxilas, href: "#produtos" },
   { id: "corpo", label: "Corpo", image: M.catCorpo, href: "#produtos" },
   { id: "rosto", label: "Rosto", image: M.catRosto, href: "#laser" },

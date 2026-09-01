@@ -230,13 +230,6 @@ export function HomeExperience({ audience = "feminino" }: Props) {
           }
         />
       ) : null}
-      {show.extra ? (
-        <PromoBanner
-          banner={
-            isMale ? rectangularBannersMasculino[1]! : rectangularBanners[2]!
-          }
-        />
-      ) : null}
       <GoogleReviews reviews={isMale ? googleReviewsMasculino : googleReviews} />
     </div>
   );
