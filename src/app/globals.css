@@ -78,6 +78,52 @@ body {
   scrollbar-width: none;
 }
 
+.carousel-track {
+  container-type: inline-size;
+  --carousel-gap: 1rem;
+  --carousel-cols: 1;
+  display: flex;
+  gap: var(--carousel-gap);
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory;
+}
+
+.carousel-track--square {
+  --carousel-cols: 1;
+}
+
+@media (min-width: 640px) {
+  .carousel-track,
+  .carousel-track--square {
+    --carousel-cols: 2;
+  }
+}
+
+@media (min-width: 768px) {
+  .carousel-track:not(.carousel-track--square) {
+    --carousel-cols: 3;
+  }
+}
+
+@media (min-width: 1024px) {
+  .carousel-track:not(.carousel-track--square) {
+    --carousel-cols: 4;
+  }
+
+  .carousel-track--square {
+    --carousel-cols: 3;
+  }
+}
+
+.carousel-card {
+  box-sizing: border-box;
+  flex: 0 0 calc((100cqi - (var(--carousel-cols) - 1) * var(--carousel-gap)) / var(--carousel-cols));
+  min-width: 0;
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+}
+
 .text-shadow {
   text-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
 }

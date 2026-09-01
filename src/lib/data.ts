@@ -238,7 +238,7 @@ const M = {
   destaqueBarba: "/images/hero/male/destaque-barba.png",
   destaqueSplash: "/images/hero/male/destaque-splash.png",
   catLaser: "/images/categories/male/cat-laser.png",
-  catProdutos: "/images/categories/male/cat-produtos.png",
+  catCera: "/images/categories/male/cat-cera.jpg",
   catAxilas: "/images/categories/male/cat-axilas.png",
   catCorpo: "/images/categories/male/cat-corpo.png",
   catRosto: "/images/categories/male/cat-rosto.png",
@@ -622,13 +622,12 @@ export const categories: Category[] = [
   { id: "laser", label: "Laser", image: "/images/categories/cat-axilas-v2.png", href: "#laser" },
   { id: "linha", label: "Linha", image: "/images/categories/cat-rosto-v2.png", href: "#linha" },
   { id: "esfoliacao", label: "Esfoliação", image: "/images/categories/cat-pernas-v2.png", href: "#esfoliacao" },
-  { id: "produtos", label: "Produtos", image: "/images/hero/destaque-kits.png", href: "#produtos-loja" },
   { id: "virilha", label: "Virilha", image: "/images/categories/cat-virilha-v2.png", href: "#produtos" },
 ];
 
 export const categoriesMasculino: Category[] = [
   { id: "laser", label: "Laser", image: M.catLaser, href: "#laser" },
-  { id: "produtos", label: "Produtos", image: M.catProdutos, href: "#produtos-loja" },
+  { id: "cera", label: "Cera", image: M.catCera, href: "/#cera" },
   { id: "axilas", label: "Axilas", image: M.catAxilas, href: "#produtos" },
   { id: "corpo", label: "Corpo", image: M.catCorpo, href: "#produtos" },
   { id: "rosto", label: "Rosto", image: M.catRosto, href: "#laser" },
@@ -742,15 +741,6 @@ export const rectangularBannersMasculino: PromoBannerData[] = [
 
 export const squareBanners: SquareBannerData[] = [
   {
-    id: "kits",
-    title: "Body Splash",
-    subtitle: "Produto oficial",
-    badge: "Oficial",
-    image: "/images/hero/destaque-kits.png",
-    imagePosition: "50% 40%",
-    imageAlt: "Body Splash oficial Pello Menos",
-  },
-  {
     id: "verao",
     title: "Pacotes Verão",
     subtitle: "5% OFF no site",
@@ -810,15 +800,6 @@ export const squareBannersMasculino: SquareBannerData[] = [
     image: M.destaqueBarba,
     imagePosition: "50% 22%",
     imageAlt: "Destaque de barba a laser",
-  },
-  {
-    id: "splash",
-    title: "Body Splash",
-    subtitle: "Produto oficial",
-    badge: "Oficial",
-    image: M.destaqueSplash,
-    imagePosition: "50% 45%",
-    imageAlt: "Body Splash na rotina masculina Pello Menos",
   },
 ];
 

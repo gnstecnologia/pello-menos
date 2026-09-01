@@ -3,11 +3,7 @@
 import Image from "next/image";
 import { BadgeTag } from "@/components/BadgeTag";
 import { CarouselArrows } from "@/components/CarouselArrows";
-import {
-  carouselCardClass,
-  carouselTrackClass,
-  useCardCarousel,
-} from "@/lib/carousel";
+import { useCardCarousel } from "@/lib/carousel";
 import type { SquareBannerData } from "@/lib/data";
 
 type Props = {
@@ -25,24 +21,21 @@ export function SquareBannerRail({ banners, productsHref }: Props) {
           Em destaque
         </h2>
       </div>
-      <div className="relative mx-auto max-w-7xl">
+      <div className="relative mx-auto max-w-7xl px-12 sm:px-14 md:px-16">
         <CarouselArrows
           prevLabel="Anterior"
           nextLabel="Próximo"
           onPrev={() => scrollByCard(-1)}
           onNext={() => scrollByCard(1)}
         />
-        <div
-          ref={scroller}
-          className={carouselTrackClass}
-        >
+        <div ref={scroller} className="carousel-track carousel-track--square hide-scrollbar pb-2">
           {banners.map((banner) => (
             <a
               key={banner.id}
               href={productsHref}
               data-carousel-card
               data-square-banner
-              className={`${carouselCardClass} group relative aspect-square w-[min(72vw,300px)] shrink-0 overflow-hidden rounded-2xl sm:w-[calc((100%-4.5rem-16px)/2)] lg:w-[calc((100%-5rem-32px)/3)]`}
+              className="carousel-card group relative aspect-square overflow-hidden rounded-2xl"
             >
               <div data-carousel-media className="absolute inset-0">
                 <Image

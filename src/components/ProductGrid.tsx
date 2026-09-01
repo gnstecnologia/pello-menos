@@ -5,11 +5,7 @@ import Link from "next/link";
 import { CarouselArrows } from "@/components/CarouselArrows";
 import { Icon } from "@/components/Icon";
 import { BadgeTag } from "@/components/BadgeTag";
-import {
-  carouselCardClass,
-  carouselTrackClass,
-  useCardCarousel,
-} from "@/lib/carousel";
+import { useCardCarousel } from "@/lib/carousel";
 import { formatBRL, getInstallment, type Product } from "@/lib/data";
 
 type Props = {
@@ -46,7 +42,7 @@ export function ProductGrid({
         <p className="mt-1 text-on-surface-variant">{subtitle}</p>
       </div>
 
-      <div className="relative mx-auto max-w-7xl">
+      <div className="relative mx-auto max-w-7xl px-12 sm:px-14 md:px-16">
         <CarouselArrows
           prevLabel="Produtos anteriores"
           nextLabel="Próximos produtos"
@@ -54,16 +50,13 @@ export function ProductGrid({
           onNext={() => scrollByCard(1)}
         />
 
-        <div
-          ref={scroller}
-          className={carouselTrackClass}
-        >
+        <div ref={scroller} className="carousel-track hide-scrollbar pb-4">
           {items.map((product) => (
             <article
               key={product.id}
               data-carousel-card
               data-product-card
-              className={`${carouselCardClass} group w-[min(72vw,300px)] shrink-0 overflow-hidden rounded-2xl bg-surface shadow-[0_18px_40px_rgba(58,10,60,0.08)] sm:w-[calc((100%-4.5rem-16px)/2)] md:w-[calc((100%-5rem-32px)/3)] lg:w-[calc((100%-5rem-48px)/4)]`}
+              className="carousel-card group overflow-hidden rounded-2xl bg-surface shadow-[0_18px_40px_rgba(58,10,60,0.08)]"
             >
               <Link href={`/produto/${product.id}`} className="block">
                 <div
@@ -74,7 +67,7 @@ export function ProductGrid({
                     src={product.image}
                     alt={product.imageAlt}
                     fill
-                    className="object-cover transition-transform duration-700 group-hover:scale-105"
+                    className="object-cover object-center transition-transform duration-700 group-hover:scale-105"
                     sizes="(max-width: 640px) 78vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
                   />
                   {product.badge ? (

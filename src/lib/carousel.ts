@@ -92,8 +92,3 @@ export function useCardCarousel(selector = "[data-carousel-card]") {
 
   return { scroller, scrollByCard };
 }
-
-export const carouselTrackClass =
-  "flex snap-x snap-mandatory gap-4 overflow-x-auto overscroll-x-contain px-12 pb-4 hide-scrollbar scroll-pl-12 sm:px-14 sm:scroll-pl-14 md:px-16 md:scroll-pl-16";
-
-export const carouselCardClass = "snap-start snap-always";

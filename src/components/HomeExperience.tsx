@@ -9,10 +9,12 @@ import { GoogleReviews } from "@/components/GoogleReviews";
 import { HeroBanner } from "@/components/HeroBanner";
 import { ProductGrid } from "@/components/ProductGrid";
 import { PromoBanner } from "@/components/PromoBanner";
+import { SplitOffer } from "@/components/SplitOffer";
 import { SquareBannerRail } from "@/components/SquareBannerRail";
 import {
   categories,
   categoriesMasculino,
+  formatBRL,
   googleReviews,
   googleReviewsMasculino,
   heroSlides,
@@ -35,13 +37,11 @@ const femaleFilters: { id: "todos" | ProductMethod; label: string }[] = [
   { id: "laser", label: "Laser" },
   { id: "linha", label: "Linha" },
   { id: "esfoliacao", label: "Esfoliação" },
-  { id: "produto", label: "Produtos" },
 ];
 
 const maleFilters: { id: "todos" | ProductMethod; label: string }[] = [
   { id: "todos", label: "Todos" },
   { id: "laser", label: "Laser" },
-  { id: "produto", label: "Produtos" },
 ];
 
 type Props = {
@@ -61,7 +61,6 @@ export function HomeExperience({ audience = "feminino" }: Props) {
       laser: filter === "todos" || filter === "laser",
       linha: !isMale && (filter === "todos" || filter === "linha"),
       esfoliacao: !isMale && (filter === "todos" || filter === "esfoliacao"),
-      produto: filter === "todos" || filter === "produto",
       extra: filter === "todos",
     }),
     [filter, isMale],
@@ -133,21 +132,25 @@ export function HomeExperience({ audience = "feminino" }: Props) {
         />
       ) : null}
       {show.extra ? (
-        <section className="js-reveal mx-auto max-w-7xl px-container-margin py-8">
-          <div className="rounded-3xl bg-primary px-6 py-8 text-on-primary md:px-10">
-            <p className="font-label-md text-label-md text-[#e8b86d] uppercase">
-              {isMale ? "E-commerce masculino" : "Clube Pello Menos"}
-            </p>
-            <h2 className="mt-2 font-[family-name:var(--font-display)] text-headline-md md:text-headline-lg">
-              {isMale ? "5% OFF em todo o catálogo" : "5% OFF no e-commerce"}
-            </h2>
-            <p className="mt-2 max-w-2xl text-on-primary/80">
-              {isMale
-                ? "Laser para peito, costas, barba e corpo com o preço original da tabela e 5% de desconto na compra pelo site."
-                : "Compre pelo site e pague 5% a menos que o preço original da tabela. Cera e esfoliação continuam exclusivas do público feminino."}
-            </p>
-          </div>
-        </section>
+        <SplitOffer
+          eyebrow={isMale ? "E-commerce masculino" : "Clube Pello Menos"}
+          title={isMale ? "5% OFF em todo o catálogo" : "5% OFF no e-commerce"}
+          subtitle={
+            isMale
+              ? "Laser para peito, costas, barba e corpo com o preço original da tabela e 5% de desconto na compra pelo site."
+              : "Compre pelo site e pague 5% a menos que o preço original da tabela. Cera e esfoliação continuam exclusivas do público feminino."
+          }
+          image={
+            isMale
+              ? "/images/hero/clube-off-male.jpg"
+              : "/images/hero/clube-off-female.jpg"
+          }
+          imageAlt={
+            isMale
+              ? "Homem na campanha de 5% OFF Pello Menos"
+              : "Mulher na campanha de 5% OFF Pello Menos"
+          }
+        />
       ) : null}
       {show.cera ? (
         <ProductGrid
@@ -215,13 +218,26 @@ export function HomeExperience({ audience = "feminino" }: Props) {
           muted
         />
       ) : null}
-      {show.produto ? (
-        <ProductGrid
+      {show.extra ? (
+        <SplitOffer
           id="produtos-loja"
-          eyebrow="Produtos"
-          title="Produto oficial"
-          subtitle="Body Splash Pello Menos para usar em casa"
-          items={productRails.produtos}
+          eyebrow="Produto oficial"
+          title="Body Splash Pello Menos"
+          subtitle="Fragrância oficial para usar em casa depois da sessão."
+          image="/images/hero/splash-banner.jpg"
+          imageAlt="Body Splash oficial Pello Menos"
+          ctaHref="/produto/body-splash"
+          ctaLabel="Ver produto"
+          price={
+            productRails.produtos[0]
+              ? formatBRL(productRails.produtos[0].priceCents)
+              : undefined
+          }
+          oldPrice={
+            productRails.produtos[0]?.oldPriceCents
+              ? formatBRL(productRails.produtos[0].oldPriceCents)
+              : undefined
+          }
         />
       ) : null}
       {show.extra ? (
