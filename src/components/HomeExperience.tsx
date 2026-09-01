@@ -131,26 +131,14 @@ export function HomeExperience({ audience = "feminino" }: Props) {
           muted
         />
       ) : null}
-      {show.extra ? (
+      {show.extra && !isMale ? (
         <SplitOffer
           eyebrow="Assinatura mensal"
-          title={isMale ? "Sua sessão todo mês" : "Volte todo mês"}
-          subtitle={
-            isMale
-              ? "O cliente assina e faz o laser no mês, no horário dele — peito, costas, barba e corpo com cuidado contínuo."
-              : "A cliente assina e faz a sessão no mês, no horário dela — cera, laser e o cuidado contínuo que a pele pede."
-          }
-          image={
-            isMale
-              ? "/images/hero/assinatura-male.jpg"
-              : "/images/hero/assinatura-female.jpg"
-          }
-          imageAlt={
-            isMale
-              ? "Recepcionista atendendo um cliente na assinatura mensal Pello Menos"
-              : "Recepcionista atendendo uma cliente na assinatura mensal Pello Menos"
-          }
-          ctaHref={isMale ? "/masculino#laser" : "/#cera"}
+          title="Volte todo mês"
+          subtitle="A cliente assina e faz a sessão no mês, no horário dela — cera, laser e o cuidado contínuo que a pele pede."
+          image="/images/hero/assinatura-female.jpg"
+          imageAlt="Recepcionista atendendo uma cliente na assinatura mensal Pello Menos"
+          ctaHref="/#cera"
           ctaLabel="Quero assinar"
         />
       ) : null}
