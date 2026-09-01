@@ -1,19 +1,10 @@
 "use client";
 
-import Image from "next/image";
 import { BadgeTag } from "@/components/BadgeTag";
+import { BannerCover } from "@/components/BannerCover";
+import type { PromoBannerData } from "@/lib/data";
 
-type Banner = {
-  badge: string;
-  title: string;
-  subtitle: string;
-  image: string;
-  imageAlt: string;
-  textSide?: "left" | "right";
-  overlay?: "black" | "purple";
-};
-
-export function PromoBanner({ banner }: { banner: Banner }) {
+export function PromoBanner({ banner }: { banner: PromoBannerData }) {
   const textOnRight = banner.textSide === "right";
   const purple = banner.overlay === "purple";
 
@@ -37,14 +28,14 @@ export function PromoBanner({ banner }: { banner: Banner }) {
 
   return (
     <section className="js-reveal mx-auto max-w-7xl px-container-margin py-4">
-      <div className="group relative h-[220px] overflow-hidden rounded-3xl md:h-[340px]">
-        <Image
+      <div className="group relative aspect-[4/5] overflow-hidden rounded-3xl md:aspect-auto md:h-[360px] lg:h-[420px]">
+        <BannerCover
           src={banner.image}
+          srcMobile={banner.imageMobile}
           alt={banner.imageAlt}
-          fill
-          className={`object-cover transition-transform duration-700 group-hover:scale-105 ${
-            textOnRight ? "object-[20%_center]" : "object-cover"
-          }`}
+          position={banner.imagePosition ?? (textOnRight ? "32% 40%" : "50% 38%")}
+          positionMobile={banner.imagePositionMobile}
+          className="transition-transform duration-700 group-hover:scale-105"
           sizes="(max-width: 768px) 100vw, 1280px"
         />
         <div className={`absolute inset-0 ${overlayClass}`} />

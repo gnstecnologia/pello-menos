@@ -22,7 +22,7 @@ export function CategoryCircles({ items }: Props) {
                 src={category.image}
                 alt={category.label}
                 fill
-                className="object-cover"
+                className="object-cover object-[center_30%]"
                 sizes="80px"
               />
             </div>

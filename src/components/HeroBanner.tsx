@@ -2,11 +2,11 @@
 
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
-import Image from "next/image";
 import { useRef, useState } from "react";
+import { BannerCover } from "@/components/BannerCover";
+import { BadgeTag } from "@/components/BadgeTag";
 import { Icon } from "@/components/Icon";
 import { type HeroSlide } from "@/lib/data";
-import { BadgeTag } from "@/components/BadgeTag";
 
 gsap.registerPlugin(useGSAP);
 
@@ -146,19 +146,21 @@ export function HeroBanner({ slides }: Props) {
     <section
       ref={root}
       id="inicio"
-      className="relative h-[420px] w-full overflow-hidden bg-[#3a0628] md:h-[640px]"
+      className="relative aspect-[4/5] w-full overflow-hidden bg-[#3a0628] md:aspect-auto md:h-[560px] lg:h-[640px] xl:h-[720px]"
     >
       {slides.map((item, slideIndex) => (
         <div
           key={item.id}
           className={`absolute inset-0 transition-opacity duration-700 ${slideIndex === index ? "opacity-100" : "opacity-0"}`}
         >
-          <Image
+          <BannerCover
             src={item.image}
+            srcMobile={item.imageMobile}
             alt={item.imageAlt}
-            fill
+            position={item.imagePosition}
+            positionMobile={item.imagePositionMobile}
             priority={slideIndex === 0}
-            className="js-hero-bg object-cover object-center"
+            className="js-hero-bg"
             sizes="100vw"
           />
         </div>

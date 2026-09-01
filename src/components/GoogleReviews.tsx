@@ -43,11 +43,11 @@ export function GoogleReviews({ reviews = defaultReviews }: Props) {
           </div>
         </div>
 
-        <div className="mt-8 flex snap-x snap-mandatory gap-4 overflow-x-auto pb-2 hide-scrollbar">
+        <div className="mt-8 flex snap-x snap-mandatory gap-4 overflow-x-auto overscroll-x-contain pb-2 hide-scrollbar">
           {reviews.map((review) => (
             <article
               key={review.id}
-              className="w-[min(82vw,340px)] shrink-0 snap-start rounded-2xl border border-outline/40 bg-background p-5 shadow-[0_12px_30px_rgba(58,10,60,0.06)] sm:w-[calc((100%-16px)/2)] lg:w-[calc((100%-32px)/3)]"
+              className="w-[min(82vw,340px)] shrink-0 snap-start snap-always rounded-2xl border border-outline/40 bg-background p-5 shadow-[0_12px_30px_rgba(58,10,60,0.06)] sm:w-[calc((100%-16px)/2)] lg:w-[calc((100%-32px)/3)]"
             >
               <div className="flex items-center justify-between">
                 <div>

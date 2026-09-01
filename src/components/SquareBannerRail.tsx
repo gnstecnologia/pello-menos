@@ -1,9 +1,13 @@
 "use client";
 
 import Image from "next/image";
-import { useRef } from "react";
 import { BadgeTag } from "@/components/BadgeTag";
 import { CarouselArrows } from "@/components/CarouselArrows";
+import {
+  carouselCardClass,
+  carouselTrackClass,
+  useCardCarousel,
+} from "@/lib/carousel";
 import type { SquareBannerData } from "@/lib/data";
 
 type Props = {
@@ -12,15 +16,7 @@ type Props = {
 };
 
 export function SquareBannerRail({ banners, productsHref }: Props) {
-  const scroller = useRef<HTMLDivElement>(null);
-
-  function scroll(direction: number) {
-    const node = scroller.current;
-    if (!node) return;
-    const card = node.querySelector<HTMLElement>("[data-square-banner]");
-    const step = card ? card.offsetWidth + 16 : node.clientWidth * 0.8;
-    node.scrollBy({ left: direction * step, behavior: "smooth" });
-  }
+  const { scroller, scrollByCard } = useCardCarousel();
 
   return (
     <section className="js-reveal relative py-6">
@@ -33,12 +29,12 @@ export function SquareBannerRail({ banners, productsHref }: Props) {
         <CarouselArrows
           prevLabel="Anterior"
           nextLabel="Próximo"
-          onPrev={() => scroll(-1)}
-          onNext={() => scroll(1)}
+          onPrev={() => scrollByCard(-1)}
+          onNext={() => scrollByCard(1)}
         />
         <div
           ref={scroller}
-          className="flex snap-x snap-mandatory gap-4 overflow-x-auto px-12 pb-2 hide-scrollbar sm:px-14 md:px-16"
+          className={carouselTrackClass}
         >
           {banners.map((banner) => (
             <a
@@ -46,7 +42,7 @@ export function SquareBannerRail({ banners, productsHref }: Props) {
               href={productsHref}
               data-carousel-card
               data-square-banner
-              className="group relative aspect-square w-[min(72vw,300px)] shrink-0 snap-start overflow-hidden rounded-2xl sm:w-[calc((100%-4.5rem-16px)/2)] lg:w-[calc((100%-5rem-32px)/3)]"
+              className={`${carouselCardClass} group relative aspect-square w-[min(72vw,300px)] shrink-0 overflow-hidden rounded-2xl sm:w-[calc((100%-4.5rem-16px)/2)] lg:w-[calc((100%-5rem-32px)/3)]`}
             >
               <div data-carousel-media className="absolute inset-0">
                 <Image
@@ -54,6 +50,7 @@ export function SquareBannerRail({ banners, productsHref }: Props) {
                   alt={banner.imageAlt}
                   fill
                   className="object-cover transition-transform duration-700 group-hover:scale-105"
+                  style={{ objectPosition: banner.imagePosition ?? "50% 28%" }}
                   sizes="(max-width: 640px) 72vw, (max-width: 1024px) 50vw, 33vw"
                 />
               </div>

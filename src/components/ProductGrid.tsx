@@ -2,10 +2,14 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useRef } from "react";
 import { CarouselArrows } from "@/components/CarouselArrows";
 import { Icon } from "@/components/Icon";
 import { BadgeTag } from "@/components/BadgeTag";
+import {
+  carouselCardClass,
+  carouselTrackClass,
+  useCardCarousel,
+} from "@/lib/carousel";
 import { formatBRL, getInstallment, type Product } from "@/lib/data";
 
 type Props = {
@@ -25,15 +29,7 @@ export function ProductGrid({
   items,
   muted = false,
 }: Props) {
-  const scroller = useRef<HTMLDivElement>(null);
-
-  function scroll(direction: number) {
-    const node = scroller.current;
-    if (!node) return;
-    const card = node.querySelector<HTMLElement>("[data-product-card]");
-    const step = card ? card.offsetWidth + 16 : node.clientWidth * 0.85;
-    node.scrollBy({ left: direction * step, behavior: "smooth" });
-  }
+  const { scroller, scrollByCard } = useCardCarousel();
 
   return (
     <section
@@ -54,20 +50,20 @@ export function ProductGrid({
         <CarouselArrows
           prevLabel="Produtos anteriores"
           nextLabel="Próximos produtos"
-          onPrev={() => scroll(-1)}
-          onNext={() => scroll(1)}
+          onPrev={() => scrollByCard(-1)}
+          onNext={() => scrollByCard(1)}
         />
 
         <div
           ref={scroller}
-          className="flex snap-x snap-mandatory gap-4 overflow-x-auto px-12 pb-4 hide-scrollbar sm:px-14 md:px-16"
+          className={carouselTrackClass}
         >
           {items.map((product) => (
             <article
               key={product.id}
               data-carousel-card
               data-product-card
-              className="group w-[min(72vw,300px)] shrink-0 snap-start overflow-hidden rounded-2xl bg-surface shadow-[0_18px_40px_rgba(58,10,60,0.08)] sm:w-[calc((100%-4.5rem-16px)/2)] md:w-[calc((100%-5rem-32px)/3)] lg:w-[calc((100%-5rem-48px)/4)]"
+              className={`${carouselCardClass} group w-[min(72vw,300px)] shrink-0 overflow-hidden rounded-2xl bg-surface shadow-[0_18px_40px_rgba(58,10,60,0.08)] sm:w-[calc((100%-4.5rem-16px)/2)] md:w-[calc((100%-5rem-32px)/3)] lg:w-[calc((100%-5rem-48px)/4)]`}
             >
               <Link href={`/produto/${product.id}`} className="block">
                 <div

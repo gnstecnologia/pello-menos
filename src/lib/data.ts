@@ -63,6 +63,9 @@ export type HeroSlide = {
   cta: string;
   ctaHref: string;
   image: string;
+  imageMobile?: string;
+  imagePosition?: string;
+  imagePositionMobile?: string;
   imageAlt: string;
   layout: HeroLayout;
 };
@@ -80,6 +83,9 @@ export type PromoBannerData = {
   title: string;
   subtitle: string;
   image: string;
+  imageMobile?: string;
+  imagePosition?: string;
+  imagePositionMobile?: string;
   imageAlt: string;
   textSide?: "left" | "right";
   overlay?: "black" | "purple";
@@ -91,6 +97,7 @@ export type SquareBannerData = {
   subtitle: string;
   badge?: string;
   image: string;
+  imagePosition?: string;
   imageAlt: string;
 };
 
@@ -215,11 +222,17 @@ const I = {
 
 const M = {
   heroPeito: "/images/hero/male/hero-peito.png",
+  heroPeitoM: "/images/hero/male/hero-peito-m.jpg",
   heroCostas: "/images/hero/male/hero-costas.png",
+  heroCostasM: "/images/hero/male/hero-costas-m.jpg",
   heroAxilas: "/images/hero/male/hero-axilas.png",
+  heroAxilasM: "/images/hero/male/hero-axilas-m.jpg",
   heroBarba: "/images/hero/male/hero-barba.png",
+  heroBarbaM: "/images/hero/male/hero-barba-m.jpg",
   promoLaser: "/images/hero/male/promo-laser.png",
+  promoLaserM: "/images/hero/male/promo-laser-m.jpg",
   promoCorpo: "/images/hero/male/promo-corpo.png",
+  promoCorpoM: "/images/hero/male/promo-corpo-m.jpg",
   destaquePeito: "/images/hero/male/destaque-peito.png",
   destaqueVerao: "/images/hero/male/destaque-verao.png",
   destaqueBarba: "/images/hero/male/destaque-barba.png",
@@ -495,6 +508,9 @@ export const heroSlides: HeroSlide[] = [
     cta: "Ver cera",
     ctaHref: "/#cera",
     image: "/images/hero/hero-campaign-low.png",
+    imageMobile: "/images/hero/hero-campaign-low-m.jpg",
+    imagePosition: "50% 82%",
+    imagePositionMobile: "50% 78%",
     imageAlt: "Mulher na campanha de pernas com cera Pello Menos",
     layout: "copy-top",
   },
@@ -506,6 +522,9 @@ export const heroSlides: HeroSlide[] = [
     cta: "Ver laser",
     ctaHref: "/#laser",
     image: "/images/hero/hero-campaign-center.png",
+    imageMobile: "/images/hero/hero-campaign-center-m.jpg",
+    imagePosition: "50% 40%",
+    imagePositionMobile: "50% 38%",
     imageAlt: "Mulher no centro da campanha de laser nas axilas Pello Menos",
     layout: "split",
   },
@@ -517,6 +536,9 @@ export const heroSlides: HeroSlide[] = [
     cta: "Ver serviços",
     ctaHref: "/#produtos",
     image: "/images/hero/hero-campaign-left.png",
+    imageMobile: "/images/hero/hero-campaign-left-m.jpg",
+    imagePosition: "22% 40%",
+    imagePositionMobile: "28% 38%",
     imageAlt: "Mulher à esquerda na campanha de virilha a laser Pello Menos",
     layout: "copy-right",
   },
@@ -528,6 +550,9 @@ export const heroSlides: HeroSlide[] = [
     cta: "Ver braços",
     ctaHref: "/#laser",
     image: "/images/hero/hero-campaign-right.png",
+    imageMobile: "/images/hero/hero-campaign-right-m.jpg",
+    imagePosition: "78% 40%",
+    imagePositionMobile: "72% 38%",
     imageAlt: "Mulher à direita na campanha de braços a laser Pello Menos",
     layout: "copy-left",
   },
@@ -542,6 +567,9 @@ export const heroSlidesMasculino: HeroSlide[] = [
     cta: "Ver laser",
     ctaHref: "/masculino#laser",
     image: M.heroPeito,
+    imageMobile: M.heroPeitoM,
+    imagePosition: "48% 28%",
+    imagePositionMobile: "50% 26%",
     imageAlt: "Homem na campanha de laser no peito Pello Menos",
     layout: "copy-top",
   },
@@ -553,6 +581,9 @@ export const heroSlidesMasculino: HeroSlide[] = [
     cta: "Ver costas",
     ctaHref: "/masculino#laser",
     image: M.heroCostas,
+    imageMobile: M.heroCostasM,
+    imagePosition: "50% 26%",
+    imagePositionMobile: "50% 24%",
     imageAlt: "Homem na campanha de laser nas costas Pello Menos",
     layout: "split",
   },
@@ -564,6 +595,9 @@ export const heroSlidesMasculino: HeroSlide[] = [
     cta: "Ver axilas",
     ctaHref: "/masculino#produtos",
     image: M.heroAxilas,
+    imageMobile: M.heroAxilasM,
+    imagePosition: "42% 32%",
+    imagePositionMobile: "50% 28%",
     imageAlt: "Homem na campanha de laser nas axilas Pello Menos",
     layout: "copy-right",
   },
@@ -575,6 +609,9 @@ export const heroSlidesMasculino: HeroSlide[] = [
     cta: "Ver barba",
     ctaHref: "/masculino#laser",
     image: M.heroBarba,
+    imageMobile: M.heroBarbaM,
+    imagePosition: "58% 28%",
+    imagePositionMobile: "55% 22%",
     imageAlt: "Homem na campanha de laser na barba Pello Menos",
     layout: "copy-left",
   },
@@ -643,6 +680,9 @@ export const rectangularBanners: PromoBannerData[] = [
     title: "Semana da Beleza",
     subtitle: "5% OFF em todos os serviços no e-commerce.",
     image: "/images/hero/promo-semana-v2.png",
+    imageMobile: "/images/hero/promo-semana-v2-m.jpg",
+    imagePosition: "50% 38%",
+    imagePositionMobile: "50% 32%",
     imageAlt: "Mulher com axilas lisas na Semana da Beleza",
   },
   {
@@ -651,6 +691,9 @@ export const rectangularBanners: PromoBannerData[] = [
     title: "Laser de última geração",
     subtitle: "Sessões mais rápidas e resultado duradouro.",
     image: "/images/hero/promo-laser-v3.png",
+    imageMobile: "/images/hero/promo-laser-v3-m.jpg",
+    imagePosition: "28% 40%",
+    imagePositionMobile: "32% 32%",
     imageAlt: "Mulher em sessão de laser em clínica com luz natural",
     textSide: "right",
     overlay: "purple",
@@ -661,6 +704,9 @@ export const rectangularBanners: PromoBannerData[] = [
     title: "Design de sobrancelha",
     subtitle: "Cera, henna e realce para valorizar o olhar.",
     image: "/images/hero/promo-olhar-v2.png",
+    imageMobile: "/images/hero/promo-olhar-v2-m.jpg",
+    imagePosition: "50% 32%",
+    imagePositionMobile: "50% 28%",
     imageAlt: "Mulher com design de sobrancelha em spa com luz e textura",
     overlay: "purple",
   },
@@ -673,6 +719,9 @@ export const rectangularBannersMasculino: PromoBannerData[] = [
     title: "Laser masculino",
     subtitle: "Peito, costas, barba e corpo com 5% OFF no site.",
     image: M.promoLaser,
+    imageMobile: M.promoLaserM,
+    imagePosition: "38% 40%",
+    imagePositionMobile: "42% 32%",
     imageAlt: "Sessão de laser masculino na clínica Pello Menos",
     textSide: "right",
     overlay: "purple",
@@ -683,6 +732,9 @@ export const rectangularBannersMasculino: PromoBannerData[] = [
     title: "Costas e peito",
     subtitle: "As áreas mais pedidas do público masculino.",
     image: M.promoCorpo,
+    imageMobile: M.promoCorpoM,
+    imagePosition: "50% 32%",
+    imagePositionMobile: "55% 28%",
     imageAlt: "Homem na campanha de corpo masculino Pello Menos",
     overlay: "purple",
   },
@@ -695,6 +747,7 @@ export const squareBanners: SquareBannerData[] = [
     subtitle: "Produto oficial",
     badge: "Oficial",
     image: "/images/hero/destaque-kits.png",
+    imagePosition: "50% 40%",
     imageAlt: "Body Splash oficial Pello Menos",
   },
   {
@@ -702,6 +755,7 @@ export const squareBanners: SquareBannerData[] = [
     title: "Pacotes Verão",
     subtitle: "5% OFF no site",
     image: "/images/hero/destaque-verao.png",
+    imagePosition: "50% 30%",
     imageAlt: "Mulher alisando as pernas para o verão",
   },
   {
@@ -709,6 +763,7 @@ export const squareBanners: SquareBannerData[] = [
     title: "Cartão Presente",
     subtitle: "Surpreenda quem você ama",
     image: "/images/hero/destaque-presente.png",
+    imagePosition: "50% 28%",
     imageAlt: "Mulher com cartão presente Pello Menos",
   },
   {
@@ -717,6 +772,7 @@ export const squareBanners: SquareBannerData[] = [
     subtitle: "Rosto, braços e corpo",
     badge: "Combos",
     image: "/images/hero/destaque-combo.png",
+    imagePosition: "50% 28%",
     imageAlt: "Mulher cuidando da pele após sessão de laser",
   },
   {
@@ -724,6 +780,7 @@ export const squareBanners: SquareBannerData[] = [
     title: "Sobrancelhas",
     subtitle: "Design e henna",
     image: "/images/hero/destaque-olhar.png",
+    imagePosition: "50% 22%",
     imageAlt: "Mulher com design de sobrancelha",
   },
 ];
@@ -735,6 +792,7 @@ export const squareBannersMasculino: SquareBannerData[] = [
     subtitle: "5% OFF no site",
     badge: "Destaque",
     image: M.destaquePeito,
+    imagePosition: "50% 22%",
     imageAlt: "Destaque de laser no peito masculino",
   },
   {
@@ -742,6 +800,7 @@ export const squareBannersMasculino: SquareBannerData[] = [
     title: "Pernas e corpo",
     subtitle: "Pacotes verão",
     image: M.destaqueVerao,
+    imagePosition: "50% 30%",
     imageAlt: "Destaque de pernas no catálogo masculino",
   },
   {
@@ -749,6 +808,7 @@ export const squareBannersMasculino: SquareBannerData[] = [
     title: "Barba a laser",
     subtitle: "Rosto definido",
     image: M.destaqueBarba,
+    imagePosition: "50% 22%",
     imageAlt: "Destaque de barba a laser",
   },
   {
@@ -757,6 +817,7 @@ export const squareBannersMasculino: SquareBannerData[] = [
     subtitle: "Produto oficial",
     badge: "Oficial",
     image: M.destaqueSplash,
+    imagePosition: "50% 45%",
     imageAlt: "Body Splash na rotina masculina Pello Menos",
   },
 ];
