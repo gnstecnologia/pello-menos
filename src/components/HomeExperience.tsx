@@ -41,7 +41,9 @@ const femaleFilters: { id: "todos" | ProductMethod; label: string }[] = [
 
 const maleFilters: { id: "todos" | ProductMethod; label: string }[] = [
   { id: "todos", label: "Todos" },
+  { id: "cera", label: "Cera" },
   { id: "laser", label: "Laser" },
+  { id: "esfoliacao", label: "Esfoliação" },
 ];
 
 type Props = {
@@ -57,10 +59,10 @@ export function HomeExperience({ audience = "feminino" }: Props) {
 
   const show = useMemo(
     () => ({
-      cera: !isMale && (filter === "todos" || filter === "cera"),
+      cera: filter === "todos" || filter === "cera",
       laser: filter === "todos" || filter === "laser",
       linha: !isMale && (filter === "todos" || filter === "linha"),
-      esfoliacao: !isMale && (filter === "todos" || filter === "esfoliacao"),
+      esfoliacao: filter === "todos" || filter === "esfoliacao",
       extra: filter === "todos",
     }),
     [filter, isMale],
@@ -127,27 +129,50 @@ export function HomeExperience({ audience = "feminino" }: Props) {
           eyebrow="Cera 5% OFF"
           title="Cera em destaque"
           subtitle="Preço da tabela com 5% de desconto no e-commerce"
-          items={productRails.ceraOfertas}
+          items={isMale ? productRails.ceraOfertasMasc : productRails.ceraOfertas}
           muted
-        />
-      ) : null}
-      {show.extra && !isMale ? (
-        <SplitOffer
-          eyebrow="Assinatura mensal"
-          title="Volte todo mês"
-          subtitle="A cliente assina e faz a sessão no mês, no horário dela — cera, laser e o cuidado contínuo que a pele pede."
-          image="/images/hero/assinatura-female.jpg"
-          imageAlt="Recepcionista atendendo uma cliente na assinatura mensal Pello Menos"
-          ctaHref="/#cera"
-          ctaLabel="Quero assinar"
         />
       ) : null}
       {show.cera ? (
         <ProductGrid
           eyebrow="Áreas mais pedidas"
           title="Cera por região"
-          subtitle="Virilha, axila, pernas, corpo e olhar — todos os serviços da tabela"
-          items={productRails.ceraAreas}
+          subtitle={
+            isMale
+              ? "Peito, costas, axila, pernas e virilha — todos os serviços da tabela"
+              : "Virilha, axila, pernas, corpo e olhar — todos os serviços da tabela"
+          }
+          items={isMale ? productRails.ceraAreasMasc : productRails.ceraAreas}
+        />
+      ) : null}
+      {show.extra ? (
+        <SplitOffer
+          eyebrow="Assinatura VIP Cera"
+          title="Cera todo mês"
+          subtitle={
+            isMale
+              ? "O cliente assina e faz a sessão de cera no mês, no horário dele — pele lisa o ano inteiro."
+              : "A cliente assina e faz a sessão de cera no mês, no horário dela — pele lisa o ano inteiro."
+          }
+          image={isMale ? "/images/hero/male/assinatura-cera.jpg" : "/images/hero/assinatura-female.jpg"}
+          imageAlt={
+            isMale
+              ? "Recepcionista atendendo um cliente na assinatura VIP Cera Pello Menos"
+              : "Recepcionista atendendo uma cliente na assinatura VIP Cera Pello Menos"
+          }
+          ctaHref={isMale ? "/masculino#cera" : "/#cera"}
+          ctaLabel="Quero assinar"
+        />
+      ) : null}
+      {show.extra && !isMale ? (
+        <SplitOffer
+          eyebrow="Assinatura VIP Laser"
+          title="Laser todo mês"
+          subtitle="A cliente assina e faz a sessão a laser no mês, no horário dela — resultado contínuo, sem recomeçar."
+          image="/images/hero/promo-laser-v3.png"
+          imageAlt="Sessão de laser na assinatura VIP Laser Pello Menos"
+          ctaHref="/#laser"
+          ctaLabel="Quero assinar"
         />
       ) : null}
       {show.laser ? (
@@ -194,8 +219,12 @@ export function HomeExperience({ audience = "feminino" }: Props) {
           id="esfoliacao"
           eyebrow="Esfoliação"
           title="Pele pronta para a cera"
-          subtitle="Todas as áreas da tabela — só no catálogo feminino"
-          items={productRails.esfoliacao}
+          subtitle={
+            isMale
+              ? "Todas as áreas da tabela para potencializar a cera"
+              : "Todas as áreas da tabela — pele pronta para a cera"
+          }
+          items={isMale ? productRails.esfoliacaoMasc : productRails.esfoliacao}
         />
       ) : null}
       {show.linha ? (

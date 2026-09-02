@@ -16,7 +16,7 @@ import {
 } from "@/lib/data";
 
 const iconBtn =
-  "btn-lux btn-lux-ghost relative flex h-11 w-11 items-center justify-center rounded-full border border-primary/20 text-primary hover:text-[#8a5a12]";
+  "btn-lux btn-lux-ghost relative flex h-11 w-11 items-center justify-center rounded-full border border-primary/20 text-primary hover:text-secondary";
 
 type Props = {
   onOpenAuth: () => void;
@@ -60,16 +60,18 @@ export function Header({ onOpenAuth }: Props) {
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-container-margin py-2.5">
           <Link href={audience === "masculino" ? "/masculino" : "/"} className="flex flex-col items-start leading-none">
             <Image
-              src="/brand/logo.png"
+              src={audience === "masculino" ? "/brand/logo-male.png" : "/brand/logo.png"}
               alt="pello menos"
               width={498}
               height={190}
               priority
               className="h-12 w-auto object-contain md:h-14"
             />
-            <span className="mt-1 text-[10px] tracking-[0.18em] text-[#8a5a12] uppercase">
-              depilação avançada
-            </span>
+            {audience === "masculino" ? null : (
+              <span className="mt-1 text-[10px] tracking-[0.18em] text-secondary uppercase">
+                depilação avançada
+              </span>
+            )}
           </Link>
           <nav className="hidden items-center gap-8 md:flex">
             {navLinks.map((link) => {

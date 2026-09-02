@@ -45,7 +45,7 @@ export function BadgeTag({ label, className = "", size = "sm" }: Props) {
         <Icon
           name={iconForBadge(label)}
           size={compact ? 10 : 12}
-          className="text-[#e8b86d]"
+          className="text-secondary-container"
         />
       </span>
       {label}

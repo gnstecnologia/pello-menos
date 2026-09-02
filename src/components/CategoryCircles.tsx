@@ -17,7 +17,7 @@ export function CategoryCircles({ items }: Props) {
             href={category.href}
             className="js-cat group flex w-[84px] flex-col items-center gap-3 md:w-[104px]"
           >
-            <div className="relative h-[72px] w-[72px] overflow-hidden rounded-full border-2 border-[#e8b86d]/70 shadow-[0_10px_30px_rgba(112,0,83,0.16)] transition-transform group-hover:scale-105 md:h-20 md:w-20">
+            <div className="relative h-[72px] w-[72px] overflow-hidden rounded-full border-2 border-secondary-container/70 shadow-[0_10px_30px_color-mix(in_srgb,var(--color-primary)_16%,transparent)] transition-transform group-hover:scale-105 md:h-20 md:w-20">
               <Image
                 src={category.image}
                 alt={category.label}

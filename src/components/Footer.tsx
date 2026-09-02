@@ -2,7 +2,9 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { Icon, type IconName } from "@/components/Icon";
+import { audienceFromPath, homeHref } from "@/lib/data";
 
 const trust: { icon: IconName; label: string }[] = [
   { icon: "truck", label: "Unidades no RJ e SP" },
@@ -88,23 +90,28 @@ type Props = {
 };
 
 export function Footer({ onOpenAuth }: Props) {
+  const audience = audienceFromPath(usePathname());
+  const isMale = audience === "masculino";
+
   return (
-    <footer className="mt-8 bg-[linear-gradient(165deg,#5a0a4a_0%,#700053_42%,#3a0628_100%)] pb-28 text-white md:pb-0">
+    <footer className="site-footer mt-8 pb-28 text-white md:pb-0">
       <div className="mx-auto max-w-7xl px-container-margin py-12">
         <div className="grid gap-10 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,0.9fr)_minmax(0,1fr)]">
           <div>
-            <Link href="/" className="inline-block">
+            <Link href={homeHref(audience)} className="inline-block">
               <Image
-                src="/brand/logo-footer.png"
+                src={isMale ? "/brand/logo-male-footer.png" : "/brand/logo-footer.png"}
                 alt="pello menos"
                 width={1024}
                 height={576}
                 className="h-16 w-auto object-contain md:h-24"
               />
             </Link>
-            <p className="mt-1 text-xs tracking-[0.2em] text-[#e8b86d] uppercase">
-              depilação avançada
-            </p>
+            {isMale ? null : (
+              <p className="mt-1 text-xs tracking-[0.2em] text-secondary-container uppercase">
+                depilação avançada
+              </p>
+            )}
             <p className="mt-4 max-w-sm text-sm leading-relaxed text-white/70">
               Compras realizadas na loja on-line, são pessoais e
               intransferíveis. Utilização somente após 24h, a contar da
@@ -118,7 +125,7 @@ export function Footer({ onOpenAuth }: Props) {
                   target="_blank"
                   rel="noreferrer"
                   aria-label={item.label}
-                  className="btn-lux btn-lux-ghost flex h-10 w-10 items-center justify-center rounded-full border border-white/20 text-[#e8b86d] hover:text-white"
+                  className="btn-lux btn-lux-ghost flex h-10 w-10 items-center justify-center rounded-full border border-white/20 text-secondary-container hover:text-white"
                 >
                   <SocialGlyph name={item.icon} size={18} />
                 </a>
@@ -127,38 +134,38 @@ export function Footer({ onOpenAuth }: Props) {
           </div>
 
           <div>
-            <h2 className="font-[family-name:var(--font-display)] text-2xl text-[#e8b86d]">
+            <h2 className="font-[family-name:var(--font-display)] text-2xl text-secondary-container">
               Pello Menos
             </h2>
             <nav className="mt-4 flex flex-col gap-2.5 text-sm text-white/75">
-              <Link href="/termos" className="hover:text-[#e8b86d]">
+              <Link href="/termos" className="hover:text-secondary-container">
                 Termos e Condições de uso
               </Link>
-              <Link href="/privacidade" className="hover:text-[#e8b86d]">
+              <Link href="/privacidade" className="hover:text-secondary-container">
                 Política de Privacidade
               </Link>
               <button
                 type="button"
                 onClick={onOpenAuth}
-                className="text-left hover:text-[#e8b86d]"
+                className="text-left hover:text-secondary-container"
               >
                 Minha Conta/Cadastre-se
               </button>
-              <Link href="/desejos" className="hover:text-[#e8b86d]">
+              <Link href="/desejos" className="hover:text-secondary-container">
                 Lista de Desejos
               </Link>
             </nav>
           </div>
 
           <div>
-            <h2 className="font-[family-name:var(--font-display)] text-2xl text-[#e8b86d]">
+            <h2 className="font-[family-name:var(--font-display)] text-2xl text-secondary-container">
               Informações para contato
             </h2>
             <ul className="mt-4 space-y-3 text-sm text-white/75">
               <li>
                 <a
                   href="mailto:pellomenos@pellomenos.com.br"
-                  className="inline-flex items-center gap-2 hover:text-[#e8b86d]"
+                  className="inline-flex items-center gap-2 hover:text-secondary-container"
                 >
                   <Icon name="mail" size={16} />
                   pellomenos@pellomenos.com.br
@@ -167,7 +174,7 @@ export function Footer({ onOpenAuth }: Props) {
               <li>
                 <a
                   href="tel:08002821233"
-                  className="inline-flex items-center gap-2 hover:text-[#e8b86d]"
+                  className="inline-flex items-center gap-2 hover:text-secondary-container"
                 >
                   <Icon name="phone" size={16} />
                   SAC 0800 282 1233
@@ -178,7 +185,7 @@ export function Footer({ onOpenAuth }: Props) {
                   href={WHATSAPP_SAC}
                   target="_blank"
                   rel="noreferrer"
-                  className="inline-flex items-center gap-2 hover:text-[#e8b86d]"
+                  className="inline-flex items-center gap-2 hover:text-secondary-container"
                 >
                   <SocialGlyph name="whatsapp" size={16} />
                   Whatsapp Sac Pello Menos
@@ -192,7 +199,7 @@ export function Footer({ onOpenAuth }: Props) {
           {trust.map((item) => (
             <div
               key={item.label}
-              className="flex items-center gap-3 text-[#e8b86d]"
+              className="flex items-center gap-3 text-secondary-container"
             >
               <Icon name={item.icon} size={18} />
               <span className="text-sm text-white/85">{item.label}</span>

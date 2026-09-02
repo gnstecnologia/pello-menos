@@ -221,39 +221,41 @@ const I = {
 };
 
 const M = {
-  heroPeito: "/images/hero/male/hero-peito.png",
+  heroPeito: "/images/hero/male/hero-peito.jpg",
   heroPeitoM: "/images/hero/male/hero-peito-m.jpg",
-  heroCostas: "/images/hero/male/hero-costas.png",
+  heroCostas: "/images/hero/male/hero-costas.jpg",
   heroCostasM: "/images/hero/male/hero-costas-m.jpg",
-  heroAxilas: "/images/hero/male/hero-axilas.png",
+  heroAxilas: "/images/hero/male/hero-axilas.jpg",
   heroAxilasM: "/images/hero/male/hero-axilas-m.jpg",
-  heroBarba: "/images/hero/male/hero-barba.png",
+  heroBarba: "/images/hero/male/hero-barba.jpg",
   heroBarbaM: "/images/hero/male/hero-barba-m.jpg",
-  promoLaser: "/images/hero/male/promo-laser.png",
+  promoLaser: "/images/hero/male/promo-laser.jpg",
   promoLaserM: "/images/hero/male/promo-laser-m.jpg",
   promoCorpo: "/images/hero/male/promo-corpo.jpg",
   promoCorpoM: "/images/hero/male/promo-corpo-m.jpg",
-  destaquePeito: "/images/hero/male/destaque-peito.png",
-  destaqueVerao: "/images/hero/male/destaque-verao.png",
-  destaqueBarba: "/images/hero/male/destaque-barba.png",
-  destaqueSplash: "/images/hero/male/destaque-splash.png",
-  catLaser: "/images/categories/male/cat-laser.png",
+  destaquePeito: "/images/hero/male/destaque-peito.jpg",
+  destaqueVerao: "/images/hero/male/destaque-verao.jpg",
+  destaqueBarba: "/images/hero/male/destaque-barba.jpg",
+  destaqueSplash: "/images/hero/male/destaque-splash.jpg",
+  catLaser: "/images/categories/male/cat-laser.jpg",
   catCera: "/images/categories/male/cat-cera.jpg",
-  catAxilas: "/images/categories/male/cat-axilas.png",
-  catCorpo: "/images/categories/male/cat-corpo.png",
-  catRosto: "/images/categories/male/cat-rosto.png",
-  catPernas: "/images/categories/male/cat-pernas.png",
-  peito: "/images/products/male/peito.png",
-  costas: "/images/products/male/costas.png",
-  barba: "/images/products/male/barba.png",
-  axilas: "/images/products/male/axilas.png",
-  abdomen: "/images/products/male/abdomen.png",
-  bracos: "/images/products/male/bracos.png",
-  pernas: "/images/products/male/pernas.png",
-  nuca: "/images/products/male/nuca.png",
-  virilha: "/images/products/male/virilha.png",
-  pescoco: "/images/products/male/pescoco.png",
-  antebraco: "/images/products/male/antebraco.png",
+  catEsfoliacao: "/images/categories/male/cat-esfoliacao.jpg",
+  catAxilas: "/images/categories/male/cat-axilas.jpg",
+  catCorpo: "/images/categories/male/cat-corpo.jpg",
+  catRosto: "/images/categories/male/cat-rosto.jpg",
+  catPernas: "/images/categories/male/cat-pernas.jpg",
+  assinaturaCera: "/images/hero/male/assinatura-cera.jpg",
+  peito: "/images/products/male/peito.jpg",
+  costas: "/images/products/male/costas.jpg",
+  barba: "/images/products/male/barba.jpg",
+  axilas: "/images/products/male/axilas.jpg",
+  abdomen: "/images/products/male/abdomen.jpg",
+  bracos: "/images/products/male/bracos.jpg",
+  pernas: "/images/products/male/pernas.jpg",
+  nuca: "/images/products/male/nuca.jpg",
+  virilha: "/images/products/male/virilha.jpg",
+  pescoco: "/images/products/male/pescoco.jpg",
+  antebraco: "/images/products/male/antebraco.jpg",
 };
 
 const catalogItems: ProductSeed[] = [
@@ -343,7 +345,41 @@ const catalogItems: ProductSeed[] = [
   // Produto oficial
   { id: "body-splash", name: "Body Splash Pello Menos", duration: "Uso diário", originalCents: 6900, badge: "Oficial", category: "produtos", method: "produto", image: I.kits, imageAlt: "Body Splash oficial Pello Menos" },
 
-  // Laser masculino — original da tabela/loja para a área equivalente; sem cera e sem esfoliação
+  // Cera masculino — áreas da tabela RJ-SP para homem; preço cartão + 5% OFF no site
+  { id: "peito-cera-masc", name: "Peito – Cera", duration: "20 min • Avulso", originalCents: 5990, badge: "Cera", highlight: true, category: "corpo", method: "cera", audience: "masculino", image: M.peito, imageAlt: "Homem após cera no peito Pello Menos" },
+  { id: "abdomen-cera-masc", name: "Abdômen – Cera", duration: "15 min • Avulso", originalCents: 5990, category: "corpo", method: "cera", audience: "masculino", image: M.abdomen, imageAlt: "Homem após cera no abdômen Pello Menos" },
+  { id: "axila-cera-masc", name: "Axila – Cera", duration: "15 min • Avulso", originalCents: 3500, badge: "Cera", highlight: true, category: "axilas", method: "cera", audience: "masculino", image: M.axilas, imageAlt: "Homem após cera nas axilas Pello Menos" },
+  { id: "antebraco-cera-masc", name: "Antebraço – Cera", duration: "15 min • Avulso", originalCents: 5190, category: "bracos", method: "cera", audience: "masculino", image: M.antebraco, imageAlt: "Homem após cera no antebraço Pello Menos" },
+  { id: "bracos-cera-masc", name: "Braços – Cera", duration: "20 min • Avulso", originalCents: 7190, category: "bracos", method: "cera", audience: "masculino", image: M.bracos, imageAlt: "Homem após cera nos braços Pello Menos" },
+  { id: "costas-cera-masc", name: "Costas – Cera", duration: "25 min • Avulso", originalCents: 5800, highlight: true, category: "corpo", method: "cera", audience: "masculino", image: M.costas, imageAlt: "Homem após cera nas costas Pello Menos" },
+  { id: "coxa-cera-masc", name: "Coxa – Cera", duration: "20 min • Avulso", originalCents: 5190, category: "pernas", method: "cera", audience: "masculino", image: M.pernas, imageAlt: "Homem após cera na coxa Pello Menos" },
+  { id: "faixa-cera-masc", name: "Faixa – Cera", duration: "10 min • Avulso", originalCents: 2800, category: "corpo", method: "cera", audience: "masculino", image: M.abdomen, imageAlt: "Homem após cera na faixa Pello Menos" },
+  { id: "intergluteos-cera-masc", name: "Interglúteos – Cera", duration: "15 min • Avulso", originalCents: 3390, category: "corpo", method: "cera", audience: "masculino", image: M.virilha, imageAlt: "Homem após cera nos interglúteos Pello Menos" },
+  { id: "nariz-cera-masc", name: "Nariz – Cera", duration: "10 min • Avulso", originalCents: 3000, category: "rosto", method: "cera", audience: "masculino", image: M.pescoco, imageAlt: "Homem após cera no nariz Pello Menos" },
+  { id: "nadegas-cera-masc", name: "Nádegas – Cera", duration: "20 min • Avulso", originalCents: 5190, category: "corpo", method: "cera", audience: "masculino", image: M.virilha, imageAlt: "Homem após cera nas nádegas Pello Menos" },
+  { id: "meia-nadega-cera-masc", name: "Meia nádega – Cera", duration: "15 min • Avulso", originalCents: 2600, badge: "Cera", category: "corpo", method: "cera", audience: "masculino", image: M.virilha, imageAlt: "Homem após cera na meia nádega Pello Menos" },
+  { id: "perna-cera-masc", name: "Perna Inteira – Cera", duration: "40 min • Avulso", originalCents: 8700, badge: "5% OFF", highlight: true, category: "pernas", method: "cera", audience: "masculino", image: M.pernas, imageAlt: "Homem após cera na perna inteira Pello Menos" },
+  { id: "meia-perna-cera-masc", name: "Meia Perna – Cera", duration: "20 min • Avulso", originalCents: 5190, category: "pernas", method: "cera", audience: "masculino", image: M.pernas, imageAlt: "Homem após cera na meia perna Pello Menos" },
+  { id: "queixo-cera-masc", name: "Queixo – Cera", duration: "10 min • Avulso", originalCents: 2800, badge: "Cera", category: "rosto", method: "cera", audience: "masculino", image: M.barba, imageAlt: "Homem após cera no queixo Pello Menos" },
+  { id: "virilha-comum-cera-masc", name: "Virilha comum – Cera", duration: "15 min • Avulso", originalCents: 3999, badge: "Cera", category: "virilha", method: "cera", audience: "masculino", image: M.virilha, imageAlt: "Homem após cera na virilha comum Pello Menos" },
+  { id: "virilha-cera-masc", name: "Virilha Total – Cera", duration: "25 min • Avulso", originalCents: 8890, highlight: true, category: "virilha", method: "cera", audience: "masculino", image: M.virilha, imageAlt: "Homem após cera na virilha total Pello Menos" },
+
+  // Esfoliação masculino — áreas equivalentes da tabela, sem seios
+  { id: "esfoliacao-faixa-masc", name: "Esfoliação de faixa", duration: "10 min • Avulso", originalCents: 1400, category: "corpo", method: "esfoliacao", audience: "masculino", image: M.abdomen, imageAlt: "Esfoliação de faixa masculina Pello Menos" },
+  { id: "esfoliacao-meio-braco-masc", name: "Esfoliação de meio braço", duration: "15 min • Avulso", originalCents: 2595, category: "bracos", method: "esfoliacao", audience: "masculino", image: M.antebraco, imageAlt: "Esfoliação de meio braço masculina Pello Menos" },
+  { id: "esfoliacao-braco-masc", name: "Esfoliação de braço", duration: "20 min • Avulso", originalCents: 3595, category: "bracos", method: "esfoliacao", audience: "masculino", image: M.bracos, imageAlt: "Esfoliação de braço masculina Pello Menos" },
+  { id: "esfoliacao-meia-perna-masc", name: "Esfoliação de meia perna", duration: "20 min • Avulso", originalCents: 2595, category: "pernas", method: "esfoliacao", audience: "masculino", image: M.pernas, imageAlt: "Esfoliação de meia perna masculina Pello Menos" },
+  { id: "esfoliacao-abdomen-masc", name: "Esfoliação de abdômen", duration: "15 min • Avulso", originalCents: 2995, category: "corpo", method: "esfoliacao", audience: "masculino", image: M.abdomen, imageAlt: "Esfoliação de abdômen masculina Pello Menos" },
+  { id: "esfoliacao-axilas-masc", name: "Esfoliação de axilas", duration: "15 min • Avulso", originalCents: 1750, badge: "Pele", category: "axilas", method: "esfoliacao", audience: "masculino", image: M.axilas, imageAlt: "Esfoliação de axilas masculina Pello Menos" },
+  { id: "esfoliacao-nadegas-masc", name: "Esfoliação de nádegas", duration: "15 min • Avulso", originalCents: 2595, category: "corpo", method: "esfoliacao", audience: "masculino", image: M.virilha, imageAlt: "Esfoliação de nádegas masculina Pello Menos" },
+  { id: "esfoliacao-meia-nadega-masc", name: "Esfoliação de meia nádega", duration: "10 min • Avulso", originalCents: 1300, category: "corpo", method: "esfoliacao", audience: "masculino", image: M.virilha, imageAlt: "Esfoliação de meia nádega masculina Pello Menos" },
+  { id: "esfoliacao-coxa-masc", name: "Esfoliação de coxa", duration: "20 min • Avulso", originalCents: 2595, category: "pernas", method: "esfoliacao", audience: "masculino", image: M.pernas, imageAlt: "Esfoliação de coxa masculina Pello Menos" },
+  { id: "esfoliacao-costas-masc", name: "Esfoliação de costas", duration: "20 min • Avulso", originalCents: 2900, category: "corpo", method: "esfoliacao", audience: "masculino", image: M.costas, imageAlt: "Esfoliação de costas masculina Pello Menos" },
+  { id: "esfoliacao-perna-masc", name: "Esfoliação de perna inteira", duration: "25 min • Avulso", originalCents: 4350, badge: "Pele", highlight: true, category: "pernas", method: "esfoliacao", audience: "masculino", image: M.pernas, imageAlt: "Esfoliação de perna inteira masculina Pello Menos" },
+  { id: "esfoliacao-virilha-masc", name: "Esfoliação de virilha", duration: "15 min • Avulso", originalCents: 2000, category: "virilha", method: "esfoliacao", audience: "masculino", image: M.virilha, imageAlt: "Esfoliação de virilha masculina Pello Menos" },
+  { id: "esfoliacao-virilha-faixa-masc", name: "Esfoliação de virilha + faixa", duration: "20 min • Avulso", originalCents: 2699, category: "virilha", method: "esfoliacao", audience: "masculino", image: M.virilha, imageAlt: "Esfoliação de virilha com faixa masculina Pello Menos" },
+
+  // Laser masculino — original da tabela/loja para a área equivalente
   { id: "axilas-laser-masc", name: "Axilas Laser", duration: "15 min • até 10 sessões", originalCents: 89990, badge: "5% OFF", highlight: true, category: "axilas", method: "laser", audience: "masculino", image: M.axilas, imageAlt: "Homem em campanha de laser nas axilas Pello Menos" },
   { id: "peito-laser-masc", name: "Peito Laser", duration: "25 min • até 10 sessões", originalCents: 149500, badge: "Masculino", highlight: true, category: "corpo", method: "laser", audience: "masculino", image: M.peito, imageAlt: "Homem em campanha de laser no peito Pello Menos" },
   { id: "costas-laser-masc", name: "Costas Laser", duration: "30 min • até 10 sessões", originalCents: 149500, badge: "Masculino", highlight: true, category: "corpo", method: "laser", audience: "masculino", image: M.costas, imageAlt: "Homem em campanha de laser nas costas Pello Menos" },
@@ -375,7 +411,7 @@ function defaultDescription(item: ProductSeed, method: ProductMethod, audience: 
     return `${item.name} com precisão no contorno. Sessão avulsa. ${who} Selecione a loja no pedido.`;
   }
   if (method === "esfoliacao") {
-    return `${item.name} para renovar a pele e potencializar a cera. Sessão avulsa, só no catálogo feminino. ${who} Selecione a unidade no pedido.`;
+    return `${item.name} para renovar a pele e potencializar a cera. Sessão avulsa. ${who} Selecione a unidade no pedido.`;
   }
   return "Body Splash oficial da linha Pello Menos para o cuidado em casa após a depilação.";
 }
@@ -467,6 +503,8 @@ const CROSS_SELL: Record<string, string[]> = {
   "virilha-comum-laser": ["virilha-laser", "virilha-cavada-laser"],
   "peito-laser-masc": ["costas-laser-masc", "abdomen-laser-masc", "axilas-laser-masc"],
   "barba-laser-masc": ["nuca-laser-masc", "pescoco-laser-masc", "orelhas-laser-masc"],
+  "peito-cera-masc": ["costas-cera-masc", "abdomen-cera-masc", "axila-cera-masc"],
+  "virilha-cera-masc": ["meia-nadega-cera-masc", "coxa-cera-masc", "axila-cera-masc"],
 };
 
 export function relatedProducts(product: Product, limit = 4) {
@@ -626,7 +664,9 @@ export const categories: Category[] = [
 ];
 
 export const categoriesMasculino: Category[] = [
+  { id: "cera", label: "Cera", image: M.catCera, href: "#cera" },
   { id: "laser", label: "Laser", image: M.catLaser, href: "#laser" },
+  { id: "esfoliacao", label: "Esfoliação", image: M.catEsfoliacao, href: "#esfoliacao" },
   { id: "axilas", label: "Axilas", image: M.catAxilas, href: "#produtos" },
   { id: "corpo", label: "Corpo", image: M.catCorpo, href: "#produtos" },
   { id: "rosto", label: "Rosto", image: M.catRosto, href: "#laser" },
@@ -667,8 +707,31 @@ export const productRails = {
   linha: female.filter((item) => item.method === "linha"),
   produtos: officialProducts,
   masculino: male,
-  laserRostoMasc: male.filter((item) => item.category === "rosto"),
-  laserCorpoMasc: male.filter((item) => item.category !== "rosto"),
+  ceraOfertasMasc: male.filter((item) => item.method === "cera"),
+  ceraAreasMasc: male.filter((item) =>
+    [
+      "virilha-cera-masc",
+      "axila-cera-masc",
+      "perna-cera-masc",
+      "peito-cera-masc",
+      "meia-nadega-cera-masc",
+      "meia-perna-cera-masc",
+      "coxa-cera-masc",
+      "bracos-cera-masc",
+      "virilha-comum-cera-masc",
+      "nadegas-cera-masc",
+      "queixo-cera-masc",
+      "costas-cera-masc",
+      "abdomen-cera-masc",
+    ].includes(item.id),
+  ),
+  esfoliacaoMasc: male.filter((item) => item.method === "esfoliacao"),
+  laserRostoMasc: male.filter(
+    (item) => item.method === "laser" && item.category === "rosto",
+  ),
+  laserCorpoMasc: male.filter(
+    (item) => item.method === "laser" && item.category !== "rosto",
+  ),
 };
 
 export const rectangularBanners: PromoBannerData[] = [

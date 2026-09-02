@@ -14,10 +14,10 @@ function PriceBlock({ slide, align = "end" }: { slide: HeroSlide; align?: "start
   return (
     <div className={`mb-5 flex items-baseline gap-1.5 text-white ${align === "end" ? "justify-end" : "justify-start"}`}>
       <span className="text-sm tracking-wide text-white/80 md:text-lg">por</span>
-      <span className="font-[family-name:var(--font-display)] text-5xl leading-none text-[#e8b86d] md:text-7xl">
+      <span className="font-[family-name:var(--font-display)] text-5xl leading-none text-secondary-container md:text-7xl">
         R$ {slide.priceReais}
       </span>
-      <span className="text-xl text-[#e8b86d] md:text-3xl">,{slide.priceCents}</span>
+      <span className="text-xl text-secondary-container md:text-3xl">,{slide.priceCents}</span>
     </div>
   );
 }
@@ -140,13 +140,13 @@ export function HeroBanner({ slides }: Props) {
   if (!slide) return null;
 
   const arrowClass =
-    "absolute top-1/2 z-20 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-[#e8b86d]/50 bg-black/25 text-[#e8b86d] backdrop-blur-sm md:h-12 md:w-12";
+    "absolute top-1/2 z-20 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-secondary-container/50 bg-black/25 text-secondary-container backdrop-blur-sm md:h-12 md:w-12";
 
   return (
     <section
       ref={root}
       id="inicio"
-      className="relative aspect-[4/5] w-full overflow-hidden bg-[#3a0628] md:aspect-auto md:h-[560px] lg:h-[640px] xl:h-[720px]"
+      className="relative aspect-[4/5] w-full overflow-hidden bg-primary md:aspect-auto md:h-[560px] lg:h-[640px] xl:h-[720px]"
     >
       {slides.map((item, slideIndex) => (
         <div
@@ -191,7 +191,7 @@ export function HeroBanner({ slides }: Props) {
             onClick={() => setIndex(slideIndex)}
             className={
               slideIndex === index
-                ? "h-1.5 w-8 rounded-full bg-[#e8b86d]"
+                ? "h-1.5 w-8 rounded-full bg-secondary-container"
                 : "h-1.5 w-4 rounded-full bg-white/35"
             }
           />
