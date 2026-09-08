@@ -3,6 +3,7 @@ export type ProductCategory =
   | "virilha"
   | "pernas"
   | "rosto"
+  | "sobrancelha"
   | "bracos"
   | "corpo"
   | "produtos";
@@ -12,7 +13,20 @@ export type ProductMethod =
   | "laser"
   | "linha"
   | "esfoliacao"
-  | "produto";
+  | "produto"
+  | "plano"
+  | "presente";
+
+export type ServiceMethod = "cera" | "laser" | "linha" | "esfoliacao";
+
+export type AreaCategory =
+  | "axilas"
+  | "virilha"
+  | "pernas"
+  | "rosto"
+  | "sobrancelha"
+  | "bracos"
+  | "corpo";
 
 export type ProductAudience = "feminino" | "masculino";
 
@@ -50,6 +64,8 @@ type ProductSeed = Omit<
   originalCents: number;
   method?: ProductMethod;
   audience?: ProductAudience;
+  skipDiscount?: boolean;
+  description?: string;
 };
 
 export type HeroLayout = "split" | "copy-right" | "copy-left" | "copy-top";
@@ -99,6 +115,18 @@ export type SquareBannerData = {
   image: string;
   imagePosition?: string;
   imageAlt: string;
+  href?: string;
+};
+
+export type NavChild = {
+  label: string;
+  href: string;
+};
+
+export type NavItem = {
+  label: string;
+  href: string;
+  children?: NavChild[];
 };
 
 export type Review = {
@@ -144,7 +172,63 @@ export function homeHref(audience: ProductAudience) {
 }
 
 export function productsHref(audience: ProductAudience) {
-  return audience === "masculino" ? "/masculino#produtos" : "/#produtos";
+  return audience === "masculino" ? "/masculino/servicos" : "/servicos";
+}
+
+export function serviceHref(audience: ProductAudience, method?: ServiceMethod) {
+  const base = audience === "masculino" ? "/masculino/servicos" : "/servicos";
+  return method ? `${base}/${method}` : base;
+}
+
+export function areaHref(audience: ProductAudience, category: AreaCategory) {
+  const base = audience === "masculino" ? "/masculino/area" : "/area";
+  return `${base}/${category}`;
+}
+
+export function planosHref(audience: ProductAudience) {
+  return audience === "masculino" ? "/masculino/planos" : "/planos";
+}
+
+export function retailHref(audience: ProductAudience) {
+  return audience === "masculino" ? "/masculino/produtos" : "/produtos";
+}
+
+export const SHARED_METHODS: ProductMethod[] = ["produto", "plano", "presente"];
+
+export function isSharedProduct(product: Pick<Product, "method">) {
+  return SHARED_METHODS.includes(product.method);
+}
+
+export const categoryLabels: Record<ProductCategory, string> = {
+  axilas: "Axilas",
+  virilha: "Virilha",
+  pernas: "Pernas",
+  rosto: "Rosto",
+  sobrancelha: "Sobrancelha",
+  bracos: "Braços",
+  corpo: "Corpo",
+  produtos: "Produtos",
+};
+
+export const methodLabels: Record<ProductMethod, string> = {
+  cera: "Cera",
+  laser: "Laser",
+  linha: "Linha",
+  esfoliacao: "Esfoliação",
+  produto: "Produtos",
+  plano: "Planos",
+  presente: "Cartão Presente",
+};
+
+export const serviceMethods: { id: ServiceMethod; label: string; subtitle: string }[] = [
+  { id: "cera", label: "Cera", subtitle: "Sessão avulsa, resultado no mesmo dia" },
+  { id: "laser", label: "Laser", subtitle: "Pacotes de até 10 sessões" },
+  { id: "linha", label: "Linha", subtitle: "Precisão no contorno do rosto" },
+  { id: "esfoliacao", label: "Esfoliação", subtitle: "Pele pronta para a cera" },
+];
+
+export function serviceMethodsFor(audience: ProductAudience) {
+  return serviceMethods.filter((item) => audience === "feminino" || item.id !== "linha");
 }
 
 export const MIN_INSTALLMENT_CENTS = 5000;
@@ -154,6 +238,8 @@ export function inferMethod(id: string, explicit?: ProductMethod): ProductMethod
   if (explicit) return explicit;
   if (id.includes("linha")) return "linha";
   if (id.includes("esfolia")) return "esfoliacao";
+  if (id.includes("plano")) return "plano";
+  if (id.includes("presente") || id.includes("cartao")) return "presente";
   if (id.includes("splash") || id.includes("body")) return "produto";
   if (id.includes("laser")) return "laser";
   if (
@@ -284,14 +370,14 @@ const catalogItems: ProductSeed[] = [
   { id: "virilha-cera", name: "Virilha Total – Cera", duration: "25 min • Avulso", originalCents: 8890, highlight: true, category: "virilha", image: I.virilhaCera, imageAlt: "Virilha total após cera" },
   { id: "labios-genitais-cera", name: "Lábios genitais – Cera", duration: "15 min • Avulso", originalCents: 3990, category: "virilha", image: I.virilhaCera, imageAlt: "Cera nos lábios genitais" },
   { id: "tintura-pelos-pubianos", name: "Tintura dos pelos pubianos", duration: "20 min • Avulso", originalCents: 4600, category: "virilha", method: "cera", image: I.virilhaCera, imageAlt: "Tintura dos pelos pubianos" },
-  { id: "sobrancelha-cera", name: "Sobrancelha – Cera", duration: "15 min • Avulso", originalCents: 4990, category: "rosto", image: I.design, imageAlt: "Sobrancelha com cera" },
-  { id: "sobrancelha-realce-cera", name: "Sobrancelha + realce – Cera", duration: "25 min • Avulso", originalCents: 7790, category: "rosto", image: I.henna, imageAlt: "Sobrancelha com realce" },
-  { id: "sobrancelha-henna-simples", name: "Sobrancelha simples + henna", duration: "25 min • Avulso", originalCents: 8590, category: "rosto", image: I.henna, imageAlt: "Sobrancelha simples com henna" },
-  { id: "design-sobrancelha", name: "Design de Sobrancelha", duration: "20 min • Avulso", originalCents: 6000, badge: "Olhar", highlight: true, category: "rosto", image: I.design, imageAlt: "Design de sobrancelha" },
-  { id: "design-sobrancelha-realce", name: "Design de sobrancelha + realce", duration: "30 min • Avulso", originalCents: 7990, category: "rosto", image: I.henna, imageAlt: "Design de sobrancelha com realce" },
-  { id: "sobrancelha-henna", name: "Design de sobrancelha + henna", duration: "30 min • Avulso", originalCents: 8790, badge: "Combo", category: "rosto", image: I.henna, imageAlt: "Design de sobrancelha com henna" },
-  { id: "realce", name: "Realce", duration: "15 min • Avulso", originalCents: 3390, category: "rosto", method: "cera", image: I.henna, imageAlt: "Realce de sobrancelha" },
-  { id: "henna", name: "Henna", duration: "20 min • Avulso", originalCents: 4290, category: "rosto", method: "cera", image: I.henna, imageAlt: "Henna nas sobrancelhas" },
+  { id: "sobrancelha-cera", name: "Sobrancelha – Cera", duration: "15 min • Avulso", originalCents: 4990, category: "sobrancelha", image: I.design, imageAlt: "Sobrancelha com cera" },
+  { id: "sobrancelha-realce-cera", name: "Sobrancelha + realce – Cera", duration: "25 min • Avulso", originalCents: 7790, category: "sobrancelha", image: I.henna, imageAlt: "Sobrancelha com realce" },
+  { id: "sobrancelha-henna-simples", name: "Sobrancelha simples + henna", duration: "25 min • Avulso", originalCents: 8590, category: "sobrancelha", image: I.henna, imageAlt: "Sobrancelha simples com henna" },
+  { id: "design-sobrancelha", name: "Design de Sobrancelha", duration: "20 min • Avulso", originalCents: 6000, badge: "Olhar", highlight: true, category: "sobrancelha", image: I.design, imageAlt: "Design de sobrancelha" },
+  { id: "design-sobrancelha-realce", name: "Design de sobrancelha + realce", duration: "30 min • Avulso", originalCents: 7990, category: "sobrancelha", image: I.henna, imageAlt: "Design de sobrancelha com realce" },
+  { id: "sobrancelha-henna", name: "Design de sobrancelha + henna", duration: "30 min • Avulso", originalCents: 8790, badge: "Combo", category: "sobrancelha", image: I.henna, imageAlt: "Design de sobrancelha com henna" },
+  { id: "realce", name: "Realce", duration: "15 min • Avulso", originalCents: 3390, category: "sobrancelha", method: "cera", image: I.henna, imageAlt: "Realce de sobrancelha" },
+  { id: "henna", name: "Henna", duration: "20 min • Avulso", originalCents: 4290, category: "sobrancelha", method: "cera", image: I.henna, imageAlt: "Henna nas sobrancelhas" },
 
   // Linha feminino — tabela RJ-SP
   { id: "buco-linha", name: "Buço – Linha", duration: "10 min • Avulso", originalCents: 3190, badge: "Linha", category: "rosto", method: "linha", image: I.bucoCera, imageAlt: "Buço após linha" },
@@ -342,8 +428,53 @@ const catalogItems: ProductSeed[] = [
   { id: "psd-m-laser", name: "PSD M Laser", duration: "15 min • até 10 sessões", originalCents: 49500, category: "corpo", image: I.abdomenLaser, imageAlt: "Área sem definição M após laser" },
   { id: "psd-g-laser", name: "PSD G Laser", duration: "20 min • até 10 sessões", originalCents: 76900, category: "corpo", image: I.abdomenLaser, imageAlt: "Área sem definição G após laser" },
 
-  // Produto oficial
+  // Produto oficial, planos e presente
   { id: "body-splash", name: "Body Splash Pello Menos", duration: "Uso diário", originalCents: 6900, badge: "Oficial", category: "produtos", method: "produto", image: I.kits, imageAlt: "Body Splash oficial Pello Menos" },
+  {
+    id: "cartao-presente",
+    name: "Cartão Presente",
+    duration: "Vale presente",
+    originalCents: 20000,
+    skipDiscount: true,
+    badge: "Presente",
+    highlight: true,
+    category: "produtos",
+    method: "presente",
+    image: "/images/hero/destaque-presente.png",
+    imageAlt: "Cartão Presente Pello Menos",
+    description:
+      "Cartão Presente Pello Menos para presentear com serviços de depilação. Informe a unidade onde o presente será usado.",
+  },
+  {
+    id: "plano-silver",
+    name: "Plano VIP Silver",
+    duration: "1ª parcela • mensal",
+    originalCents: 10990,
+    skipDiscount: true,
+    badge: "Silver",
+    highlight: true,
+    category: "produtos",
+    method: "plano",
+    image: "/images/hero/assinatura-female.jpg",
+    imageAlt: "Plano de assinatura VIP Silver Pello Menos",
+    description:
+      "Como assinante Vip Silver você depila 3 áreas (axila + 1/2 perna + qualquer virilha) por um valor fixo mensal, com 10% em serviços extras. A compra no e-commerce é a primeira parcela: depois cadastre a recorrência na loja escolhida.",
+  },
+  {
+    id: "plano-gold",
+    name: "Plano VIP Gold",
+    duration: "1ª parcela • mensal",
+    originalCents: 11490,
+    skipDiscount: true,
+    badge: "Gold",
+    highlight: true,
+    category: "produtos",
+    method: "plano",
+    image: "/images/hero/clube-off-female.jpg",
+    imageAlt: "Plano de assinatura VIP Gold Pello Menos",
+    description:
+      "No Vip Gold você escolhe os serviços de cera da sessão mensal. Exceto sobrancelha; perna inteira conta como 2 serviços. A compra no e-commerce é a primeira parcela: depois cadastre a recorrência na loja escolhida.",
+  },
 
   // Cera masculino — áreas da tabela RJ-SP para homem; preço cartão + 5% OFF no site
   { id: "peito-cera-masc", name: "Peito – Cera", duration: "20 min • Avulso", originalCents: 5990, badge: "Cera", highlight: true, category: "corpo", method: "cera", audience: "masculino", image: M.peito, imageAlt: "Homem após cera no peito Pello Menos" },
@@ -413,6 +544,12 @@ function defaultDescription(item: ProductSeed, method: ProductMethod, audience: 
   if (method === "esfoliacao") {
     return `${item.name} para renovar a pele e potencializar a cera. Sessão avulsa. ${who} Selecione a unidade no pedido.`;
   }
+  if (method === "plano") {
+    return `${item.name}. A compra no e-commerce é a primeira parcela: depois cadastre a recorrência na loja escolhida.`;
+  }
+  if (method === "presente") {
+    return "Cartão Presente Pello Menos para presentear com serviços de depilação. Informe a unidade onde o presente será usado.";
+  }
   return "Body Splash oficial da linha Pello Menos para o cuidado em casa após a depilação.";
 }
 
@@ -425,18 +562,28 @@ function catalogCode(id: string) {
 }
 
 export const products: Product[] = catalogItems.map((item, index) => {
-  const { originalCents, method: explicitMethod, audience: explicitAudience, ...rest } = item;
+  const {
+    originalCents,
+    method: explicitMethod,
+    audience: explicitAudience,
+    skipDiscount,
+    description,
+    ...rest
+  } = item;
   const method = inferMethod(item.id, explicitMethod);
   const audience = explicitAudience ?? "feminino";
+  const pricing = skipDiscount
+    ? { priceCents: originalCents }
+    : withEcommercePrice(originalCents);
   return {
     ...rest,
-    ...withEcommercePrice(originalCents),
+    ...pricing,
     duration: item.duration.replace(/^(\d+)/, "~$1"),
     method,
     audience,
     sku: catalogSku(index),
     code: catalogCode(item.id),
-    description: defaultDescription(item, method, audience),
+    description: description ?? defaultDescription(item, method, audience),
   };
 });
 
@@ -446,8 +593,58 @@ export function getProductById(id: string) {
 
 export function productsForAudience(audience: ProductAudience) {
   return products.filter(
-    (item) => item.audience === audience || item.method === "produto",
+    (item) => item.audience === audience || isSharedProduct(item),
   );
+}
+
+export function isServiceMethod(method: ProductMethod): method is ServiceMethod {
+  return (
+    method === "cera" ||
+    method === "laser" ||
+    method === "linha" ||
+    method === "esfoliacao"
+  );
+}
+
+export function productsByMethod(audience: ProductAudience, method: ServiceMethod) {
+  return productsForAudience(audience).filter((item) => item.method === method);
+}
+
+export function productsByArea(audience: ProductAudience, category: AreaCategory) {
+  return productsForAudience(audience).filter(
+    (item) => item.category === category && isServiceMethod(item.method),
+  );
+}
+
+export function retailProducts() {
+  return products.filter((item) => item.method === "produto");
+}
+
+export function planProducts() {
+  return products.filter((item) => item.method === "plano");
+}
+
+export const femaleAreaIds: AreaCategory[] = [
+  "virilha",
+  "pernas",
+  "axilas",
+  "rosto",
+  "sobrancelha",
+  "bracos",
+  "corpo",
+];
+
+export const maleAreaIds: AreaCategory[] = [
+  "virilha",
+  "pernas",
+  "axilas",
+  "rosto",
+  "bracos",
+  "corpo",
+];
+
+export function areaIdsFor(audience: ProductAudience) {
+  return audience === "masculino" ? maleAreaIds : femaleAreaIds;
 }
 
 export const storeUnits: StoreUnit[] = [
@@ -544,7 +741,7 @@ export const heroSlides: HeroSlide[] = [
     title: "Pernas prontas pra viver",
     ...pernaCeraHero,
     cta: "Ver cera",
-    ctaHref: "/#cera",
+    ctaHref: "/servicos/cera",
     image: "/images/hero/hero-campaign-low.png",
     imageMobile: "/images/hero/hero-campaign-low-m.jpg",
     imagePosition: "50% 82%",
@@ -558,7 +755,7 @@ export const heroSlides: HeroSlide[] = [
     title: "10 sessões de laser nas axilas",
     ...axilasLaserHero,
     cta: "Ver laser",
-    ctaHref: "/#laser",
+    ctaHref: "/servicos/laser",
     image: "/images/hero/hero-campaign-center.png",
     imageMobile: "/images/hero/hero-campaign-center-m.jpg",
     imagePosition: "50% 40%",
@@ -572,7 +769,7 @@ export const heroSlides: HeroSlide[] = [
     title: "Virilha total a laser",
     ...virilhaLaserHero,
     cta: "Ver serviços",
-    ctaHref: "/#produtos",
+    ctaHref: "/servicos",
     image: "/images/hero/hero-campaign-left.png",
     imageMobile: "/images/hero/hero-campaign-left-m.jpg",
     imagePosition: "22% 40%",
@@ -586,7 +783,7 @@ export const heroSlides: HeroSlide[] = [
     title: "Braços inteiros a laser",
     ...bracosLaserHero,
     cta: "Ver braços",
-    ctaHref: "/#laser",
+    ctaHref: "/servicos/laser",
     image: "/images/hero/hero-campaign-right.png",
     imageMobile: "/images/hero/hero-campaign-right-m.jpg",
     imagePosition: "78% 40%",
@@ -603,7 +800,7 @@ export const heroSlidesMasculino: HeroSlide[] = [
     title: "Peito liso, rotina leve",
     ...peitoHero,
     cta: "Ver laser",
-    ctaHref: "/masculino#laser",
+    ctaHref: "/masculino/servicos/laser",
     image: M.heroPeito,
     imageMobile: M.heroPeitoM,
     imagePosition: "48% 28%",
@@ -617,7 +814,7 @@ export const heroSlidesMasculino: HeroSlide[] = [
     title: "Costas a laser",
     ...costasHero,
     cta: "Ver costas",
-    ctaHref: "/masculino#laser",
+    ctaHref: "/masculino/servicos/laser",
     image: M.heroCostas,
     imageMobile: M.heroCostasM,
     imagePosition: "50% 26%",
@@ -631,7 +828,7 @@ export const heroSlidesMasculino: HeroSlide[] = [
     title: "10 sessões de laser nas axilas",
     ...axilasLaserHero,
     cta: "Ver axilas",
-    ctaHref: "/masculino#produtos",
+    ctaHref: "/masculino/servicos",
     image: M.heroAxilas,
     imageMobile: M.heroAxilasM,
     imagePosition: "42% 32%",
@@ -645,7 +842,7 @@ export const heroSlidesMasculino: HeroSlide[] = [
     title: "Barba a laser",
     ...barbaHero,
     cta: "Ver barba",
-    ctaHref: "/masculino#laser",
+    ctaHref: "/masculino/servicos/laser",
     image: M.heroBarba,
     imageMobile: M.heroBarbaM,
     imagePosition: "58% 28%",
@@ -656,21 +853,20 @@ export const heroSlidesMasculino: HeroSlide[] = [
 ];
 
 export const categories: Category[] = [
-  { id: "cera", label: "Cera", image: "/images/categories/cat-pernas-v2.png", href: "#cera" },
-  { id: "laser", label: "Laser", image: "/images/categories/cat-axilas-v2.png", href: "#laser" },
-  { id: "linha", label: "Linha", image: "/images/categories/cat-rosto-v2.png", href: "#linha" },
-  { id: "esfoliacao", label: "Esfoliação", image: "/images/categories/cat-pernas-v2.png", href: "#esfoliacao" },
-  { id: "virilha", label: "Virilha", image: "/images/categories/cat-virilha-v2.png", href: "#produtos" },
+  { id: "virilha", label: "Virilha", image: I.virilhaCera, href: areaHref("feminino", "virilha") },
+  { id: "pernas", label: "Pernas", image: I.pernaCera, href: areaHref("feminino", "pernas") },
+  { id: "axilas", label: "Axilas", image: I.axilaCera, href: areaHref("feminino", "axilas") },
+  { id: "rosto", label: "Rosto", image: I.rostoLaser, href: areaHref("feminino", "rosto") },
+  { id: "sobrancelha", label: "Sobrancelha", image: I.design, href: areaHref("feminino", "sobrancelha") },
+  { id: "bracos", label: "Braços", image: I.bracosCera, href: areaHref("feminino", "bracos") },
+  { id: "corpo", label: "Corpo", image: I.abdomenCera, href: areaHref("feminino", "corpo") },
 ];
 
 export const categoriesMasculino: Category[] = [
-  { id: "cera", label: "Cera", image: M.catCera, href: "#cera" },
-  { id: "laser", label: "Laser", image: M.catLaser, href: "#laser" },
-  { id: "esfoliacao", label: "Esfoliação", image: M.catEsfoliacao, href: "#esfoliacao" },
-  { id: "axilas", label: "Axilas", image: M.catAxilas, href: "#produtos" },
-  { id: "corpo", label: "Corpo", image: M.catCorpo, href: "#produtos" },
-  { id: "rosto", label: "Rosto", image: M.catRosto, href: "#laser" },
-  { id: "pernas", label: "Pernas", image: M.catPernas, href: "#produtos" },
+  { id: "virilha", label: "Virilha", image: M.virilha, href: areaHref("masculino", "virilha") },
+  { id: "pernas", label: "Pernas", image: M.catPernas, href: areaHref("masculino", "pernas") },
+  { id: "axilas", label: "Axilas", image: M.catAxilas, href: areaHref("masculino", "axilas") },
+  { id: "bracos", label: "Braços", image: M.bracos, href: areaHref("masculino", "bracos") },
 ];
 
 const female = products.filter((item) => item.audience === "feminino");
@@ -817,6 +1013,7 @@ export const squareBanners: SquareBannerData[] = [
     image: "/images/hero/destaque-presente.png",
     imagePosition: "50% 28%",
     imageAlt: "Mulher com cartão presente Pello Menos",
+    href: "/produto/cartao-presente",
   },
   {
     id: "combo",
@@ -966,8 +1163,25 @@ export const audienceLinks = [
   { href: "/masculino", label: "Masculino", audience: "masculino" as const },
 ];
 
-export const navLinks = [
-  { href: "/#produtos", label: "Serviços" },
-  { href: "/carrinho", label: "Carrinho" },
-  { href: "/checkout", label: "Pagamento" },
-];
+export function navItems(audience: ProductAudience): NavItem[] {
+  return [
+    {
+      label: "Serviços",
+      href: serviceHref(audience),
+      children: serviceMethodsFor(audience).map((item) => ({
+        label: item.label,
+        href: serviceHref(audience, item.id),
+      })),
+    },
+    {
+      label: "Planos de Assinatura",
+      href: planosHref(audience),
+      children: [
+        { label: "Silver", href: "/produto/plano-silver" },
+        { label: "Gold", href: "/produto/plano-gold" },
+      ],
+    },
+    { label: "Cartão Presente", href: "/produto/cartao-presente" },
+    { label: "Produtos", href: retailHref(audience) },
+  ];
+}

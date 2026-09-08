@@ -9,7 +9,7 @@ const femaleItems: { icon: IconName; label: string; detail: string }[] = [
   { icon: "heart", label: "Cortesia de primeira vez", detail: "Na unidade escolhida" },
   { icon: "scanFace", label: "Atendimento feminino", detail: "Ambiente exclusivo" },
   { icon: "star", label: "Laser e cera", detail: "Tudo na mesma loja" },
-  { icon: "house", label: "Unidades no RJ e SP", detail: "Loja perto de você" },
+  { icon: "house", label: "Unidades no RJ, SP e DF", detail: "Loja perto de você" },
   { icon: "check", label: "Avaliação com especialista", detail: "Pacotes a laser" },
 ];
 

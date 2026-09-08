@@ -160,8 +160,8 @@ export function HomeExperience({ audience = "feminino" }: Props) {
               ? "Recepcionista atendendo um cliente na assinatura VIP Cera Pello Menos"
               : "Recepcionista atendendo uma cliente na assinatura VIP Cera Pello Menos"
           }
-          ctaHref={isMale ? "/masculino#cera" : "/#cera"}
-          ctaLabel="Quero assinar"
+          ctaHref={isMale ? "/masculino/planos" : "/planos"}
+          ctaLabel="Ver planos"
         />
       ) : null}
       {show.extra && !isMale ? (
@@ -171,8 +171,8 @@ export function HomeExperience({ audience = "feminino" }: Props) {
           subtitle="A cliente assina e faz a sessão a laser no mês, no horário dela — resultado contínuo, sem recomeçar."
           image="/images/hero/promo-laser-v3.png"
           imageAlt="Sessão de laser na assinatura VIP Laser Pello Menos"
-          ctaHref="/#laser"
-          ctaLabel="Quero assinar"
+          ctaHref="/servicos/laser"
+          ctaLabel="Ver laser"
         />
       ) : null}
       {show.laser ? (
@@ -245,8 +245,8 @@ export function HomeExperience({ audience = "feminino" }: Props) {
           subtitle="Fragrância oficial para usar em casa depois da sessão."
           image="/images/hero/splash-banner.jpg"
           imageAlt="Body Splash oficial Pello Menos"
-          ctaHref="/produto/body-splash"
-          ctaLabel="Ver produto"
+          ctaHref="/produtos"
+          ctaLabel="Ver produtos"
           price={
             productRails.produtos[0]
               ? formatBRL(productRails.produtos[0].priceCents)

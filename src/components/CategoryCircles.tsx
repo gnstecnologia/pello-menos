@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import type { Category } from "@/lib/data";
 
 type Props = {
@@ -12,7 +13,7 @@ export function CategoryCircles({ items }: Props) {
     <section className="mx-auto max-w-7xl overflow-x-auto px-container-margin py-10 hide-scrollbar">
       <div className="js-cats flex min-w-max justify-start gap-6 md:justify-center md:gap-10">
         {items.map((category) => (
-          <a
+          <Link
             key={category.id}
             href={category.href}
             className="js-cat group flex w-[84px] flex-col items-center gap-3 md:w-[104px]"
@@ -29,7 +30,7 @@ export function CategoryCircles({ items }: Props) {
             <span className="text-center text-sm font-medium text-on-surface">
               {category.label}
             </span>
-          </a>
+          </Link>
         ))}
       </div>
     </section>

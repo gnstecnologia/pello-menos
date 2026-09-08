@@ -184,14 +184,14 @@ export function SearchPanel({ open, onClose }: Props) {
                   </p>
                   <div className="mt-3 flex flex-wrap gap-2">
                     {categoryHits.map((category) => (
-                      <button
+                      <Link
                         key={category.id}
-                        type="button"
-                        onClick={goToProducts}
+                        href={category.href}
+                        onClick={onClose}
                         className="btn-lux btn-lux-primary rounded-full px-4 py-2 text-sm text-white"
                       >
                         {category.label}
-                      </button>
+                      </Link>
                     ))}
                   </div>
                 </div>

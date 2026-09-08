@@ -16,7 +16,7 @@ export default function DesejosPage() {
         Sua lista está vazia. Explore os serviços e guarde os favoritos.
       </p>
       <Link
-        href="/#produtos"
+        href="/servicos"
         className="btn-lux btn-lux-primary mt-8 inline-flex items-center gap-2 rounded-full px-8 py-3 font-label-md text-label-md text-on-primary uppercase"
       >
         Ver serviços

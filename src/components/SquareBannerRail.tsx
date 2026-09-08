@@ -32,7 +32,7 @@ export function SquareBannerRail({ banners, productsHref }: Props) {
           {banners.map((banner) => (
             <a
               key={banner.id}
-              href={productsHref}
+              href={banner.href ?? productsHref}
               data-carousel-card
               data-square-banner
               className="carousel-card group relative aspect-square overflow-hidden rounded-2xl"

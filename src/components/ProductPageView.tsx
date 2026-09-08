@@ -7,12 +7,16 @@ import { BadgeTag } from "@/components/BadgeTag";
 import { Icon } from "@/components/Icon";
 import { useStore } from "@/components/StoreProvider";
 import {
+  categoryLabels,
   formatBRL,
   getInstallment,
   homeHref,
   installmentHint,
+  methodLabels,
   productsHref,
   relatedProducts,
+  retailHref,
+  planosHref,
   storeUnits,
   type Product,
 } from "@/lib/data";
@@ -47,6 +51,15 @@ export function ProductPageView({ product }: Props) {
         )
       : null;
 
+  const catalogParent =
+    product.method === "produto"
+      ? { href: retailHref(product.audience), label: "Produtos" }
+      : product.method === "plano"
+        ? { href: planosHref(product.audience), label: "Planos de Assinatura" }
+        : product.method === "presente"
+          ? { href: "/produto/cartao-presente", label: "Cartão Presente" }
+          : { href: productsHref(product.audience), label: "Serviços" };
+
   return (
     <main className="mx-auto max-w-6xl px-container-margin py-8 md:py-12">
       <nav className="text-xs text-on-surface-variant">
@@ -54,8 +67,8 @@ export function ProductPageView({ product }: Props) {
           Início
         </Link>
         <span className="px-2">/</span>
-        <Link href={productsHref(product.audience)} className="hover:text-primary">
-          Serviços
+        <Link href={catalogParent.href} className="hover:text-primary">
+          {catalogParent.label}
         </Link>
         <span className="px-2">/</span>
         <span className="text-primary">{product.name}</span>
@@ -82,7 +95,9 @@ export function ProductPageView({ product }: Props) {
 
         <div>
           <p className="font-label-md text-label-md text-secondary uppercase">
-            {product.category}
+            {product.method === "cera" || product.method === "laser" || product.method === "linha" || product.method === "esfoliacao"
+              ? `${methodLabels[product.method]} · ${categoryLabels[product.category]}`
+              : methodLabels[product.method]}
           </p>
           <h1 className="mt-2 font-[family-name:var(--font-display)] text-headline-md text-primary md:text-headline-lg">
             {product.name}

@@ -1,6 +1,7 @@
 import {
   ArrowRight,
   BadgePercent,
+  ChevronDown,
   ChevronLeft,
   ChevronRight,
   Check,
@@ -11,6 +12,7 @@ import {
   LayoutGrid,
   Mail,
   MapPin,
+  Menu,
   Minus,
   PersonStanding,
   Phone,
@@ -47,6 +49,7 @@ const icons = {
   creditCard: CreditCard,
   clock: Clock,
   arrowRight: ArrowRight,
+  chevronDown: ChevronDown,
   chevronLeft: ChevronLeft,
   chevronRight: ChevronRight,
   check: Check,
@@ -63,6 +66,7 @@ const icons = {
   badgePercent: BadgePercent,
   qrCode: QrCode,
   mail: Mail,
+  menu: Menu,
   mapPin: MapPin,
   phone: Phone,
 } as const;
