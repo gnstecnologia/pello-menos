@@ -57,7 +57,7 @@ const malePurchases = [
   {
     name: "Rafael C.",
     city: "Copacabana, RJ",
-    product: "Peito Laser",
+    product: "Tórax Laser",
     href: "/produto/peito-laser-masc",
     image: "/images/products/male/peito.jpg",
     when: "há 2 minutos",
@@ -73,7 +73,7 @@ const malePurchases = [
   {
     name: "Pedro S.",
     city: "Barra da Tijuca, RJ",
-    product: "Axilas Laser",
+    product: "Axila Laser",
     href: "/produto/axilas-laser-masc",
     image: "/images/products/male/axilas.jpg",
     when: "há 11 minutos",
@@ -88,10 +88,10 @@ const malePurchases = [
   },
   {
     name: "Thiago P.",
-    city: "Campo Grande, RJ",
-    product: "Nuca Laser",
-    href: "/produto/nuca-laser-masc",
-    image: "/images/products/male/nuca.jpg",
+    city: "Copacabana, RJ",
+    product: "Queixo Laser",
+    href: "/produto/queixo-laser-masc",
+    image: "/images/products/male/barba.jpg",
     when: "há 24 minutos",
   },
 ];

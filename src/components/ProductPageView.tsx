@@ -17,7 +17,7 @@ import {
   relatedProducts,
   retailHref,
   planosHref,
-  storeUnits,
+  unitsForProduct,
   type Product,
 } from "@/lib/data";
 
@@ -32,7 +32,15 @@ export function ProductPageView({ product }: Props) {
   const [unitError, setUnitError] = useState("");
 
   const related = useMemo(() => relatedProducts(product), [product]);
-  const selectedUnit = storeUnits.find((unit) => unit.id === unitId);
+  const availableUnits = useMemo(() => unitsForProduct(product), [product]);
+  const unitsByState = useMemo(() => {
+    const groups: Record<string, typeof availableUnits> = {};
+    for (const unit of availableUnits) {
+      (groups[unit.state] ??= []).push(unit);
+    }
+    return groups;
+  }, [availableUnits]);
+  const selectedUnit = availableUnits.find((unit) => unit.id === unitId);
   const installment = getInstallment(product.priceCents, product.method);
 
   function handleAdd() {
@@ -150,7 +158,7 @@ export function ProductPageView({ product }: Props) {
               Unidade <span className="text-primary">*</span>
             </label>
             <p className="mt-1 text-xs text-on-surface-variant">
-              Campo obrigatório. O serviço é atendido só na loja escolhida.
+              Campo obrigatório. Só aparecem lojas que atendem este serviço.
             </p>
             <select
               id="unit"
@@ -165,12 +173,21 @@ export function ProductPageView({ product }: Props) {
               }`}
             >
               <option value="">Selecione a unidade</option>
-              {storeUnits.map((unit) => (
-                <option key={unit.id} value={unit.id}>
-                  {unit.name} — {unit.city}/{unit.state}
-                </option>
+              {Object.entries(unitsByState).map(([state, units]) => (
+                <optgroup key={state} label={state}>
+                  {units.map((unit) => (
+                    <option key={unit.id} value={unit.id}>
+                      {unit.name} — {unit.city}
+                    </option>
+                  ))}
+                </optgroup>
               ))}
             </select>
+            {availableUnits.length === 0 ? (
+              <p className="mt-2 text-sm text-primary">
+                Este serviço ainda não está disponível para agendamento online.
+              </p>
+            ) : null}
             {selectedUnit ? (
               <p className="mt-2 inline-flex items-start gap-2 text-xs text-on-surface-variant">
                 <Icon name="mapPin" size={14} className="mt-0.5 shrink-0 text-primary" />

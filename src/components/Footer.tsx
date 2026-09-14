@@ -198,15 +198,15 @@ export function Footer({ onOpenAuth }: Props) {
           <Image
             src="/images/trust/cards.png"
             alt="Pagamento com cartão de crédito: Visa, Mastercard e Elo"
-            width={520}
-            height={120}
+            width={754}
+            height={169}
             className="h-14 w-auto max-w-[min(100%,420px)] object-contain object-left md:h-16"
           />
           <Image
             src="/images/trust/ssl.png"
             alt="Site seguro, SSL certificado"
-            width={420}
-            height={140}
+            width={1004}
+            height={412}
             className="h-16 w-auto max-w-[min(100%,280px)] object-contain object-left md:h-[72px]"
           />
         </div>

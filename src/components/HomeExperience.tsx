@@ -189,7 +189,7 @@ export function HomeExperience({ audience = "feminino" }: Props) {
           title={isMale ? "Laser no rosto" : "Laser no rosto"}
           subtitle={
             isMale
-              ? "Barba, nuca, pescoço, orelhas e nariz"
+              ? "Barba, bigode, queixo, pescoço, orelhas e nariz"
               : "Pacotes nas áreas do rosto, depois da cera"
           }
           items={isMale ? productRails.laserRostoMasc : productRails.laserRosto}
@@ -201,7 +201,7 @@ export function HomeExperience({ audience = "feminino" }: Props) {
           title={isMale ? "Laser no corpo" : "Laser no corpo"}
           subtitle={
             isMale
-              ? "Peito, costas, axilas, braços, pernas e virilha"
+              ? "Tórax, abdômen, costas, axilas, braços, pernas e virilha"
               : "Braços, pernas e corpo em carrossel próprio"
           }
           items={isMale ? productRails.laserCorpoMasc : productRails.laserCorpo}
