@@ -6,6 +6,7 @@ export type ProductCategory =
   | "sobrancelha"
   | "bracos"
   | "corpo"
+  | "torax"
   | "produtos";
 
 export type ProductMethod =
@@ -26,7 +27,8 @@ export type AreaCategory =
   | "rosto"
   | "sobrancelha"
   | "bracos"
-  | "corpo";
+  | "corpo"
+  | "torax";
 
 export type ProductAudience = "feminino" | "masculino";
 
@@ -207,6 +209,7 @@ export const categoryLabels: Record<ProductCategory, string> = {
   sobrancelha: "Sobrancelha",
   bracos: "Braços",
   corpo: "Corpo",
+  torax: "Tórax/abdômen",
   produtos: "Produtos",
 };
 
@@ -259,6 +262,9 @@ export function getInstallment(
   priceCents: number,
   method: ProductMethod = "laser",
 ) {
+  if (method === "plano") {
+    return { times: 1, installmentCents: priceCents };
+  }
   let maxTimes = 10;
   if (method === "cera" && priceCents < WAX_TEN_X_MIN_CENTS) {
     maxTimes = Math.max(1, Math.floor(priceCents / MIN_INSTALLMENT_CENTS));
@@ -270,6 +276,9 @@ export function getInstallment(
 }
 
 export function installmentHint(method: ProductMethod) {
+  if (method === "plano") {
+    return "Planos são cobrados no valor cheio, sem parcelamento.";
+  }
   if (method === "cera") {
     return "Em cera, 10x só acima de R$ 180. Parcela mínima de R$ 50.";
   }
@@ -447,7 +456,7 @@ const catalogItems: ProductSeed[] = [
   },
   {
     id: "plano-silver",
-    name: "Plano VIP Silver",
+    name: "Plano VIP Silver – Cera",
     duration: "1ª parcela • mensal",
     originalCents: 10990,
     skipDiscount: true,
@@ -456,13 +465,13 @@ const catalogItems: ProductSeed[] = [
     category: "produtos",
     method: "plano",
     image: "/images/hero/assinatura-female.jpg",
-    imageAlt: "Plano de assinatura VIP Silver Pello Menos",
+    imageAlt: "Plano de assinatura VIP Silver Cera Pello Menos",
     description:
-      "Como assinante Vip Silver você depila 3 áreas (axila + 1/2 perna + qualquer virilha) por um valor fixo mensal, com 10% em serviços extras. A compra no e-commerce é a primeira parcela: depois cadastre a recorrência na loja escolhida.",
+      "Como assinante Vip Silver você depila 3 áreas a cera (axila + 1/2 perna + qualquer virilha) por um valor fixo mensal, com 10% em serviços extras. A compra no e-commerce é a primeira parcela: depois cadastre a recorrência na loja escolhida.",
   },
   {
     id: "plano-gold",
-    name: "Plano VIP Gold",
+    name: "Plano VIP Gold – Cera",
     duration: "1ª parcela • mensal",
     originalCents: 11490,
     skipDiscount: true,
@@ -470,15 +479,45 @@ const catalogItems: ProductSeed[] = [
     highlight: true,
     category: "produtos",
     method: "plano",
-    image: "/images/hero/clube-off-female.jpg",
-    imageAlt: "Plano de assinatura VIP Gold Pello Menos",
+    image: "/images/hero/assinatura-female.jpg",
+    imageAlt: "Plano de assinatura VIP Gold Cera Pello Menos",
     description:
       "No Vip Gold você escolhe os serviços de cera da sessão mensal. Exceto sobrancelha; perna inteira conta como 2 serviços. A compra no e-commerce é a primeira parcela: depois cadastre a recorrência na loja escolhida.",
   },
+  {
+    id: "plano-clube-laser",
+    name: "Clube de Laser",
+    duration: "1ª parcela • mensal",
+    originalCents: 24990,
+    skipDiscount: true,
+    badge: "Laser",
+    highlight: true,
+    category: "produtos",
+    method: "plano",
+    image: "/images/hero/clube-off-female.jpg",
+    imageAlt: "Clube de Laser Pello Menos",
+    description:
+      "Assinatura mensal de laser por R$ 249,90, com fidelidade mínima de 5 meses. Até 8 áreas no mês, sem hora marcada. A compra no e-commerce é a primeira parcela: depois cadastre a recorrência do clube na loja escolhida.",
+  },
+  {
+    id: "plano-prepago",
+    name: "Pré-pago Pello Menos",
+    duration: "Compra única • 3 sessões",
+    originalCents: 34470,
+    skipDiscount: true,
+    badge: "Pré-pago",
+    highlight: true,
+    category: "produtos",
+    method: "plano",
+    image: "/images/hero/destaque-verao.png",
+    imageAlt: "Plano Pré-pago Pello Menos",
+    description:
+      "Pacote pré-pago de cera em compra única: 3 sessões, com até 3 serviços por visita. Perna inteira conta como 2 serviços; sobrancelha não entra. Informe a unidade no pedido e use na loja escolhida.",
+  },
 
   // Cera masculino — áreas da tabela RJ-SP para homem; preço cartão + 5% OFF no site
-  { id: "peito-cera-masc", name: "Peito – Cera", duration: "20 min • Avulso", originalCents: 5990, badge: "Cera", highlight: true, category: "corpo", method: "cera", audience: "masculino", image: M.peito, imageAlt: "Homem após cera no peito Pello Menos" },
-  { id: "abdomen-cera-masc", name: "Abdômen – Cera", duration: "15 min • Avulso", originalCents: 5990, category: "corpo", method: "cera", audience: "masculino", image: M.abdomen, imageAlt: "Homem após cera no abdômen Pello Menos" },
+  { id: "peito-cera-masc", name: "Peito – Cera", duration: "20 min • Avulso", originalCents: 5990, badge: "Cera", highlight: true, category: "torax", method: "cera", audience: "masculino", image: M.peito, imageAlt: "Homem após cera no peito Pello Menos" },
+  { id: "abdomen-cera-masc", name: "Abdômen – Cera", duration: "15 min • Avulso", originalCents: 5990, category: "torax", method: "cera", audience: "masculino", image: M.abdomen, imageAlt: "Homem após cera no abdômen Pello Menos" },
   { id: "axila-cera-masc", name: "Axila – Cera", duration: "15 min • Avulso", originalCents: 3500, badge: "Cera", highlight: true, category: "axilas", method: "cera", audience: "masculino", image: M.axilas, imageAlt: "Homem após cera nas axilas Pello Menos" },
   { id: "antebraco-cera-masc", name: "Antebraço – Cera", duration: "15 min • Avulso", originalCents: 5190, category: "bracos", method: "cera", audience: "masculino", image: M.antebraco, imageAlt: "Homem após cera no antebraço Pello Menos" },
   { id: "bracos-cera-masc", name: "Braços – Cera", duration: "20 min • Avulso", originalCents: 7190, category: "bracos", method: "cera", audience: "masculino", image: M.bracos, imageAlt: "Homem após cera nos braços Pello Menos" },
@@ -500,7 +539,7 @@ const catalogItems: ProductSeed[] = [
   { id: "esfoliacao-meio-braco-masc", name: "Esfoliação de meio braço", duration: "15 min • Avulso", originalCents: 2595, category: "bracos", method: "esfoliacao", audience: "masculino", image: M.antebraco, imageAlt: "Esfoliação de meio braço masculina Pello Menos" },
   { id: "esfoliacao-braco-masc", name: "Esfoliação de braço", duration: "20 min • Avulso", originalCents: 3595, category: "bracos", method: "esfoliacao", audience: "masculino", image: M.bracos, imageAlt: "Esfoliação de braço masculina Pello Menos" },
   { id: "esfoliacao-meia-perna-masc", name: "Esfoliação de meia perna", duration: "20 min • Avulso", originalCents: 2595, category: "pernas", method: "esfoliacao", audience: "masculino", image: M.pernas, imageAlt: "Esfoliação de meia perna masculina Pello Menos" },
-  { id: "esfoliacao-abdomen-masc", name: "Esfoliação de abdômen", duration: "15 min • Avulso", originalCents: 2995, category: "corpo", method: "esfoliacao", audience: "masculino", image: M.abdomen, imageAlt: "Esfoliação de abdômen masculina Pello Menos" },
+  { id: "esfoliacao-abdomen-masc", name: "Esfoliação de abdômen", duration: "15 min • Avulso", originalCents: 2995, category: "torax", method: "esfoliacao", audience: "masculino", image: M.abdomen, imageAlt: "Esfoliação de abdômen masculina Pello Menos" },
   { id: "esfoliacao-axilas-masc", name: "Esfoliação de axilas", duration: "15 min • Avulso", originalCents: 1750, badge: "Pele", category: "axilas", method: "esfoliacao", audience: "masculino", image: M.axilas, imageAlt: "Esfoliação de axilas masculina Pello Menos" },
   { id: "esfoliacao-nadegas-masc", name: "Esfoliação de nádegas", duration: "15 min • Avulso", originalCents: 2595, category: "corpo", method: "esfoliacao", audience: "masculino", image: M.virilha, imageAlt: "Esfoliação de nádegas masculina Pello Menos" },
   { id: "esfoliacao-meia-nadega-masc", name: "Esfoliação de meia nádega", duration: "10 min • Avulso", originalCents: 1300, category: "corpo", method: "esfoliacao", audience: "masculino", image: M.virilha, imageAlt: "Esfoliação de meia nádega masculina Pello Menos" },
@@ -512,9 +551,9 @@ const catalogItems: ProductSeed[] = [
 
   // Laser masculino — original da tabela/loja para a área equivalente
   { id: "axilas-laser-masc", name: "Axilas Laser", duration: "15 min • até 10 sessões", originalCents: 89990, badge: "5% OFF", highlight: true, category: "axilas", method: "laser", audience: "masculino", image: M.axilas, imageAlt: "Homem em campanha de laser nas axilas Pello Menos" },
-  { id: "peito-laser-masc", name: "Peito Laser", duration: "25 min • até 10 sessões", originalCents: 149500, badge: "Masculino", highlight: true, category: "corpo", method: "laser", audience: "masculino", image: M.peito, imageAlt: "Homem em campanha de laser no peito Pello Menos" },
+  { id: "peito-laser-masc", name: "Peito Laser", duration: "25 min • até 10 sessões", originalCents: 149500, badge: "Masculino", highlight: true, category: "torax", method: "laser", audience: "masculino", image: M.peito, imageAlt: "Homem em campanha de laser no peito Pello Menos" },
   { id: "costas-laser-masc", name: "Costas Laser", duration: "30 min • até 10 sessões", originalCents: 149500, badge: "Masculino", highlight: true, category: "corpo", method: "laser", audience: "masculino", image: M.costas, imageAlt: "Homem em campanha de laser nas costas Pello Menos" },
-  { id: "abdomen-laser-masc", name: "Abdômen Laser", duration: "20 min • até 10 sessões", originalCents: 102000, category: "corpo", method: "laser", audience: "masculino", image: M.abdomen, imageAlt: "Homem em campanha de laser no abdômen Pello Menos" },
+  { id: "abdomen-laser-masc", name: "Abdômen Laser", duration: "20 min • até 10 sessões", originalCents: 102000, category: "torax", method: "laser", audience: "masculino", image: M.abdomen, imageAlt: "Homem em campanha de laser no abdômen Pello Menos" },
   { id: "barba-laser-masc", name: "Barba Laser", duration: "15 min • até 10 sessões", originalCents: 99000, badge: "Rosto", highlight: true, category: "rosto", method: "laser", audience: "masculino", image: M.barba, imageAlt: "Homem em campanha de laser na barba Pello Menos" },
   { id: "nuca-laser-masc", name: "Nuca Laser", duration: "10 min • até 10 sessões", originalCents: 70300, category: "rosto", method: "laser", audience: "masculino", image: M.nuca, imageAlt: "Homem em campanha de laser na nuca Pello Menos" },
   { id: "pescoco-laser-masc", name: "Pescoço Laser", duration: "10 min • até 10 sessões", originalCents: 70300, category: "rosto", method: "laser", audience: "masculino", image: M.pescoco, imageAlt: "Homem em campanha de laser no pescoço Pello Menos" },
@@ -611,9 +650,13 @@ export function productsByMethod(audience: ProductAudience, method: ServiceMetho
 }
 
 export function productsByArea(audience: ProductAudience, category: AreaCategory) {
-  return productsForAudience(audience).filter(
-    (item) => item.category === category && isServiceMethod(item.method),
-  );
+  return productsForAudience(audience).filter((item) => {
+    if (!isServiceMethod(item.method)) return false;
+    if (audience === "masculino" && category === "corpo") {
+      return item.category === "corpo" || item.category === "virilha" || item.category === "bracos";
+    }
+    return item.category === category;
+  });
 }
 
 export function retailProducts() {
@@ -622,6 +665,14 @@ export function retailProducts() {
 
 export function planProducts() {
   return products.filter((item) => item.method === "plano");
+}
+
+export function planProductsFor(audience: ProductAudience) {
+  const items = planProducts();
+  if (audience === "masculino") {
+    return items.filter((item) => item.id !== "plano-clube-laser");
+  }
+  return items;
 }
 
 export const femaleAreaIds: AreaCategory[] = [
@@ -635,11 +686,10 @@ export const femaleAreaIds: AreaCategory[] = [
 ];
 
 export const maleAreaIds: AreaCategory[] = [
-  "virilha",
-  "pernas",
+  "torax",
   "axilas",
+  "pernas",
   "rosto",
-  "bracos",
   "corpo",
 ];
 
@@ -857,16 +907,15 @@ export const categories: Category[] = [
   { id: "pernas", label: "Pernas", image: I.pernaCera, href: areaHref("feminino", "pernas") },
   { id: "axilas", label: "Axilas", image: I.axilaCera, href: areaHref("feminino", "axilas") },
   { id: "rosto", label: "Rosto", image: I.rostoLaser, href: areaHref("feminino", "rosto") },
-  { id: "sobrancelha", label: "Sobrancelha", image: I.design, href: areaHref("feminino", "sobrancelha") },
-  { id: "bracos", label: "Braços", image: I.bracosCera, href: areaHref("feminino", "bracos") },
   { id: "corpo", label: "Corpo", image: I.abdomenCera, href: areaHref("feminino", "corpo") },
 ];
 
 export const categoriesMasculino: Category[] = [
-  { id: "virilha", label: "Virilha", image: M.virilha, href: areaHref("masculino", "virilha") },
-  { id: "pernas", label: "Pernas", image: M.catPernas, href: areaHref("masculino", "pernas") },
-  { id: "axilas", label: "Axilas", image: M.catAxilas, href: areaHref("masculino", "axilas") },
-  { id: "bracos", label: "Braços", image: M.bracos, href: areaHref("masculino", "bracos") },
+  { id: "torax", label: "Tórax/abdômen", image: M.peito, href: areaHref("masculino", "torax") },
+  { id: "axilas", label: "Axila", image: M.catAxilas, href: areaHref("masculino", "axilas") },
+  { id: "pernas", label: "Perna", image: M.catPernas, href: areaHref("masculino", "pernas") },
+  { id: "rosto", label: "Barba", image: M.barba, href: areaHref("masculino", "rosto") },
+  { id: "corpo", label: "Corpo", image: M.catCorpo, href: areaHref("masculino", "corpo") },
 ];
 
 const female = products.filter((item) => item.audience === "feminino");
@@ -1164,6 +1213,15 @@ export const audienceLinks = [
 ];
 
 export function navItems(audience: ProductAudience): NavItem[] {
+  const planChildren: NavChild[] = [
+    { label: "Silver - Cera", href: "/produto/plano-silver" },
+    { label: "Gold - Cera", href: "/produto/plano-gold" },
+  ];
+  if (audience === "feminino") {
+    planChildren.push({ label: "Clube de Laser", href: "/produto/plano-clube-laser" });
+  }
+  planChildren.push({ label: "Pré Pago", href: "/produto/plano-prepago" });
+
   return [
     {
       label: "Serviços",
@@ -1176,10 +1234,7 @@ export function navItems(audience: ProductAudience): NavItem[] {
     {
       label: "Planos de Assinatura",
       href: planosHref(audience),
-      children: [
-        { label: "Silver", href: "/produto/plano-silver" },
-        { label: "Gold", href: "/produto/plano-gold" },
-      ],
+      children: planChildren,
     },
     { label: "Cartão Presente", href: "/produto/cartao-presente" },
     { label: "Produtos", href: retailHref(audience) },

@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
 import { CatalogPageView } from "@/components/CatalogPageView";
-import { planProducts } from "@/lib/data";
+import { planProductsFor } from "@/lib/data";
 
 export const metadata: Metadata = {
   title: "Planos de Assinatura | Pello Menos",
-  description: "Planos VIP Silver e Gold. A compra no site é a primeira parcela da assinatura.",
+  description:
+    "Silver Cera, Gold Cera, Clube de Laser e Pré-pago. Escolha o plano e compre em um clique.",
 };
 
 export default function PlanosPage() {
@@ -13,8 +14,8 @@ export default function PlanosPage() {
       audience="feminino"
       eyebrow="Assinatura"
       title="Planos de Assinatura"
-      subtitle="Silver e Gold: a compra no e-commerce é a primeira parcela. Depois cadastre a recorrência na loja."
-      items={planProducts()}
+      subtitle="Silver - Cera, Gold - Cera, Clube de Laser e Pré Pago. Planos no valor cheio, sem parcelamento."
+      items={planProductsFor("feminino")}
     />
   );
 }

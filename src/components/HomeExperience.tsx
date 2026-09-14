@@ -160,19 +160,19 @@ export function HomeExperience({ audience = "feminino" }: Props) {
               ? "Recepcionista atendendo um cliente na assinatura VIP Cera Pello Menos"
               : "Recepcionista atendendo uma cliente na assinatura VIP Cera Pello Menos"
           }
-          ctaHref={isMale ? "/masculino/planos" : "/planos"}
-          ctaLabel="Ver planos"
+          ctaHref="/produto/plano-silver"
+          ctaLabel="Ver Silver - Cera"
         />
       ) : null}
       {show.extra && !isMale ? (
         <SplitOffer
-          eyebrow="Assinatura VIP Laser"
+          eyebrow="Clube de Laser"
           title="Laser todo mês"
-          subtitle="A cliente assina e faz a sessão a laser no mês, no horário dela — resultado contínuo, sem recomeçar."
+          subtitle="A cliente assina o Clube de Laser e faz a sessão no mês, no horário dela — até 8 áreas, sem hora marcada."
           image="/images/hero/promo-laser-v3.png"
-          imageAlt="Sessão de laser na assinatura VIP Laser Pello Menos"
-          ctaHref="/servicos/laser"
-          ctaLabel="Ver laser"
+          imageAlt="Sessão de laser no Clube de Laser Pello Menos"
+          ctaHref="/produto/plano-clube-laser"
+          ctaLabel="Ver Clube de Laser"
         />
       ) : null}
       {show.laser ? (

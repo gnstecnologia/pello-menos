@@ -3,14 +3,8 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Icon, type IconName } from "@/components/Icon";
+import { Icon } from "@/components/Icon";
 import { audienceFromPath, homeHref } from "@/lib/data";
-
-const trust: { icon: IconName; label: string }[] = [
-  { icon: "truck", label: "Unidades no RJ e SP" },
-  { icon: "badgePercent", label: "Até 10x no cartão" },
-  { icon: "shieldCheck", label: "Compra segura" },
-];
 
 const WHATSAPP_SAC =
   "https://wa.me/?text=" +
@@ -92,6 +86,7 @@ type Props = {
 export function Footer({ onOpenAuth }: Props) {
   const audience = audienceFromPath(usePathname());
   const isMale = audience === "masculino";
+  const unitsLabel = isMale ? "Unidades no RJ e SP" : "Unidades no RJ, SP e DF";
 
   return (
     <footer className="site-footer mt-8 pb-28 text-white md:pb-0">
@@ -195,16 +190,25 @@ export function Footer({ onOpenAuth }: Props) {
           </div>
         </div>
 
-        <div className="mt-10 grid gap-4 border-t border-white/15 pt-8 sm:grid-cols-3">
-          {trust.map((item) => (
-            <div
-              key={item.label}
-              className="flex items-center gap-3 text-secondary-container"
-            >
-              <Icon name={item.icon} size={18} />
-              <span className="text-sm text-white/85">{item.label}</span>
-            </div>
-          ))}
+        <div className="mt-10 flex flex-col gap-6 border-t border-white/15 pt-8 md:flex-row md:items-center md:justify-between">
+          <div className="flex items-center gap-3 text-secondary-container">
+            <Icon name="truck" size={18} />
+            <span className="text-sm text-white/85">{unitsLabel}</span>
+          </div>
+          <Image
+            src="/images/trust/cards.png"
+            alt="Pagamento com cartão de crédito: Visa, Mastercard e Elo"
+            width={520}
+            height={120}
+            className="h-14 w-auto max-w-[min(100%,420px)] object-contain object-left md:h-16"
+          />
+          <Image
+            src="/images/trust/ssl.png"
+            alt="Site seguro, SSL certificado"
+            width={420}
+            height={140}
+            className="h-16 w-auto max-w-[min(100%,280px)] object-contain object-left md:h-[72px]"
+          />
         </div>
       </div>
     </footer>

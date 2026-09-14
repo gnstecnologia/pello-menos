@@ -35,7 +35,13 @@ function linkActive(pathname: string, item: NavItem) {
     return path === "/servicos" || path.endsWith("/servicos") || path.includes("/servicos/");
   }
   if (item.label === "Planos de Assinatura") {
-    return path.includes("/planos") || path.includes("plano-silver") || path.includes("plano-gold");
+    return (
+      path.includes("/planos") ||
+      path.includes("plano-silver") ||
+      path.includes("plano-gold") ||
+      path.includes("plano-clube-laser") ||
+      path.includes("plano-prepago")
+    );
   }
   if (item.label === "Cartão Presente") {
     return path.includes("cartao-presente");
@@ -143,7 +149,7 @@ function NavMenu({
               <Icon name="chevronDown" size={14} className="opacity-70" />
             </Link>
             <div className="invisible absolute top-full left-1/2 z-50 pt-3 opacity-0 transition group-hover:visible group-hover:opacity-100 group-focus-within:visible group-focus-within:opacity-100 -translate-x-1/2">
-              <div className="min-w-[180px] rounded-2xl border border-outline/40 bg-white py-2 shadow-[0_18px_40px_rgba(58,10,60,0.12)]">
+              <div className="min-w-[210px] rounded-2xl border border-outline/40 bg-white py-2 shadow-[0_18px_40px_rgba(58,10,60,0.12)]">
                 {item.children.map((child) => (
                   <Link
                     key={child.href}

@@ -50,6 +50,11 @@ export function CheckoutView() {
   const unit = cartItems[0]?.unit;
   const qtyInvalid = cartItems.some((item) => item.qty > 1);
 
+  const hasPlan = cartItems.some((item) => item.product.method === "plano");
+  const paymentNote = hasPlan
+    ? "Planos são cobrados no valor cheio, sem parcelamento."
+    : "Parcela mínima de R$ 50. Em cera, 10x só acima de R$ 180.";
+
   if (cartItems.length === 0 && !done) {
     return (
       <main className="mx-auto flex max-w-lg flex-col items-center px-container-margin py-20 text-center">
@@ -183,7 +188,7 @@ export function CheckoutView() {
               <span>
                 <span className="block text-sm font-semibold">Cartão</span>
                 <span className="text-xs text-on-surface-variant">
-                  Parcela mínima de R$ 50. Em cera, 10x só acima de R$ 180.
+                  {paymentNote}
                 </span>
               </span>
             </div>
