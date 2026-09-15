@@ -21,7 +21,6 @@ import {
   heroSlidesMasculino,
   productRails,
   productsHref,
-  rectangularBanners,
   rectangularBannersMasculino,
   squareBanners,
   squareBannersMasculino,
@@ -173,14 +172,11 @@ export function HomeExperience({ audience = "feminino" }: Props) {
           imageAlt="Sessão de laser no Clube de Laser Pello Menos"
           ctaHref="/produto/plano-clube-laser"
           ctaLabel="Ver Clube de Laser"
+          textSide="right"
         />
       ) : null}
-      {show.laser ? (
-        <PromoBanner
-          banner={
-            isMale ? rectangularBannersMasculino[0]! : rectangularBanners[1]!
-          }
-        />
+      {show.laser && isMale ? (
+        <PromoBanner banner={rectangularBannersMasculino[0]!} />
       ) : null}
       {show.laser ? (
         <ProductGrid
