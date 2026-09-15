@@ -295,22 +295,9 @@ export function installmentHint(method: ProductMethod) {
   return "Parcele em até 10x, com parcela mínima de R$ 50.";
 }
 
-const MALE_CANONICAL_IMAGES: Record<string, string> = {
-  "peito-cera-masc": "/images/products/male/peito.jpg",
-  "abdomen-cera-masc": "/images/products/male/abdomen.jpg",
-  "axila-cera-masc": "/images/products/male/axilas.jpg",
-  "antebraco-cera-masc": "/images/products/male/antebraco.jpg",
-  "bracos-cera-masc": "/images/products/male/bracos.jpg",
-  "costas-cera-masc": "/images/products/male/costas.jpg",
-  "perna-cera-masc": "/images/products/male/pernas.jpg",
-  "virilha-cera-masc": "/images/products/male/virilha.jpg",
-  "queixo-cera-masc": "/images/products/male/barba.jpg",
-  "pescoco-laser-masc": "/images/products/male/pescoco.jpg",
-};
-
 export function catalogImage(id: string, audience: ProductAudience = "feminino") {
   if (audience === "masculino") {
-    return MALE_CANONICAL_IMAGES[id] ?? `/images/products/male/${id}.png`;
+    return `/images/products/male/${id}.png`;
   }
   return `/images/products/${id}.png`;
 }
@@ -340,17 +327,16 @@ const M = {
   catRosto: "/images/categories/male/cat-rosto.jpg",
   catPernas: "/images/categories/male/cat-pernas.jpg",
   assinaturaCera: "/images/hero/male/assinatura-cera.jpg",
-  peito: "/images/products/male/peito.jpg",
-  costas: "/images/products/male/costas.jpg",
-  barba: "/images/products/male/barba.jpg",
-  axilas: "/images/products/male/axilas.jpg",
-  abdomen: "/images/products/male/abdomen.jpg",
-  bracos: "/images/products/male/bracos.jpg",
-  pernas: "/images/products/male/pernas.jpg",
-  nuca: "/images/products/male/nuca.jpg",
-  virilha: "/images/products/male/virilha.jpg",
-  pescoco: "/images/products/male/pescoco.jpg",
-  antebraco: "/images/products/male/antebraco.jpg",
+  peito: "/images/products/male/peito-cera-masc.png",
+  costas: "/images/products/male/costas-cera-masc.png",
+  barba: "/images/products/male/barba-laser-masc.png",
+  axilas: "/images/products/male/axila-cera-masc.png",
+  abdomen: "/images/products/male/abdomen-cera-masc.png",
+  bracos: "/images/products/male/bracos-cera-masc.png",
+  pernas: "/images/products/male/perna-cera-masc.png",
+  virilha: "/images/products/male/virilha-cera-masc.png",
+  pescoco: "/images/products/male/pescoco-laser-masc.png",
+  antebraco: "/images/products/male/antebraco-cera-masc.png",
 };
 
 const catalogItems: ProductSeed[] = [

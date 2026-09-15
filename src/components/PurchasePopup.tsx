@@ -59,7 +59,7 @@ const malePurchases = [
     city: "Copacabana, RJ",
     product: "Tórax Laser",
     href: "/produto/peito-laser-masc",
-    image: "/images/products/male/peito.jpg",
+    image: "/images/products/male/peito-laser-masc.png",
     when: "há 2 minutos",
   },
   {
@@ -67,7 +67,7 @@ const malePurchases = [
     city: "Tijuca, RJ",
     product: "Costas Laser",
     href: "/produto/costas-laser-masc",
-    image: "/images/products/male/costas.jpg",
+    image: "/images/products/male/costas-laser-masc.png",
     when: "há 6 minutos",
   },
   {
@@ -75,7 +75,7 @@ const malePurchases = [
     city: "Barra da Tijuca, RJ",
     product: "Axila Laser",
     href: "/produto/axilas-laser-masc",
-    image: "/images/products/male/axilas.jpg",
+    image: "/images/products/male/axilas-laser-masc.png",
     when: "há 11 minutos",
   },
   {
@@ -83,7 +83,7 @@ const malePurchases = [
     city: "Avenida Paulista, SP",
     product: "Barba Laser",
     href: "/produto/barba-laser-masc",
-    image: "/images/products/male/barba.jpg",
+    image: "/images/products/male/barba-laser-masc.png",
     when: "há 18 minutos",
   },
   {
@@ -91,7 +91,7 @@ const malePurchases = [
     city: "Copacabana, RJ",
     product: "Queixo Laser",
     href: "/produto/queixo-laser-masc",
-    image: "/images/products/male/barba.jpg",
+    image: "/images/products/male/queixo-laser-masc.png",
     when: "há 24 minutos",
   },
 ];
