@@ -17,6 +17,8 @@ import {
   relatedProducts,
   retailHref,
   planosHref,
+  giftCardHref,
+  isServiceMethod,
   unitsForProduct,
   type Product,
 } from "@/lib/data";
@@ -33,6 +35,7 @@ export function ProductPageView({ product }: Props) {
 
   const related = useMemo(() => relatedProducts(product), [product]);
   const availableUnits = useMemo(() => unitsForProduct(product), [product]);
+  const isTimedService = isServiceMethod(product.method);
   const unitsByState = useMemo(() => {
     const groups: Record<string, typeof availableUnits> = {};
     for (const unit of availableUnits) {
@@ -65,7 +68,7 @@ export function ProductPageView({ product }: Props) {
       : product.method === "plano"
         ? { href: planosHref(product.audience), label: "Planos de Assinatura" }
         : product.method === "presente"
-          ? { href: "/produto/cartao-presente", label: "Cartão Presente" }
+          ? { href: giftCardHref(), label: "Cartão Presente" }
           : { href: productsHref(product.audience), label: "Serviços" };
 
   return (
@@ -113,7 +116,8 @@ export function ProductPageView({ product }: Props) {
           <div className="mt-3 flex flex-wrap items-center gap-3 text-sm text-on-surface-variant">
             <span className="inline-flex items-center gap-1.5">
               <Icon name="clock" size={15} />
-              {product.duration}*
+              {product.duration}
+              {isTimedService ? "*" : ""}
             </span>
             <span>SKU {product.sku}</span>
             <span>Cód. {product.code}</span>
@@ -146,9 +150,11 @@ export function ProductPageView({ product }: Props) {
           </p>
 
           <p className="mt-5 text-body-md text-on-surface">{product.description}</p>
-          <p className="mt-3 text-xs text-on-surface-variant">
-            * Tempo médio só da execução do serviço; não inclui anamnese.
-          </p>
+          {isTimedService ? (
+            <p className="mt-3 text-xs text-on-surface-variant">
+              * Tempo médio só da execução do serviço; não inclui anamnese.
+            </p>
+          ) : null}
 
           <div className="mt-6">
             <label

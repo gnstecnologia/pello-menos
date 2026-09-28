@@ -205,6 +205,10 @@ export function retailHref(audience: ProductAudience) {
   return audience === "masculino" ? "/masculino/produtos" : "/produtos";
 }
 
+export function giftCardHref() {
+  return "/cartao-presente";
+}
+
 export const SHARED_METHODS: ProductMethod[] = ["produto", "plano", "presente"];
 
 export function isSharedProduct(product: Pick<Product, "method">) {
@@ -288,6 +292,9 @@ export function getInstallment(
 export function installmentHint(method: ProductMethod) {
   if (method === "plano") {
     return "Planos são cobrados no valor cheio, sem parcelamento.";
+  }
+  if (method === "presente") {
+    return "Valor do vale presente, sem o 5% OFF do e-commerce.";
   }
   if (method === "cera") {
     return "Em cera, 10x só acima de R$ 180. Parcela mínima de R$ 50.";
@@ -427,18 +434,63 @@ const catalogItems: ProductSeed[] = [
   { id: "body-splash", name: "Body Splash Pello Menos", duration: "Uso diário", originalCents: 6900, badge: "Oficial", category: "produtos", method: "produto", image: catalogImage("body-splash"), imageAlt: "Body Splash oficial Pello Menos" },
   {
     id: "cartao-presente",
-    name: "Cartão Presente",
+    name: "Cartão Presente R$ 79,99",
     duration: "Vale presente",
-    originalCents: 20000,
+    originalCents: 7999,
     skipDiscount: true,
     badge: "Presente",
     highlight: true,
     category: "produtos",
     method: "presente",
     image: catalogImage("cartao-presente"),
-    imageAlt: "Cartão Presente Pello Menos",
+    imageAlt: "Cartão presente Pello Menos de R$ 79,99 nas mãos",
     description:
-      "Cartão Presente Pello Menos para presentear com serviços de depilação. Informe a unidade onde o presente será usado.",
+      "Gift card Pello Menos de R$ 79,99. Vale presente para serviços de depilação. Informe a unidade onde o presente será usado.",
+  },
+  {
+    id: "cartao-presente-160",
+    name: "Cartão Presente R$ 160",
+    duration: "Vale presente",
+    originalCents: 16000,
+    skipDiscount: true,
+    badge: "Presente",
+    highlight: true,
+    category: "produtos",
+    method: "presente",
+    image: catalogImage("cartao-presente-160"),
+    imageAlt: "Cartão presente Pello Menos de R$ 160 nas mãos",
+    description:
+      "Gift card Pello Menos de R$ 160. Vale presente para serviços de depilação. Informe a unidade onde o presente será usado.",
+  },
+  {
+    id: "cartao-presente-215",
+    name: "Cartão Presente R$ 215",
+    duration: "Vale presente",
+    originalCents: 21500,
+    skipDiscount: true,
+    badge: "Presente",
+    highlight: true,
+    category: "produtos",
+    method: "presente",
+    image: catalogImage("cartao-presente-215"),
+    imageAlt: "Cartão presente Pello Menos de R$ 215 nas mãos",
+    description:
+      "Gift card Pello Menos de R$ 215. Vale presente para serviços de depilação. Informe a unidade onde o presente será usado.",
+  },
+  {
+    id: "cartao-presente-290",
+    name: "Cartão Presente R$ 290",
+    duration: "Vale presente",
+    originalCents: 29000,
+    skipDiscount: true,
+    badge: "Presente",
+    highlight: true,
+    category: "produtos",
+    method: "presente",
+    image: catalogImage("cartao-presente-290"),
+    imageAlt: "Cartão presente Pello Menos de R$ 290 nas mãos",
+    description:
+      "Gift card Pello Menos de R$ 290. Vale presente para serviços de depilação. Informe a unidade onde o presente será usado.",
   },
   {
     id: "plano-silver",
@@ -670,6 +722,12 @@ export function planProductsFor(audience: ProductAudience) {
     return items.filter((item) => item.id !== "plano-clube-laser");
   }
   return items;
+}
+
+export function giftCardProducts() {
+  return products
+    .filter((item) => item.method === "presente")
+    .sort((a, b) => a.priceCents - b.priceCents);
 }
 
 export const femaleAreaIds: AreaCategory[] = [
@@ -1105,7 +1163,7 @@ export const squareBanners: SquareBannerData[] = [
     image: "/images/hero/destaque-presente.png",
     imagePosition: "50% 28%",
     imageAlt: "Mulher com cartão presente Pello Menos",
-    href: "/produto/cartao-presente",
+    href: giftCardHref(),
   },
   {
     id: "combo",
@@ -1279,7 +1337,14 @@ export function navItems(audience: ProductAudience): NavItem[] {
       href: planosHref(audience),
       children: planChildren,
     },
-    { label: "Cartão Presente", href: "/produto/cartao-presente" },
+    {
+      label: "Cartão Presente",
+      href: giftCardHref(),
+      children: giftCardProducts().map((item) => ({
+        label: item.name.replace("Cartão Presente ", ""),
+        href: `/produto/${item.id}`,
+      })),
+    },
     { label: "Produtos", href: retailHref(audience) },
   ];
 }
