@@ -91,3 +91,7 @@ scripts/_tmp_*.json
 scripts/_audit_accesstage_ot.json
 scripts/_audit_encoding_mojibake_result.json
 scripts/_audit_loja_cache_headers*.json
+
+# bytecode python
+__pycache__/
+*.pyc
