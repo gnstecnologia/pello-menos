@@ -1,0 +1,85 @@
+name: Espelhar produção no ambiente de teste
+
+# Mantém pellomenosoficialteste idêntico a loja.pellomenos.com.br.
+# A origem é a própria loja (leitura pública); o destino é o ambiente de teste.
+# Nunca escreve em produção.
+
+on:
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Simular sem publicar"
+        type: boolean
+        default: false
+  schedule:
+    # todos os dias às 09:00 UTC (06:00 em São Paulo)
+    - cron: "0 9 * * *"
+  push:
+    branches: [main]
+    paths:
+      - "wordpress-loja/snippets/**"
+      - "scripts/sync_oficialteste.py"
+      - ".github/workflows/sync-oficialteste.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: sync-oficialteste
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Conferir credenciais
+        env:
+          URL: ${{ secrets.PM_SYNC_URL }}
+          USER: ${{ secrets.PM_SYNC_USER }}
+          PASS: ${{ secrets.PM_SYNC_APP_PASSWORD }}
+        run: |
+          faltando=""
+          [ -z "$URL" ] && faltando="$faltando PM_SYNC_URL"
+          [ -z "$USER" ] && faltando="$faltando PM_SYNC_USER"
+          [ -z "$PASS" ] && faltando="$faltando PM_SYNC_APP_PASSWORD"
+          if [ -n "$faltando" ]; then
+            echo "::error::secrets ausentes:$faltando"
+            exit 1
+          fi
+          case "$URL" in
+            *loja.pellomenos.com.br*) echo "::error::PM_SYNC_URL aponta para produção"; exit 1 ;;
+          esac
+          echo "destino: $URL"
+
+      - name: Sincronizar
+        env:
+          PM_SYNC_URL: ${{ secrets.PM_SYNC_URL }}
+          PM_SYNC_USER: ${{ secrets.PM_SYNC_USER }}
+          PM_SYNC_APP_PASSWORD: ${{ secrets.PM_SYNC_APP_PASSWORD }}
+        run: |
+          if [ "${{ inputs.dry_run }}" = "true" ]; then
+            python scripts/sync_oficialteste.py --dry
+          else
+            python scripts/sync_oficialteste.py
+          fi
+
+      - name: Resumo
+        if: always()
+        env:
+          RESULTADO: ${{ job.status }}
+        run: |
+          {
+            echo "### Sincronização do ambiente de teste"
+            echo ""
+            echo "- Resultado: **$RESULTADO**"
+            echo "- Origem: \`loja.pellomenos.com.br\` (leitura pública)"
+            echo "- Destino: \`${{ secrets.PM_SYNC_URL }}\`"
+            echo "- Disparo: \`${{ github.event_name }}\`"
+          } >> "$GITHUB_STEP_SUMMARY"
