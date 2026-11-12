@@ -26,6 +26,7 @@ type Toast = { id: number; message: string } | null;
 export type UserAccount = {
   name: string;
   email: string;
+  phone?: string;
 };
 
 type StoreContextValue = {
@@ -39,8 +40,17 @@ type StoreContextValue = {
   setQty: (lineId: string, qty: number) => void;
   setAllQty: (qty: number) => void;
   clearCart: () => void;
+  /** Atualiza priceCents de linhas existentes (ex.: sync Woo). */
+  patchCartPrices: (
+    updates: Array<{ lineId: string; priceCents: number }>,
+  ) => void;
   login: (email: string, password: string) => string | null;
-  register: (name: string, email: string, password: string) => string | null;
+  register: (
+    name: string,
+    email: string,
+    password: string,
+    phone: string,
+  ) => string | null;
   logout: () => void;
 };
 
@@ -112,6 +122,24 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     showToast("Carrinho esvaziado");
   }, [showToast]);
 
+  const patchCartPrices = useCallback(
+    (updates: Array<{ lineId: string; priceCents: number }>) => {
+      if (!updates.length) return;
+      const map = new Map(updates.map((u) => [u.lineId, u.priceCents]));
+      setCartItems((current) =>
+        current.map((item) => {
+          const next = map.get(item.lineId);
+          if (next == null || next === item.product.priceCents) return item;
+          return {
+            ...item,
+            product: { ...item.product, priceCents: next },
+          };
+        }),
+      );
+    },
+    [],
+  );
+
   const removeFromCart = useCallback((lineId: string) => {
     setCartItems((current) =>
       current.filter((item) => item.lineId !== lineId),
@@ -154,18 +182,19 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   );
 
   const register = useCallback(
-    (name: string, email: string, password: string) => {
+    (name: string, email: string, password: string, phone: string) => {
       const cleanName = name.trim();
       const cleanEmail = email.trim().toLowerCase();
-      if (!cleanName || !cleanEmail || !password) {
-        return "Preencha nome, e-mail e senha.";
+      const cleanPhone = phone.trim();
+      if (!cleanName || !cleanPhone || !cleanEmail || !password) {
+        return "Preencha nome, telefone, e-mail e senha.";
       }
       if (password.length < 6) return "A senha precisa ter pelo menos 6 caracteres.";
       const accounts = readAccounts();
       if (accounts.some((account) => account.email === cleanEmail)) {
         return "Esse e-mail já tem conta.";
       }
-      const next = { name: cleanName, email: cleanEmail };
+      const next = { name: cleanName, email: cleanEmail, phone: cleanPhone };
       localStorage.setItem(
         ACCOUNTS_KEY,
         JSON.stringify([...accounts, { ...next, password }]),
@@ -201,6 +230,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       setQty,
       setAllQty,
       clearCart,
+      patchCartPrices,
       login,
       register,
       logout,
@@ -214,6 +244,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     setQty,
     setAllQty,
     clearCart,
+    patchCartPrices,
     login,
     register,
     logout,

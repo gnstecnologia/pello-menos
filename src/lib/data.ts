@@ -1,3 +1,11 @@
+import {
+  BLACK_NOV,
+  applyCampaignCents,
+  campaignPhaseAt,
+  discountRateForLine,
+  type CartLineLike,
+} from "./black-nov-campaign";
+
 export type ProductCategory =
   | "axilas"
   | "virilha"
@@ -55,8 +63,11 @@ export type Product = {
   id: string;
   name: string;
   duration: string;
+  /** Preço de tabela (antes de 5% / campanha). */
+  originalCents: number;
   priceCents: number;
   oldPriceCents?: number;
+  skipDiscount?: boolean;
   badge?: string;
   highlight?: boolean;
   image: string;
@@ -92,10 +103,16 @@ export type HeroSlide = {
   ctaHref: string;
   image: string;
   imageMobile?: string;
+  /** Arte intermediária (md–lg), tipicamente 1536×960. */
+  imageTablet?: string;
   imagePosition?: string;
   imagePositionMobile?: string;
   imageAlt: string;
   layout: HeroLayout;
+  /** Texto/preço já estão na arte — não renderiza overlay HTML. */
+  bakedText?: boolean;
+  /** Só no mobile a arte traz texto — desktop continua com overlay HTML. */
+  bakedTextMobile?: boolean;
 };
 
 export type Category = {
@@ -151,11 +168,63 @@ export type Review = {
 
 export const ECOMMERCE_DISCOUNT = 0.05;
 
+/** Override global de cobrança (0 = preços reais de catálogo/bridge). */
+export const TEST_CHARGE_CENTS = 0;
+
 export function withEcommercePrice(originalCents: number) {
   return {
     oldPriceCents: originalCents,
     priceCents: Math.round(originalCents * (1 - ECOMMERCE_DISCOUNT)),
   };
+}
+
+export {
+  BLACK_NOV,
+  campaignPhaseAt,
+  campaignDiscountLabel,
+  discountRateForLine,
+  applyCampaignCents,
+  multiAreaHint,
+  familyForProduct,
+  type CampaignPhase,
+  type CartLineLike,
+} from "./black-nov-campaign";
+
+/** Preço de vitrine: campanha Black (se ativa) ou 5% / skipDiscount. */
+export function resolveCatalogPrice(
+  args: {
+    id: string;
+    originalCents: number;
+    method?: ProductMethod | null;
+    skipDiscount?: boolean;
+    audience?: ProductAudience | null;
+  },
+  cartLines?: CartLineLike[],
+) {
+  const lines =
+    cartLines && cartLines.length
+      ? cartLines
+      : [{ id: args.id, method: args.method ?? null }];
+  const rate = discountRateForLine(args.id, args.method, lines);
+  if (rate != null) {
+    return applyCampaignCents(args.originalCents, rate, {
+      skipDiscount: args.skipDiscount,
+      method: args.method,
+      audience: args.audience,
+    });
+  }
+  if (args.skipDiscount) {
+    return {
+      priceCents: args.originalCents,
+      oldPriceCents: undefined as number | undefined,
+      discountRate: null as number | null,
+    };
+  }
+  return { ...withEcommercePrice(args.originalCents), discountRate: null as number | null };
+}
+
+export function chargeCents(cents: number) {
+  return TEST_CHARGE_CENTS || cents;
 }
 
 export function formatBRL(cents: number) {
@@ -165,8 +234,33 @@ export function formatBRL(cents: number) {
   });
 }
 
-export function formatHeroPrice(cents: number) {
-  const sale = withEcommercePrice(cents).priceCents;
+/** Preço de banner na Esquenta (1 área): cera 15%, laser 60%. Fora da campanha, cai no 5%. */
+export function formatHeroCampaignPrice(
+  originalCents: number,
+  method: "cera" | "laser" | "esfoliacao",
+  opts?: { skipDiscount?: boolean; audience?: ProductAudience },
+) {
+  const phase = campaignPhaseAt();
+  let rate: number | null = null;
+  if (phase === "esquenta" || phase === "black_week") {
+    if (method === "laser") {
+      rate = BLACK_NOV.laser[phase].any;
+    } else if (phase === "esquenta") {
+      rate = BLACK_NOV.ceraEsf.esquenta.any;
+    } else {
+      rate = BLACK_NOV.ceraEsf.black_week_esfoliacao;
+    }
+  }
+  const sale =
+    rate != null
+      ? chargeCents(
+          applyCampaignCents(originalCents, rate, {
+            skipDiscount: opts?.skipDiscount,
+            method,
+            audience: opts?.audience,
+          }).priceCents,
+        )
+      : chargeCents(withEcommercePrice(originalCents).priceCents);
   const reais = Math.floor(sale / 100);
   const cc = sale % 100;
   return {
@@ -175,8 +269,20 @@ export function formatHeroPrice(cents: number) {
   };
 }
 
+/** @deprecated Use formatHeroCampaignPrice — mantido para scripts legados. */
+export function formatHeroPrice(cents: number) {
+  return formatHeroCampaignPrice(cents, "cera");
+}
+
 export function audienceFromPath(pathname: string): ProductAudience {
-  return pathname.startsWith("/masculino") ? "masculino" : "feminino";
+  if (pathname.startsWith("/masculino")) return "masculino";
+  // Fichas usam /produto/:id (sem prefixo /masculino); ids masculinos terminam em -masc.
+  const productMatch = pathname.match(/^\/produto\/([^/?#]+)/);
+  if (productMatch) {
+    const id = decodeURIComponent(productMatch[1]).replace(/\/$/, "");
+    if (id.endsWith("-masc")) return "masculino";
+  }
+  return "feminino";
 }
 
 export function homeHref(audience: ProductAudience) {
@@ -205,8 +311,65 @@ export function retailHref(audience: ProductAudience) {
   return audience === "masculino" ? "/masculino/produtos" : "/produtos";
 }
 
-export function giftCardHref() {
-  return "/cartao-presente";
+export function giftCardHref(audience: ProductAudience = "feminino") {
+  return audience === "masculino" ? "/masculino/cartao-presente" : "/cartao-presente";
+}
+
+/** Shared SKUs that need a chrome twin (`*-masc`) so masculino keeps male header/footer. */
+export const SHARED_CHROME_TWIN_IDS = [
+  "body-splash-livre",
+  "body-splash-marcante",
+  "body-splash-autentica",
+  "cartao-presente",
+  "cartao-presente-160",
+  "cartao-presente-215",
+  "cartao-presente-290",
+  "plano-silver",
+  "plano-gold",
+  "plano-prepago",
+] as const;
+
+/** Catalog bases for the three Body Splash fragrances (same photo, distinct SKUs). */
+export const BODY_SPLASH_IDS = [
+  "body-splash-livre",
+  "body-splash-marcante",
+  "body-splash-autentica",
+] as const;
+
+export function isBodySplashId(id: string) {
+  const base = canonicalCatalogId(id);
+  return (BODY_SPLASH_IDS as readonly string[]).includes(base);
+}
+
+/**
+ * Body Splash: lançamento em 1º de dezembro (reunião 29/10). Até lá a vitrine
+ * mostra o produto "em produção", sem botão de compra e fora do cross-sell.
+ * Para liberar a venda: trocar para `true`, exportar e publicar.
+ */
+export const BODY_SPLASH_FOR_SALE = false;
+export const BODY_SPLASH_LAUNCH_LABEL = "1º de dezembro";
+
+/** Produto visível na vitrine mas ainda sem venda (hoje, só o Body Splash). */
+export function isComingSoon(id: string) {
+  return !BODY_SPLASH_FOR_SALE && isBodySplashId(id);
+}
+
+export type SharedChromeTwinId = (typeof SHARED_CHROME_TWIN_IDS)[number];
+
+export function isSharedChromeTwinBase(id: string): id is SharedChromeTwinId {
+  return (SHARED_CHROME_TWIN_IDS as readonly string[]).includes(id);
+}
+
+export function canonicalCatalogId(id: string) {
+  return id.endsWith("-masc") ? id.slice(0, -5) : id;
+}
+
+export function productHref(audience: ProductAudience, id: string) {
+  const base = canonicalCatalogId(id);
+  if (audience === "masculino" && isSharedChromeTwinBase(base)) {
+    return `/produto/${base}-masc`;
+  }
+  return `/produto/${base}`;
 }
 
 export const SHARED_METHODS: ProductMethod[] = ["produto", "plano", "presente"];
@@ -249,7 +412,12 @@ export function serviceMethodsFor(audience: ProductAudience) {
 }
 
 export const MIN_INSTALLMENT_CENTS = 5000;
-export const WAX_TEN_X_MIN_CENTS = 18000;
+/** Total mínimo pós-desconto para liberar parcelamento (abaixo = só 1x, sem texto Nx). */
+export const MIN_INSTALLMENT_ORDER_CENTS = 18000;
+/** Teto do select CF7 `cerainstallments` na loja (cera / esfoliação / clareamento). */
+export const CHECKOUT_CERA_MAX_TIMES = 3;
+/** Teto do select CF7 `allinstallments` na loja (laser, linha, produto…). */
+export const CHECKOUT_DEFAULT_MAX_TIMES = 10;
 
 export function inferMethod(id: string, explicit?: ProductMethod): ProductMethod {
   if (explicit) return explicit;
@@ -272,19 +440,27 @@ export function inferMethod(id: string, explicit?: ProductMethod): ProductMethod
   return "produto";
 }
 
+/**
+ * Parcelas exibidas na ficha — alinhadas ao CF7 #1831 da loja.pellomenos.com.br:
+ * total pós-desconto < R$ 180 → 1x (sem Nx); cera/esfoliação → até 3x; plano/presente → 1x;
+ * demais → até 10x; piso R$ 50/parcela.
+ */
 export function getInstallment(
   priceCents: number,
   method: ProductMethod = "laser",
 ) {
-  if (method === "plano") {
+  if (method === "plano" || method === "presente") {
     return { times: 1, installmentCents: priceCents };
   }
-  let maxTimes = 10;
-  if (method === "cera" && priceCents < WAX_TEN_X_MIN_CENTS) {
-    maxTimes = Math.max(1, Math.floor(priceCents / MIN_INSTALLMENT_CENTS));
+  if (priceCents < MIN_INSTALLMENT_ORDER_CENTS) {
+    return { times: 1, installmentCents: priceCents };
   }
+  const maxTimes =
+    method === "cera" || method === "esfoliacao"
+      ? CHECKOUT_CERA_MAX_TIMES
+      : CHECKOUT_DEFAULT_MAX_TIMES;
   const byFloor = Math.max(1, Math.floor(priceCents / MIN_INSTALLMENT_CENTS));
-  const times = Math.min(10, maxTimes, byFloor);
+  const times = Math.min(maxTimes, byFloor);
   const installmentCents = Math.ceil(priceCents / times);
   return { times, installmentCents };
 }
@@ -294,19 +470,22 @@ export function installmentHint(method: ProductMethod) {
     return "Planos são cobrados no valor cheio, sem parcelamento.";
   }
   if (method === "presente") {
-    return "Valor do vale presente, sem o 5% OFF do e-commerce.";
+    return "Vale só para cera. Valor cheio, sem parcelamento e sem o 5% OFF do e-commerce.";
   }
   if (method === "cera") {
-    return "Em cera, 10x só acima de R$ 180. Parcela mínima de R$ 50.";
+    return "Em cera, parcele em até 3x. Parcela mínima de R$ 50.";
+  }
+  if (method === "esfoliacao") {
+    return "Em esfoliação, parcele em até 3x. Parcela mínima de R$ 50.";
   }
   return "Parcele em até 10x, com parcela mínima de R$ 50.";
 }
 
 export function catalogImage(id: string, audience: ProductAudience = "feminino") {
   if (audience === "masculino") {
-    return `/images/products/male/${id}.png`;
+    return `/images/products/male/${id}.webp`;
   }
-  return `/images/products/${id}.png`;
+  return `/images/products/${id}.webp`;
 }
 
 const M = {
@@ -318,14 +497,18 @@ const M = {
   heroAxilasM: "/images/hero/male/hero-axilas-m.jpg",
   heroBarba: "/images/hero/male/hero-barba.jpg",
   heroBarbaM: "/images/hero/male/hero-barba-m.jpg",
-  promoLaser: "/images/hero/male/promo-laser.jpg",
-  promoLaserM: "/images/hero/male/promo-laser-m.jpg",
+  promoLaser: "/images/hero/male/promo-laser-v5.jpg",
+  promoLaserM: "/images/hero/male/promo-laser-v5-m.jpg",
   promoCorpo: "/images/hero/male/promo-corpo.jpg",
   promoCorpoM: "/images/hero/male/promo-corpo-m.jpg",
+  destaqueCera: "/images/hero/male/destaque-cera.jpg",
+  destaqueLaser: "/images/hero/male/destaque-laser.jpg",
+  destaqueEsfoliacao: "/images/hero/male/destaque-esfoliacao.jpg",
+  destaqueSplash: "/images/hero/male/destaque-splash.jpg",
+  // legados (outras telas podem referenciar)
   destaquePeito: "/images/hero/male/destaque-peito.jpg",
   destaqueVerao: "/images/hero/male/destaque-verao.jpg",
   destaqueBarba: "/images/hero/male/destaque-barba.jpg",
-  destaqueSplash: "/images/hero/male/destaque-splash.jpg",
   catLaser: "/images/categories/male/cat-laser.jpg",
   catCera: "/images/categories/male/cat-cera.jpg",
   catEsfoliacao: "/images/categories/male/cat-esfoliacao.jpg",
@@ -334,51 +517,53 @@ const M = {
   catRosto: "/images/categories/male/cat-rosto.jpg",
   catPernas: "/images/categories/male/cat-pernas.jpg",
   assinaturaCera: "/images/hero/male/assinatura-cera.jpg",
-  peito: "/images/products/male/peito-cera-masc.png",
-  costas: "/images/products/male/costas-cera-masc.png",
-  barba: "/images/products/male/barba-laser-masc.png",
-  axilas: "/images/products/male/axila-cera-masc.png",
-  abdomen: "/images/products/male/abdomen-cera-masc.png",
-  bracos: "/images/products/male/bracos-cera-masc.png",
-  pernas: "/images/products/male/perna-cera-masc.png",
-  virilha: "/images/products/male/virilha-cera-masc.png",
-  pescoco: "/images/products/male/pescoco-laser-masc.png",
-  antebraco: "/images/products/male/antebraco-cera-masc.png",
+  peito: "/images/products/male/peito-cera-masc.webp",
+  costas: "/images/products/male/costas-cera-masc.webp",
+  barba: "/images/products/male/barba-laser-masc.webp",
+  axilas: "/images/products/male/axila-cera-masc.webp",
+  abdomen: "/images/products/male/abdomen-cera-masc.webp",
+  bracos: "/images/products/male/bracos-cera-masc.webp",
+  pernas: "/images/products/male/perna-cera-masc.webp",
+  virilha: "/images/products/male/virilha-cera-masc.webp",
+  pescoco: "/images/products/male/pescoco-laser-masc.webp",
+  antebraco: "/images/products/male/antebraco-cera-masc.webp",
 };
 
 const catalogItems: ProductSeed[] = [
   // Cera / laser / linha feminino — nomes, preços Copacabana I e descrições do CSV da loja
-  { id: "abdomen-cera", name: "Abdômen – Cera", duration: "15 min • Avulso", originalCents: 5801, category: "corpo", image: catalogImage("abdomen-cera"), imageAlt: "Abdômen após cera", description: "A depilação a cera do abdômen feminino vai remover os pelos da parede abdominal abaixo dos seios até a linha do baixo ventre." },
-  { id: "axila-cera", name: "Axila – Cera", duration: "15 min • Avulso", originalCents: 3300, category: "axilas", image: catalogImage("axila-cera"), imageAlt: "Axila lisa após cera", description: "Garanta axilas suaves e livre de pelos com a depilação a cera. Resultados duradouros para sua maior confiança.", badge: "Cera", highlight: true },
-  { id: "antebraco-cera", name: "Antebraço – Cera", duration: "15 min • Avulso", originalCents: 4990, category: "bracos", image: catalogImage("antebraco-cera"), imageAlt: "Antebraço após cera", description: "A depilação a cera do antebraço feminino vai remover os pelos do antebraço, que pode ser tanto a parte superior ou inferior do membro." },
-  { id: "bracos-cera", name: "Braços – Cera", duration: "20 min • Avulso", originalCents: 6990, category: "bracos", image: catalogImage("bracos-cera"), imageAlt: "Braços lisos após cera", description: "Obtenha pele suave e livre de pelos com a depilação a cera para braços. Conforto, eficácia e resultados duradouros. Agende sua sessão hoje mesmo!" },
-  { id: "buco-cera", name: "Buço – Cera", duration: "10 min • Avulso", originalCents: 2690, category: "rosto", image: catalogImage("buco-cera"), imageAlt: "Buço após cera", description: "A depilação do buço com cera remove os pelos da parte em cima da boca e da parte entre o queixo e a boca.", highlight: true },
-  { id: "costas-cera", name: "Costas – Cera", duration: "25 min • Avulso", originalCents: 5501, category: "corpo", image: catalogImage("costas-cera"), imageAlt: "Costas após cera", description: "Desfrute de costas lisas e sem pelos com nossa depilação a cera. Resultados suaves e duradouros para uma pele sedosa. Agende já!" },
-  { id: "coxa-cera", name: "Coxa – Cera", duration: "20 min • Avulso", originalCents: 4990, category: "pernas", image: catalogImage("coxa-cera"), imageAlt: "Coxa após cera", description: "Transforme suas coxas com nossa depilação a cera. Pele macia, livre de pelos e resultados prolongados. Agende sua sessão agora!" },
-  { id: "faixa-cera", name: "Faixa – Cera", duration: "10 min • Avulso", originalCents: 2600, category: "corpo", image: catalogImage("faixa-cera"), imageAlt: "Faixa de cera no corpo", description: "Experimente nossa depilação a cera para faixa. Remova os pelos de forma eficaz e rápida, com resultados duradouros e conforto garantido." },
-  { id: "intergluteos-cera", name: "Interglúteos – Cera", duration: "15 min • Avulso", originalCents: 3250, category: "corpo", image: catalogImage("intergluteos-cera"), imageAlt: "Cera na região dos interglúteos", description: "Depilação com cera para interglúteos: conforto e higiene garantidos. Serviço seguro e eficiente. Agende sua sessão agora mesmo!" },
-  { id: "nariz-cera", name: "Nariz – Cera", duration: "10 min • Avulso", originalCents: 2890, category: "rosto", image: catalogImage("nariz-cera"), imageAlt: "Nariz após cera", description: "Depilação com cera para nariz: elimine pelos visíveis com praticidade e segurança. Rápido, eficiente e confortável. Agende já!" },
-  { id: "nadegas-cera", name: "Nádegas Completas – Cera", duration: "20 min • Avulso", originalCents: 4990, category: "corpo", image: catalogImage("nadegas-cera"), imageAlt: "Nádegas após cera", description: "Depilação completa de nádegas com cera. Rápida, eficiente e ideal para quem busca conforto e bem-estar. Agende sua sessão!" },
+  { id: "abdomen-cera", name: "Abdômen – Cera", duration: "15 min • Avulso", originalCents: 5800, category: "corpo", image: catalogImage("abdomen-cera"), imageAlt: "Abdômen feminino com a área central marcada", description: "A depilação a cera do abdômen feminino vai remover os pelos da parede abdominal abaixo dos seios até a linha do baixo ventre." },
+  { id: "axila-cera", name: "Axila – Cera", duration: "15 min • Avulso", originalCents: 3300, category: "axilas", image: catalogImage("axila-cera"), imageAlt: "Axila feminina com a região axilar marcada", description: "Na depilação com cera nas axilas são eliminados os pelos de toda a região axilar.", badge: "Cera", highlight: true },
+  { id: "antebraco-cera", name: "Antebraço – Cera", duration: "15 min • Avulso", originalCents: 4990, category: "bracos", image: catalogImage("antebraco-cera"), imageAlt: "Antebraços femininos com a região marcada", description: "A depilação a cera do antebraço feminino vai remover os pelos do antebraço, que pode ser tanto a parte superior ou inferior do membro." },
+  { id: "bracos-cera", name: "Braços – Cera", duration: "20 min • Avulso", originalCents: 6990, category: "bracos", image: catalogImage("bracos-cera"), imageAlt: "Braços femininos com a região marcada", description: "Remova os pelos do braço e ao seu redor." },
+  { id: "buco-cera", name: "Buço – Cera", duration: "10 min • Avulso", originalCents: 2690, category: "rosto", image: catalogImage("buco-cera"), imageAlt: "Buço feminino com a região marcada", description: "Retire os pelos da parte em cima da boca e da parte entre o queixo e a boca.", highlight: true },
+  { id: "costas-cera", name: "Costas – Cera", duration: "25 min • Avulso", originalCents: 5500, category: "corpo", image: catalogImage("costas-cera"), imageAlt: "Costas femininas com a região marcada dos ombros à cintura", description: "A depilação com cera nas costas vai eliminar os pelos das imediações dos ombros até a linha da cintura." },
+  { id: "coxa-cera", name: "Coxa – Cera", duration: "20 min • Avulso", originalCents: 4990, category: "pernas", image: catalogImage("coxa-cera"), imageAlt: "Coxas femininas com a região marcada", description: "A depilação com cera nas coxas vai remover os pelos da linha do joelho até as proximidades da dobra superior da perna." },
+  { id: "faixa-cera", name: "Faixa – Cera", duration: "10 min • Avulso", originalCents: 2600, category: "corpo", image: catalogImage("faixa-cera"), imageAlt: "Faixa de cera no corpo", description: "É considerado faixa, pequenas regiões com pelos na extensão do corpo, como na região do umbigo, por exemplo." },
+  { id: "intergluteos-cera", name: "Interglúteos – Cera", duration: "15 min • Avulso", originalCents: 3250, category: "corpo", image: catalogImage("intergluteos-cera"), imageAlt: "Região dos interglúteos marcada", description: "Remove os pelos da lateral anal e cóccix." },
+  { id: "nariz-cera", name: "Nariz – Cera", duration: "10 min • Avulso", originalCents: 2890, category: "rosto", image: catalogImage("nariz-cera"), imageAlt: "Nariz feminino com a região marcada", description: "A depilação a cera no nariz feminino vai remover os pelos da entrada da cavidade nasal e uma faixa na parte de fora." },
+  { id: "nadegas-cera", name: "Nádegas Completas – Cera", duration: "20 min • Avulso", originalCents: 4990, category: "corpo", image: catalogImage("nadegas-cera"), imageAlt: "Nádegas completas com a região marcada", description: "A depilação de nádegas completas com cera vai remover os pelos em toda a extensão das nádegas e da faixa acima do cóccix." },
   { id: "meia-nadega-cera", name: "Meia Nádega – Cera", duration: "15 min • Avulso", originalCents: 2499, category: "corpo", image: catalogImage("meia-nadega-cera"), imageAlt: "Meia nádega após cera", description: "Depilação a cera para meia nádega: resultado impecável e duradouro. Remova os pelos com conforto e facilidade. Agende sua sessão!", badge: "Cera" },
-  { id: "perna-cera", name: "Perna Inteira – Cera", duration: "40 min • Avulso", originalCents: 8590, category: "pernas", image: catalogImage("perna-cera"), imageAlt: "Perna inteira após cera", description: "Desfrute de uma pele lisinha por mais tempo com nosso serviço de depilação a cera para perna inteira. Conforto e cuidado que sua pele merece.", badge: "5% OFF", highlight: true },
-  { id: "meia-perna-cera", name: "Meia Perna – Cera", duration: "20 min • Avulso", originalCents: 4990, category: "pernas", image: catalogImage("meia-perna-cera"), imageAlt: "Meia perna após cera", description: "A depilação com cera meia perna feminino vai remover os pelos da região do joelho até o calcanhar sem qualquer custo adicional." },
-  { id: "queixo-cera", name: "Queixo – Cera", duration: "10 min • Avulso", originalCents: 2690, category: "rosto", image: catalogImage("queixo-cera"), imageAlt: "Queixo após cera", description: "Elimine os pelos indesejados do queixo com nossa depilação a cera. Resultados eficazes e duradouros para uma pele suave e bem cuidada.", badge: "Cera" },
-  { id: "seios-cera", name: "Seios – Cera", duration: "10 min • Avulso", originalCents: 2790, category: "corpo", image: catalogImage("seios-cera"), imageAlt: "Seios após cera", description: "Descubra a cera de depilação delicada para seios, ideal para peles sensíveis. Garanta resultados suaves e duradouros." },
-  { id: "virilha-comum-cera", name: "Virilha Comum – Cera", duration: "15 min • Avulso", originalCents: 3850, category: "virilha", image: catalogImage("virilha-comum-cera"), imageAlt: "Virilha comum após cera", description: "Opte pela simplicidade com nossa depilação a cera para virilha comum. Suavidade e limpeza para sua pele.", badge: "Cera" },
-  { id: "virilha-comum-faixa-cera", name: "Virilha Comum + Faixa – Cera", duration: "20 min • Avulso", originalCents: 5150, category: "virilha", image: catalogImage("virilha-comum-faixa-cera"), imageAlt: "Virilha comum com faixa após cera", description: "Depilação a cera eficaz para a virilha comum. Conforto e higiene em um serviço de qualidade." },
-  { id: "virilha-cavada-cera", name: "Virilha Cavada – Cera", duration: "20 min • Avulso", originalCents: 7101, category: "virilha", image: catalogImage("virilha-cavada-cera"), imageAlt: "Virilha cavada após cera", description: "Depilação a Cera Virilha Cavada remove os pelos da virilha, lábios internos e externos, porém deixa uma pequena faixa de pelo no púbis. Essa depilação inclui ânus e cóccix." },
-  { id: "virilha-cavada-faixa-cera", name: "Virilha Cavada + Faixa – Cera", duration: "25 min • Avulso", originalCents: 8401, category: "virilha", image: catalogImage("virilha-cavada-faixa-cera"), imageAlt: "Virilha cavada com faixa após cera", description: "Depilação a Cera Virilha Cavada + Faixa - Valor e Duração: Explore a depilação a cera para uma virilha cavada mais definida. Estética e conforto em harmonia." },
+  { id: "perna-cera", name: "Perna Inteira – Cera", duration: "40 min • Avulso", originalCents: 8590, category: "pernas", image: catalogImage("perna-cera"), imageAlt: "Perna inteira feminina com a região marcada", description: "Remove os pelos da região, desde os pelos que ficam na área do calcanhar e pé (opcional) até a dobra superior da coxa.",     badge: "15% OFF", highlight: true },
+  { id: "meia-perna-cera", name: "Meia Perna – Cera", duration: "20 min • Avulso", originalCents: 4990, category: "pernas", image: catalogImage("meia-perna-cera"), imageAlt: "Meia perna após cera", description: "A depilação com cera meia perna feminina vai remover os pelos da região do joelho até o calcanhar. A faixa do pé e os dedinhos do pé são cortesia: entram na mesma sessão, sem custo adicional." },
+  { id: "queixo-cera", name: "Queixo – Cera", duration: "10 min • Avulso", originalCents: 2690, category: "rosto", image: catalogImage("queixo-cera"), imageAlt: "Queixo após cera", description: "A depilação a cera do queixo feminino vai remover os pelos do queixo e ao seu redor.", badge: "Cera" },
+  { id: "seios-cera", name: "Seios – Cera", duration: "10 min • Avulso", originalCents: 2790, category: "corpo", image: catalogImage("seios-cera"), imageAlt: "Seios após cera", description: "Remove os pelos do centro e ao redor dos mamilos." },
+  { id: "virilha-comum-cera", name: "Virilha Comum – Cera", duration: "15 min • Avulso", originalCents: 3850, category: "virilha", image: catalogImage("virilha-comum-cera"), imageAlt: "Virilha comum com o contorno marcado", description: "Remove os pelos no contorno da virilha, podendo se aproximar dos lábios, porém os lábios, ânus e cóccix não estão incluídos na depilação.", badge: "Cera" },
+  { id: "virilha-comum-faixa-cera", name: "Virilha Comum + Faixa – Cera", duration: "20 min • Avulso", originalCents: 5150, category: "virilha", image: catalogImage("virilha-comum-faixa-cera"), imageAlt: "Virilha comum com faixa vertical marcada", description: "Remove os pelos no contorno da virilha, podendo se aproximar aos lábios. Essa depilação inclui faixa de contorno, porém os lábios, ânus e cóccix não estão inclusos." },
+  { id: "virilha-cavada-cera", name: "Virilha Cavada – Cera", duration: "20 min • Avulso", originalCents: 7100, category: "virilha", image: catalogImage("virilha-cavada-cera"), imageAlt: "Virilha cavada após cera", description: "Remove os pelos da virilha, lábios internos e externos, porém deixa uma pequena faixa de pelo no púbis. Essa depilação inclui ânus e cóccix." },
+  { id: "virilha-cavada-faixa-cera", name: "Virilha Cavada + Faixa – Cera", duration: "25 min • Avulso", originalCents: 8400, category: "virilha", image: catalogImage("virilha-cavada-faixa-cera"), imageAlt: "Virilha cavada com faixa após cera", description: "Remove os pelos da virilha, lábios internos e externos, porém deixa uma pequena faixa de pelo no púbis. Essa depilação inclui ânus, cóccix e a faixa de contorno." },
   { id: "virilha-modelada-cera", name: "Virilha Modelada – Cera", duration: "25 min • Avulso", originalCents: 8390, category: "virilha", image: catalogImage("virilha-modelada-cera"), imageAlt: "Virilha modelada após cera", description: "A depilação a cera da virilha feminina modelada vai remover os pelos dos lábios internos e externos e os pelos envoltos do molde escolhido pela cliente no púbis. Não inclui ânus e cóccix." },
-  { id: "virilha-cera", name: "Virilha Total – Cera", duration: "25 min • Avulso", originalCents: 8501, category: "virilha", image: catalogImage("virilha-cera"), imageAlt: "Virilha total após cera", description: "Remove por completo todos os pelos da virilha, lábios externos e internos , incluindo anus , cóccix e faixa do baixo ventre.", highlight: true },
-  { id: "labios-genitais-cera", name: "Lábios Genitais – Cera", duration: "15 min • Avulso", originalCents: 3850, category: "virilha", image: catalogImage("labios-genitais-cera"), imageAlt: "Cera nos lábios genitais", description: "Experimente a depilação a cera para lábios genitais com total conforto e segurança. Resultados suaves e duradouros para a sua confiança." },
-  { id: "sobrancelha-cera", name: "Sobrancelha – Cera", duration: "15 min • Avulso", originalCents: 4799, category: "sobrancelha", image: catalogImage("sobrancelha-cera"), imageAlt: "Sobrancelha com cera", description: "Obtenha sobrancelhas perfeitas com nossa cera exclusiva para sobrancelhas. Perfeita para um olhar marcante!" },
-  { id: "sobrancelha-realce-cera", name: "Sobrancelha + Realce – Cera", duration: "25 min • Avulso", originalCents: 7590, category: "sobrancelha", image: catalogImage("sobrancelha-realce-cera"), imageAlt: "Sobrancelha com realce", description: "Realce suas sobrancelhas com nossa cera especializada, projetada para definição e beleza duradouras. Adquira já!" },
+  { id: "virilha-cera", name: "Virilha Total – Cera", duration: "25 min • Avulso", originalCents: 8500, category: "virilha", image: catalogImage("virilha-cera"), imageAlt: "Virilha total após cera", description: "Remove por completo todos os pelos da virilha, lábios externos e internos, incluindo ânus, cóccix e faixa do baixo ventre.", highlight: true },
+  { id: "labios-genitais-cera", name: "Lábios Genitais – Cera", duration: "15 min • Avulso", originalCents: 3850, category: "virilha", image: catalogImage("labios-genitais-cera"), imageAlt: "Cera nos lábios genitais", description: "A depilação dos grandes lábios genitais a cera vai retirar os pelos dos lábios internos e externos." },
+  { id: "sobrancelha-cera", name: "Sobrancelha – Cera", duration: "15 min • Avulso", originalCents: 4799, category: "sobrancelha", image: catalogImage("sobrancelha-cera"), imageAlt: "Sobrancelha com cera", description: "A depilação de sobrancelha com cera remove os pelos de acordo com o desenho já existente, fazendo apenas a limpeza da região. Acabamento final com lápis finalizador, explicando a cliente que ao lavar o rosto o mesmo sairá." },
+  { id: "sobrancelha-realce-cera", name: "Sobrancelha + Realce – Cera", duration: "25 min • Avulso", originalCents: 7590, category: "sobrancelha", image: catalogImage("sobrancelha-realce-cera"), imageAlt: "Sobrancelha com realce", description: "Remove os pelos de acordo com o desenho já existente, fazendo apenas a limpeza com cera ou pinça. O Realce é uma coloração temporária feita na sobrancelha, de preferência nos pelos claros ou brancos, para valorizar o olhar." },
   { id: "sobrancelha-henna-simples", name: "Sobrancelha Simples + Henna", duration: "25 min • Avulso", originalCents: 8390, category: "sobrancelha", image: catalogImage("sobrancelha-henna-simples"), imageAlt: "Sobrancelha simples com henna", description: "Transforme suas sobrancelhas com a henna e cera da Pello Menos. Definição precisa e resultados duradouros para um olhar marcante." },
-  { id: "design-sobrancelha", name: "Design de Sobrancelha – Cera", duration: "20 min • Avulso", originalCents: 5850, category: "sobrancelha", image: catalogImage("design-sobrancelha"), imageAlt: "Design de sobrancelha", description: "A técnica de design de sobrancelha com cera consiste em ressaltar a beleza dos olhos e do rosto, dando-lhes o equilíbrio e a simetria adequada.", badge: "Olhar", highlight: true },
-  { id: "design-sobrancelha-realce", name: "Design de Sobrancelha + Realce – Cera", duration: "30 min • Avulso", originalCents: 7850, category: "sobrancelha", image: catalogImage("design-sobrancelha-realce"), imageAlt: "Design de sobrancelha com realce", description: "Obtenha o design perfeito para suas sobrancelhas com nossa depilação a cera. Realce sua expressão de maneira natural e duradoura." },
+  { id: "design-sobrancelha", name: "Design de Sobrancelha – Cera", duration: "20 min • Avulso", originalCents: 5850, category: "sobrancelha", image: catalogImage("design-sobrancelha"), imageAlt: "Design de sobrancelha", description: "A técnica de design de sobrancelha com cera consiste em ressaltar a beleza dos olhos e do rosto, dando-lhes o equilíbrio e a simetria adequada. As sobrancelhas serão remodeladas de forma a valorizar o olhar e embelezar o rosto.", badge: "Olhar", highlight: true },
+  { id: "design-sobrancelha-realce", name: "Design de Sobrancelha + Realce – Cera", duration: "30 min • Avulso", originalCents: 7850, category: "sobrancelha", image: catalogImage("design-sobrancelha-realce"), imageAlt: "Design de sobrancelha com realce", description: "O Design remodela as sobrancelhas com cera para valorizar o olhar. O Realce colore temporariamente os pelos brancos das sobrancelhas." },
   { id: "sobrancelha-henna", name: "Design de Sobrancelha + Henna Feminino", duration: "30 min • Avulso", originalCents: 8650, category: "sobrancelha", image: catalogImage("sobrancelha-henna"), imageAlt: "Design de sobrancelha com henna", description: "Realce suas sobrancelhas com henna e cera. Definição impecável, longa duração e visual natural. Agende sua sessão agora!", badge: "Combo" },
-  { id: "realce", name: "Realce", duration: "15 min • Avulso", originalCents: 3200, category: "sobrancelha", image: catalogImage("realce"), imageAlt: "Realce de sobrancelha", description: "Realce sua beleza com nossos tratamentos exclusivos. Descubra como nossos serviços de depilação e design de sobrancelhas podem transformar seu visual.", method: "cera" },
+  { id: "realce", name: "Realce", duration: "15 min • Avulso", originalCents: 3200, category: "sobrancelha", image: catalogImage("realce"), imageAlt: "Realce de sobrancelha com tintura", description: "Aplicação de tintura específica para pelos da sobrancelha. O produto não entra em contato com a pele. Indicado para disfarçar fios brancos ou clarear tons apagados, sem alterar o desenho natural da sobrancelha.", method: "cera" },
   { id: "henna", name: "Henna", duration: "20 min • Avulso", originalCents: 4100, category: "sobrancelha", image: catalogImage("henna"), imageAlt: "Henna nas sobrancelhas", description: "Realce suas sobrancelhas com nossa henna especial. Definição perfeita, longa duração e resultados naturais. Adquira já e transforme seu olhar!", method: "cera" },
+  // Preço provisório (= Realce R$ 32): produto sumiu do Woo; confirmar tabela com Pello antes do GO loja.
+  { id: "tintura-pelos-pubianos", name: "Tintura de Pelos Pubianos", duration: "15 min • Avulso", originalCents: 3200, category: "virilha", image: catalogImage("labios-genitais-cera"), imageAlt: "Tintura de pelos pubianos", description: "Coloração temporária dos pelos pubianos. Sessão avulsa. Informe a unidade no pedido.", method: "cera", badge: "Cera" },
 
   // Linha feminino
   { id: "buco-linha", name: "Buço – Linha", duration: "10 min • Avulso", originalCents: 2092, category: "rosto", image: catalogImage("buco-linha"), imageAlt: "Buço após linha", description: "Elimine os pelos indesejados do buço com nossa depilação a linha. Resultados suaves e duradouros para uma pele impecável. Agende agora!", method: "linha", badge: "Linha" },
@@ -386,24 +571,23 @@ const catalogItems: ProductSeed[] = [
   { id: "faixa-linha", name: "Faixa – Linha", duration: "10 min • Avulso", originalCents: 2550, category: "rosto", image: catalogImage("faixa-linha"), imageAlt: "Faixa após linha", description: "Depilação a linha para faixa: remoção precisa e eficaz dos pelos. Resultados suaves e duradouros para uma pele impecável. Agende sua sessão!", method: "linha", badge: "Linha" },
 
   // Esfoliação feminino — preço cartão da tabela oficial
-  { id: "esfoliacao-faixa", name: "Esfoliação Faixa 01", duration: "10 min • Avulso", originalCents: 1200, category: "corpo", image: catalogImage("esfoliacao-faixa"), imageAlt: "Esfoliação de faixa", method: "esfoliacao" },
-  { id: "esfoliacao-faixa-02", name: "Esfoliação Faixa 02", duration: "10 min • Avulso", originalCents: 2400, category: "corpo", image: catalogImage("esfoliacao-faixa-02"), imageAlt: "Esfoliação de faixa 02", method: "esfoliacao" },
-  { id: "esfoliacao-meio-braco", name: "Esfoliação de meio braço", duration: "15 min • Avulso", originalCents: 2390, category: "bracos", image: catalogImage("esfoliacao-meio-braco"), imageAlt: "Esfoliação de meio braço", method: "esfoliacao" },
-  { id: "esfoliacao-braco", name: "Esfoliação de braço", duration: "20 min • Avulso", originalCents: 3390, category: "bracos", image: catalogImage("esfoliacao-braco"), imageAlt: "Esfoliação de braço", method: "esfoliacao" },
-  { id: "esfoliacao-meia-perna", name: "Esfoliação de meia perna", duration: "20 min • Avulso", originalCents: 2325, category: "pernas", image: catalogImage("esfoliacao-meia-perna"), imageAlt: "Esfoliação de meia perna", method: "esfoliacao" },
-  { id: "esfoliacao-abdomen", name: "Esfoliação de abdômen", duration: "15 min • Avulso", originalCents: 2750, category: "corpo", image: catalogImage("esfoliacao-abdomen"), imageAlt: "Esfoliação de abdômen", method: "esfoliacao" },
-  { id: "esfoliacao-axilas", name: "Esfoliação de axilas", duration: "15 min • Avulso", originalCents: 1590, category: "axilas", image: catalogImage("esfoliacao-axilas"), imageAlt: "Esfoliação de axilas", method: "esfoliacao", badge: "Pele" },
-  { id: "esfoliacao-nadegas", name: "Esfoliação de nádegas", duration: "15 min • Avulso", originalCents: 2390, category: "corpo", image: catalogImage("esfoliacao-nadegas"), imageAlt: "Esfoliação de nádegas", method: "esfoliacao" },
-  { id: "esfoliacao-meia-nadega", name: "Esfoliação de meia nádega", duration: "10 min • Avulso", originalCents: 1195, category: "corpo", image: catalogImage("esfoliacao-meia-nadega"), imageAlt: "Esfoliação de meia nádega", method: "esfoliacao" },
-  { id: "esfoliacao-coxa", name: "Esfoliação de coxa", duration: "20 min • Avulso", originalCents: 2325, category: "pernas", image: catalogImage("esfoliacao-coxa"), imageAlt: "Esfoliação de coxa", method: "esfoliacao" },
-  { id: "esfoliacao-costas", name: "Esfoliação de costas", duration: "20 min • Avulso", originalCents: 2600, category: "corpo", image: catalogImage("esfoliacao-costas"), imageAlt: "Esfoliação de costas", method: "esfoliacao" },
-  { id: "esfoliacao-perna", name: "Esfoliação de perna inteira", duration: "25 min • Avulso", originalCents: 3995, category: "pernas", image: catalogImage("esfoliacao-perna"), imageAlt: "Esfoliação de perna inteira", method: "esfoliacao", badge: "Pele", highlight: true },
-  { id: "esfoliacao-virilha", name: "Esfoliação de virilha", duration: "15 min • Avulso", originalCents: 1825, category: "virilha", image: catalogImage("esfoliacao-virilha"), imageAlt: "Esfoliação de virilha", method: "esfoliacao" },
-  { id: "esfoliacao-virilha-faixa", name: "Esfoliação de virilha + faixa", duration: "20 min • Avulso", originalCents: 2425, category: "virilha", image: catalogImage("esfoliacao-virilha-faixa"), imageAlt: "Esfoliação de virilha com faixa", method: "esfoliacao" },
-  { id: "esfoliacao-seios", name: "Esfoliação de seios", duration: "10 min • Avulso", originalCents: 1250, category: "corpo", image: catalogImage("esfoliacao-seios"), imageAlt: "Esfoliação de seios", method: "esfoliacao" },
+  { id: "esfoliacao-faixa", name: "Esfoliação Faixa 01", duration: "10 min • Avulso", originalCents: 1300, category: "corpo", image: catalogImage("esfoliacao-faixa"), imageAlt: "Esfoliação de faixa", method: "esfoliacao" },
+  { id: "esfoliacao-meio-braco", name: "Esfoliação de meio braço", duration: "15 min • Avulso", originalCents: 2495, category: "bracos", image: catalogImage("esfoliacao-meio-braco"), imageAlt: "Esfoliação de meio braço", method: "esfoliacao" },
+  { id: "esfoliacao-braco", name: "Esfoliação de braço", duration: "20 min • Avulso", originalCents: 3495, category: "bracos", image: catalogImage("esfoliacao-braco"), imageAlt: "Esfoliação de braço", method: "esfoliacao" },
+  { id: "esfoliacao-meia-perna", name: "Esfoliação de meia perna", duration: "20 min • Avulso", originalCents: 2495, category: "pernas", image: catalogImage("esfoliacao-meia-perna"), imageAlt: "Esfoliação de meia perna", method: "esfoliacao" },
+  { id: "esfoliacao-abdomen", name: "Esfoliação de abdômen", duration: "15 min • Avulso", originalCents: 2900, category: "corpo", image: catalogImage("esfoliacao-abdomen"), imageAlt: "Esfoliação de abdômen", method: "esfoliacao" },
+  { id: "esfoliacao-axilas", name: "Esfoliação de axilas", duration: "15 min • Avulso", originalCents: 1650, category: "axilas", image: catalogImage("esfoliacao-axilas"), imageAlt: "Esfoliação de axilas", method: "esfoliacao", badge: "Pele" },
+  { id: "esfoliacao-nadegas", name: "Esfoliação de nádegas", duration: "15 min • Avulso", originalCents: 2495, category: "corpo", image: catalogImage("esfoliacao-nadegas"), imageAlt: "Esfoliação de nádegas", method: "esfoliacao" },
+  { id: "esfoliacao-meia-nadega", name: "Esfoliação de meia nádega", duration: "10 min • Avulso", originalCents: 1250, category: "corpo", image: catalogImage("esfoliacao-meia-nadega"), imageAlt: "Esfoliação de meia nádega", method: "esfoliacao" },
+  { id: "esfoliacao-coxa", name: "Esfoliação de coxa", duration: "20 min • Avulso", originalCents: 2495, category: "pernas", image: catalogImage("esfoliacao-coxa"), imageAlt: "Esfoliação de coxa", method: "esfoliacao" },
+  { id: "esfoliacao-costas", name: "Esfoliação de costas", duration: "20 min • Avulso", originalCents: 2750, category: "corpo", image: catalogImage("esfoliacao-costas"), imageAlt: "Esfoliação de costas", method: "esfoliacao" },
+  { id: "esfoliacao-perna", name: "Esfoliação de perna inteira", duration: "25 min • Avulso", originalCents: 4295, category: "pernas", image: catalogImage("esfoliacao-perna"), imageAlt: "Esfoliação de perna inteira", method: "esfoliacao", badge: "Pele", highlight: true },
+  { id: "esfoliacao-virilha", name: "Esfoliação de virilha", duration: "15 min • Avulso", originalCents: 1925, category: "virilha", image: catalogImage("esfoliacao-virilha"), imageAlt: "Esfoliação de virilha", method: "esfoliacao" },
+  { id: "esfoliacao-virilha-faixa", name: "Esfoliação de virilha + faixa", duration: "20 min • Avulso", originalCents: 2575, category: "virilha", image: catalogImage("esfoliacao-virilha-faixa"), imageAlt: "Esfoliação de virilha com faixa", method: "esfoliacao" },
+  { id: "esfoliacao-seios", name: "Esfoliação de seios", duration: "10 min • Avulso", originalCents: 1395, category: "corpo", image: catalogImage("esfoliacao-seios"), imageAlt: "Esfoliação de seios", method: "esfoliacao" },
 
   // Laser feminino
-  { id: "axilas-laser", name: "Axilas Laser", duration: "15 min • até 10 sessões", originalCents: 89990, category: "axilas", image: catalogImage("axilas-laser"), imageAlt: "Axilas após laser", description: "Descubra a revolucionária depilação a laser para axilas. Resultados eficazes e duradouros. Conquiste axilas suaves e sem pelos. Adquira agora!", badge: "5% OFF", highlight: true },
+  { id: "axilas-laser", name: "Axilas Laser", duration: "15 min • até 10 sessões", originalCents: 89990, category: "axilas", image: catalogImage("axilas-laser"), imageAlt: "Axilas após laser", description: "Descubra a revolucionária depilação a laser para axilas. Resultados eficazes e duradouros. Conquiste axilas suaves e sem pelos. Adquira agora!", badge: "60% OFF", highlight: true },
   { id: "areola-laser", name: "Aréola Laser", duration: "10 min • até 10 sessões", originalCents: 38090, category: "corpo", image: catalogImage("areola-laser"), imageAlt: "Aréola após laser", description: "A depilação a laser da aréola feminina vai eliminar os pelos ao redor dos mamilos." },
   { id: "buco-laser", name: "Buço Laser", duration: "10 min • até 10 sessões", originalCents: 42590, category: "rosto", image: catalogImage("buco-laser"), imageAlt: "Buço após laser", description: "Na depilação a laser do buço são eliminados os pelos da parte em cima da boca e da parte entre o queixo e a boca." },
   { id: "virilha-laser", name: "Virilha Total Laser", duration: "20 min • até 10 sessões", originalCents: 209000, category: "virilha", image: catalogImage("virilha-laser"), imageAlt: "Virilha total após laser", description: "Na depilação a laser total na virilha são eliminados os pelos das seguintes regiões: virilha, lábios externos e internos, ânus, cóccix e faixa do baixo ventre.", badge: "Mais vendido", highlight: true },
@@ -430,11 +614,14 @@ const catalogItems: ProductSeed[] = [
   { id: "psd-m-laser", name: "PSD M Laser (até 20 cm)", duration: "15 min • até 10 sessões", originalCents: 49500, category: "corpo", image: catalogImage("psd-m-laser"), imageAlt: "Área sem definição M após laser", description: "Área sem definição média (até 20 cm) na depilação a laser. Resultados rápidos e eficazes." },
   { id: "psd-g-laser", name: "PSD G Laser (a partir de 21 cm)", duration: "20 min • até 10 sessões", originalCents: 76900, category: "corpo", image: catalogImage("psd-g-laser"), imageAlt: "Área sem definição G após laser", description: "Na depilação a laser PSD G considera-se todas as regiões do corpo (a partir de 21 cm) que não possuem definição clara." },
 
-  // Produto oficial, planos e presente
-  { id: "body-splash", name: "Body Splash Pello Menos", duration: "Uso diário", originalCents: 6900, badge: "Oficial", category: "produtos", method: "produto", image: catalogImage("body-splash"), imageAlt: "Body Splash oficial Pello Menos" },
+  // Produto oficial (3 fragrâncias), planos e presente — mesma foto do Body Splash
+  // Artes oficiais do Drive (pasta BODY SPLASHS); mesma URL fem/masc (chrome twin reutiliza `image`).
+  { id: "body-splash-livre", name: "Body Splash - Livre", duration: "Uso diário", originalCents: 8590, badge: "Oficial", category: "produtos", method: "produto", image: catalogImage("body-splash-livre"), imageAlt: "Body Splash - Livre Pello Menos" },
+  { id: "body-splash-marcante", name: "Body Splash - Marcante", duration: "Uso diário", originalCents: 8590, badge: "Oficial", category: "produtos", method: "produto", image: catalogImage("body-splash-marcante"), imageAlt: "Body Splash - Marcante Pello Menos" },
+  { id: "body-splash-autentica", name: "Body Splash - Autêntica", duration: "Uso diário", originalCents: 8590, badge: "Oficial", category: "produtos", method: "produto", image: catalogImage("body-splash-autentica"), imageAlt: "Body Splash - Autêntica Pello Menos" },
   {
     id: "cartao-presente",
-    name: "Cartão Presente R$ 79,99",
+    name: "Gift Card R$ 79,99",
     duration: "Vale presente",
     originalCents: 7999,
     skipDiscount: true,
@@ -443,13 +630,13 @@ const catalogItems: ProductSeed[] = [
     category: "produtos",
     method: "presente",
     image: catalogImage("cartao-presente"),
-    imageAlt: "Cartão presente Pello Menos de R$ 79,99 nas mãos",
+    imageAlt: "Cartão presente Pello Menos de R$ 79,99 sobre a mesa",
     description:
-      "Gift card Pello Menos de R$ 79,99. Vale presente para serviços de depilação. Informe a unidade onde o presente será usado.",
+      "Gift Card R$ 79,99. Vale presente só para depilação a cera. Não vale para laser, linha, esfoliação nem planos. Informe a unidade onde o presente será usado.",
   },
   {
     id: "cartao-presente-160",
-    name: "Cartão Presente R$ 160",
+    name: "Gift Card R$ 160,00",
     duration: "Vale presente",
     originalCents: 16000,
     skipDiscount: true,
@@ -458,13 +645,13 @@ const catalogItems: ProductSeed[] = [
     category: "produtos",
     method: "presente",
     image: catalogImage("cartao-presente-160"),
-    imageAlt: "Cartão presente Pello Menos de R$ 160 nas mãos",
+    imageAlt: "Cartão presente Pello Menos de R$ 160 sobre a mesa",
     description:
-      "Gift card Pello Menos de R$ 160. Vale presente para serviços de depilação. Informe a unidade onde o presente será usado.",
+      "Gift Card R$ 160,00. Vale presente só para depilação a cera. Não vale para laser, linha, esfoliação nem planos. Informe a unidade onde o presente será usado.",
   },
   {
     id: "cartao-presente-215",
-    name: "Cartão Presente R$ 215",
+    name: "Gift Card R$ 215,00",
     duration: "Vale presente",
     originalCents: 21500,
     skipDiscount: true,
@@ -473,13 +660,13 @@ const catalogItems: ProductSeed[] = [
     category: "produtos",
     method: "presente",
     image: catalogImage("cartao-presente-215"),
-    imageAlt: "Cartão presente Pello Menos de R$ 215 nas mãos",
+    imageAlt: "Cartão presente Pello Menos de R$ 215 sobre a mesa",
     description:
-      "Gift card Pello Menos de R$ 215. Vale presente para serviços de depilação. Informe a unidade onde o presente será usado.",
+      "Gift Card R$ 215,00. Vale presente só para depilação a cera. Não vale para laser, linha, esfoliação nem planos. Informe a unidade onde o presente será usado.",
   },
   {
     id: "cartao-presente-290",
-    name: "Cartão Presente R$ 290",
+    name: "Gift Card R$ 290,00",
     duration: "Vale presente",
     originalCents: 29000,
     skipDiscount: true,
@@ -488,9 +675,9 @@ const catalogItems: ProductSeed[] = [
     category: "produtos",
     method: "presente",
     image: catalogImage("cartao-presente-290"),
-    imageAlt: "Cartão presente Pello Menos de R$ 290 nas mãos",
+    imageAlt: "Cartão presente Pello Menos de R$ 290 sobre a mesa",
     description:
-      "Gift card Pello Menos de R$ 290. Vale presente para serviços de depilação. Informe a unidade onde o presente será usado.",
+      "Gift Card R$ 290,00. Vale presente só para depilação a cera. Não vale para laser, linha, esfoliação nem planos. Informe a unidade onde o presente será usado.",
   },
   {
     id: "plano-silver",
@@ -553,40 +740,51 @@ const catalogItems: ProductSeed[] = [
       "Pacote pré-pago de cera em compra única: 3 sessões, com até 3 serviços por visita. Perna inteira conta como 2 serviços; sobrancelha não entra. Informe a unidade no pedido e use na loja escolhida.",
   },
 
-  // Cera masculino — áreas da tabela RJ-SP para homem; preço cartão + 5% OFF no site
-  { id: "peito-cera-masc", name: "Peito – Cera", duration: "20 min • Avulso", originalCents: 5990, category: "torax", image: catalogImage("peito-cera-masc", "masculino"), imageAlt: "Homem após cera no peito Pello Menos", method: "cera", audience: "masculino", badge: "Cera", highlight: true },
-  { id: "abdomen-cera-masc", name: "Abdômen – Cera", duration: "15 min • Avulso", originalCents: 5990, category: "torax", image: catalogImage("abdomen-cera-masc", "masculino"), imageAlt: "Homem após cera no abdômen Pello Menos", method: "cera", audience: "masculino" },
-  { id: "axila-cera-masc", name: "Axila – Cera", duration: "15 min • Avulso", originalCents: 3500, category: "axilas", image: catalogImage("axila-cera-masc", "masculino"), imageAlt: "Homem após cera nas axilas Pello Menos", method: "cera", audience: "masculino", badge: "Cera", highlight: true },
-  { id: "antebraco-cera-masc", name: "Antebraço – Cera", duration: "15 min • Avulso", originalCents: 5190, category: "bracos", image: catalogImage("antebraco-cera-masc", "masculino"), imageAlt: "Homem após cera no antebraço Pello Menos", method: "cera", audience: "masculino" },
-  { id: "bracos-cera-masc", name: "Braços – Cera", duration: "20 min • Avulso", originalCents: 7190, category: "bracos", image: catalogImage("bracos-cera-masc", "masculino"), imageAlt: "Homem após cera nos braços Pello Menos", method: "cera", audience: "masculino" },
-  { id: "costas-cera-masc", name: "Costas – Cera", duration: "25 min • Avulso", originalCents: 5800, category: "corpo", image: catalogImage("costas-cera-masc", "masculino"), imageAlt: "Homem após cera nas costas Pello Menos", method: "cera", audience: "masculino", highlight: true },
-  { id: "coxa-cera-masc", name: "Coxa – Cera", duration: "20 min • Avulso", originalCents: 5190, category: "pernas", image: catalogImage("coxa-cera-masc", "masculino"), imageAlt: "Homem após cera na coxa Pello Menos", method: "cera", audience: "masculino" },
-  { id: "faixa-cera-masc", name: "Faixa – Cera", duration: "10 min • Avulso", originalCents: 2800, category: "corpo", image: catalogImage("faixa-cera-masc", "masculino"), imageAlt: "Homem após cera na faixa Pello Menos", method: "cera", audience: "masculino" },
-  { id: "intergluteos-cera-masc", name: "Interglúteos – Cera", duration: "15 min • Avulso", originalCents: 3390, category: "corpo", image: catalogImage("intergluteos-cera-masc", "masculino"), imageAlt: "Homem após cera nos interglúteos Pello Menos", method: "cera", audience: "masculino" },
-  { id: "nariz-cera-masc", name: "Nariz – Cera", duration: "10 min • Avulso", originalCents: 3000, category: "rosto", image: catalogImage("nariz-cera-masc", "masculino"), imageAlt: "Homem após cera no nariz Pello Menos", method: "cera", audience: "masculino" },
-  { id: "nadegas-cera-masc", name: "Nádegas – Cera", duration: "20 min • Avulso", originalCents: 5190, category: "corpo", image: catalogImage("nadegas-cera-masc", "masculino"), imageAlt: "Homem após cera nas nádegas Pello Menos", method: "cera", audience: "masculino" },
-  { id: "meia-nadega-cera-masc", name: "Meia nádega – Cera", duration: "15 min • Avulso", originalCents: 2600, category: "corpo", image: catalogImage("meia-nadega-cera-masc", "masculino"), imageAlt: "Homem após cera na meia nádega Pello Menos", method: "cera", audience: "masculino", badge: "Cera" },
-  { id: "perna-cera-masc", name: "Perna Inteira – Cera", duration: "40 min • Avulso", originalCents: 8700, category: "pernas", image: catalogImage("perna-cera-masc", "masculino"), imageAlt: "Homem após cera na perna inteira Pello Menos", method: "cera", audience: "masculino", badge: "5% OFF", highlight: true },
-  { id: "meia-perna-cera-masc", name: "Meia Perna – Cera", duration: "20 min • Avulso", originalCents: 5190, category: "pernas", image: catalogImage("meia-perna-cera-masc", "masculino"), imageAlt: "Homem após cera na meia perna Pello Menos", method: "cera", audience: "masculino" },
-  { id: "queixo-cera-masc", name: "Queixo – Cera", duration: "10 min • Avulso", originalCents: 2800, category: "rosto", image: catalogImage("queixo-cera-masc", "masculino"), imageAlt: "Homem após cera no queixo Pello Menos", method: "cera", audience: "masculino", badge: "Cera" },
-  { id: "virilha-comum-cera-masc", name: "Virilha comum – Cera", duration: "15 min • Avulso", originalCents: 3999, category: "virilha", image: catalogImage("virilha-comum-cera-masc", "masculino"), imageAlt: "Homem após cera na virilha comum Pello Menos", method: "cera", audience: "masculino", badge: "Cera" },
-  { id: "virilha-cera-masc", name: "Virilha Total – Cera", duration: "25 min • Avulso", originalCents: 8890, category: "virilha", image: catalogImage("virilha-cera-masc", "masculino"), imageAlt: "Homem após cera na virilha total Pello Menos", method: "cera", audience: "masculino", highlight: true },
+  // Cera masculino — tabela Rafael e-commerce (já com desconto; skipDiscount)
+  { id: "peito-cera-masc", name: "Peito – Cera", duration: "20 min • Avulso", originalCents: 4990, skipDiscount: true, category: "torax", image: catalogImage("peito-cera-masc", "masculino"), imageAlt: "Homem após cera no peito Pello Menos", method: "cera", audience: "masculino", badge: "Cera", highlight: true },
+  { id: "abdomen-cera-masc", name: "Abdômen – Cera", duration: "15 min • Avulso", originalCents: 5790, skipDiscount: true, category: "torax", image: catalogImage("abdomen-cera-masc", "masculino"), imageAlt: "Homem após cera no abdômen Pello Menos", method: "cera", audience: "masculino" },
+  { id: "axila-cera-masc", name: "Axila – Cera", duration: "15 min • Avulso", originalCents: 3890, skipDiscount: true, category: "axilas", image: catalogImage("axila-cera-masc", "masculino"), imageAlt: "Homem após cera nas axilas Pello Menos", method: "cera", audience: "masculino", badge: "Cera", highlight: true },
+  { id: "antebraco-cera-masc", name: "Antebraço – Cera", duration: "15 min • Avulso", originalCents: 3850, skipDiscount: true, category: "bracos", image: catalogImage("antebraco-cera-masc", "masculino"), imageAlt: "Homem após cera no antebraço Pello Menos", method: "cera", audience: "masculino" },
+  { id: "bracos-cera-masc", name: "Braços – Cera", duration: "20 min • Avulso", originalCents: 7400, skipDiscount: true, category: "bracos", image: catalogImage("bracos-cera-masc", "masculino"), imageAlt: "Homem após cera nos braços Pello Menos", method: "cera", audience: "masculino" },
+  { id: "costas-cera-masc", name: "Costas – Cera", duration: "25 min • Avulso", originalCents: 5990, skipDiscount: true, category: "corpo", image: catalogImage("costas-cera-masc", "masculino"), imageAlt: "Homem após cera nas costas Pello Menos", method: "cera", audience: "masculino", highlight: true },
+  { id: "coxa-cera-masc", name: "Coxa – Cera", duration: "20 min • Avulso", originalCents: 6190, skipDiscount: true, category: "pernas", image: catalogImage("coxa-cera-masc", "masculino"), imageAlt: "Homem após cera na coxa Pello Menos", method: "cera", audience: "masculino" },
+  { id: "faixa-cera-masc", name: "Faixa – Cera", duration: "10 min • Avulso", originalCents: 3400, skipDiscount: true, category: "corpo", image: catalogImage("faixa-cera-masc", "masculino"), imageAlt: "Homem após cera na faixa Pello Menos", method: "cera", audience: "masculino" },
+  { id: "intergluteos-cera-masc", name: "Interglúteos – Cera", duration: "15 min • Avulso", originalCents: 4850, skipDiscount: true, category: "corpo", image: catalogImage("intergluteos-cera-masc", "masculino"), imageAlt: "Homem após cera nos interglúteos Pello Menos", method: "cera", audience: "masculino" },
+  { id: "nariz-cera-masc", name: "Nariz – Cera", duration: "10 min • Avulso", originalCents: 3290, skipDiscount: true, category: "rosto", image: catalogImage("nariz-cera-masc", "masculino"), imageAlt: "Homem após cera no nariz Pello Menos", method: "cera", audience: "masculino" },
+  { id: "nadegas-cera-masc", name: "Nádegas – Cera", duration: "20 min • Avulso", originalCents: 5250, skipDiscount: true, category: "corpo", image: catalogImage("nadegas-cera-masc", "masculino"), imageAlt: "Homem após cera nas nádegas Pello Menos", method: "cera", audience: "masculino" },
+  { id: "meia-nadega-cera-masc", name: "Meia nádega – Cera", duration: "15 min • Avulso", originalCents: 2795, skipDiscount: true, category: "corpo", image: catalogImage("meia-nadega-cera-masc", "masculino"), imageAlt: "Homem após cera na meia nádega Pello Menos", method: "cera", audience: "masculino", badge: "Cera" },
+  { id: "perna-cera-masc", name: "Perna Inteira – Cera", duration: "40 min • Avulso", originalCents: 11500, skipDiscount: true, category: "pernas", image: catalogImage("perna-cera-masc", "masculino"), imageAlt: "Homem após cera na perna inteira Pello Menos", method: "cera", audience: "masculino", badge: "15% OFF", highlight: true },
+  { id: "meia-perna-cera-masc", name: "Meia Perna – Cera", duration: "20 min • Avulso", originalCents: 6190, skipDiscount: true, category: "pernas", image: catalogImage("meia-perna-cera-masc", "masculino"), imageAlt: "Homem após cera na meia perna Pello Menos", method: "cera", audience: "masculino" },
+  { id: "queixo-cera-masc", name: "Queixo – Cera", duration: "10 min • Avulso", originalCents: 3290, skipDiscount: true, category: "rosto", image: catalogImage("queixo-cera-masc", "masculino"), imageAlt: "Homem após cera no queixo Pello Menos", method: "cera", audience: "masculino", badge: "Cera" },
+  { id: "virilha-comum-cera-masc", name: "Virilha comum – Cera", duration: "15 min • Avulso", originalCents: 5890, skipDiscount: true, category: "virilha", image: catalogImage("virilha-comum-cera-masc", "masculino"), imageAlt: "Homem após cera na virilha comum Pello Menos", method: "cera", audience: "masculino", badge: "Cera" },
+  { id: "virilha-cera-masc", name: "Virilha Total – Cera", duration: "25 min • Avulso", originalCents: 8890, skipDiscount: true, category: "virilha", image: catalogImage("virilha-cera-masc", "masculino"), imageAlt: "Homem após cera na virilha total Pello Menos", method: "cera", audience: "masculino", highlight: true },
 
-  // Esfoliação masculino — preço cartão da tabela oficial (sem meio braço, meia nádega, virilha+faixa e seios)
-  { id: "esfoliacao-faixa-masc", name: "Esfoliação Faixa 01", duration: "10 min • Avulso", originalCents: 1850, category: "corpo", image: catalogImage("esfoliacao-faixa-masc", "masculino"), imageAlt: "Esfoliação de faixa masculina Pello Menos", method: "esfoliacao", audience: "masculino" },
-  { id: "esfoliacao-faixa-02-masc", name: "Esfoliação Faixa 02", duration: "10 min • Avulso", originalCents: 3700, category: "corpo", image: catalogImage("esfoliacao-faixa-02-masc", "masculino"), imageAlt: "Esfoliação de faixa 02 masculina Pello Menos", method: "esfoliacao", audience: "masculino" },
-  { id: "esfoliacao-braco-masc", name: "Esfoliação de braço", duration: "20 min • Avulso", originalCents: 3850, category: "bracos", image: catalogImage("esfoliacao-braco-masc", "masculino"), imageAlt: "Esfoliação de braço masculina Pello Menos", method: "esfoliacao", audience: "masculino" },
-  { id: "esfoliacao-meia-perna-masc", name: "Esfoliação de meia perna", duration: "20 min • Avulso", originalCents: 3295, category: "pernas", image: catalogImage("esfoliacao-meia-perna-masc", "masculino"), imageAlt: "Esfoliação de meia perna masculina Pello Menos", method: "esfoliacao", audience: "masculino" },
-  { id: "esfoliacao-abdomen-masc", name: "Esfoliação de abdômen", duration: "15 min • Avulso", originalCents: 3095, category: "torax", image: catalogImage("esfoliacao-abdomen-masc", "masculino"), imageAlt: "Esfoliação de abdômen masculina Pello Menos", method: "esfoliacao", audience: "masculino" },
-  { id: "esfoliacao-axilas-masc", name: "Esfoliação de axilas", duration: "15 min • Avulso", originalCents: 2095, category: "axilas", image: catalogImage("esfoliacao-axilas-masc", "masculino"), imageAlt: "Esfoliação de axilas masculina Pello Menos", method: "esfoliacao", audience: "masculino", badge: "Pele" },
-  { id: "esfoliacao-nadegas-masc", name: "Esfoliação de nádegas", duration: "15 min • Avulso", originalCents: 2795, category: "corpo", image: catalogImage("esfoliacao-nadegas-masc", "masculino"), imageAlt: "Esfoliação de nádegas masculina Pello Menos", method: "esfoliacao", audience: "masculino" },
-  { id: "esfoliacao-coxa-masc", name: "Esfoliação de coxa", duration: "20 min • Avulso", originalCents: 3245, category: "pernas", image: catalogImage("esfoliacao-coxa-masc", "masculino"), imageAlt: "Esfoliação de coxa masculina Pello Menos", method: "esfoliacao", audience: "masculino" },
-  { id: "esfoliacao-costas-masc", name: "Esfoliação de costas", duration: "20 min • Avulso", originalCents: 3145, category: "corpo", image: catalogImage("esfoliacao-costas-masc", "masculino"), imageAlt: "Esfoliação de costas masculina Pello Menos", method: "esfoliacao", audience: "masculino" },
-  { id: "esfoliacao-perna-masc", name: "Esfoliação de perna inteira", duration: "25 min • Avulso", originalCents: 5945, category: "pernas", image: catalogImage("esfoliacao-perna-masc", "masculino"), imageAlt: "Esfoliação de perna inteira masculina Pello Menos", method: "esfoliacao", audience: "masculino", badge: "Pele", highlight: true },
-  { id: "esfoliacao-virilha-masc", name: "Esfoliação de virilha", duration: "15 min • Avulso", originalCents: 3095, category: "virilha", image: catalogImage("esfoliacao-virilha-masc", "masculino"), imageAlt: "Esfoliação de virilha masculina Pello Menos", method: "esfoliacao", audience: "masculino" },
 
-  // Laser masculino — preço de 10 sessões da tabela oficial (sem 50% de loja; 5% OFF só no e-commerce)
-  { id: "axilas-laser-masc", name: "Axila Laser", duration: "15 min • até 10 sessões", originalCents: 98000, category: "axilas", image: catalogImage("axilas-laser-masc", "masculino"), imageAlt: "Homem em campanha de laser nas axilas Pello Menos", method: "laser", audience: "masculino", badge: "5% OFF", highlight: true },
+  // Cera masculino — áreas novas (tabela Rafael; skipDiscount; Woo próprio no oficialteste)
+  { id: "barba-cera-masc", name: "Barba – Cera", duration: "20 min • Avulso", originalCents: 5690, skipDiscount: true, category: "rosto", image: catalogImage("barba-cera-masc", "masculino"), imageAlt: "Barba – Cera Pello Menos", description: "Depilação a cera da barba masculina: remove os pelos da região da barba pela raiz.", method: "cera", audience: "masculino", badge: "Cera", highlight: true },
+  { id: "barba-modeladora-cera-masc", name: "Barba Modeladora – Cera", duration: "25 min • Avulso", originalCents: 7490, skipDiscount: true, category: "rosto", image: catalogImage("barba-modeladora-cera-masc", "masculino"), imageAlt: "Barba Modeladora – Cera Pello Menos", description: "Modelagem da barba com cera: desenho e limpeza das linhas para valorizar o contorno.", method: "cera", audience: "masculino" },
+  { id: "bigode-cera-masc", name: "Bigode – Cera", duration: "10 min • Avulso", originalCents: 3850, skipDiscount: true, category: "rosto", image: catalogImage("bigode-cera-masc", "masculino"), imageAlt: "Bigode – Cera Pello Menos", description: "Depilação a cera do bigode masculino: remove os pelos da região do bigode.", method: "cera", audience: "masculino" },
+  { id: "orelha-cera-masc", name: "Orelha – Cera", duration: "10 min • Avulso", originalCents: 3290, skipDiscount: true, category: "rosto", image: catalogImage("orelha-cera-masc", "masculino"), imageAlt: "Orelha – Cera Pello Menos", description: "Depilação a cera das orelhas masculinas: remove os pelos da orelha e entrada do canal.", method: "cera", audience: "masculino" },
+  { id: "pescoco-cera-masc", name: "Pescoço – Cera", duration: "10 min • Avulso", originalCents: 3290, skipDiscount: true, category: "rosto", image: catalogImage("pescoco-cera-masc", "masculino"), imageAlt: "Pescoço – Cera Pello Menos", description: "Depilação a cera do pescoço masculino: remove os pelos da região do pescoço.", method: "cera", audience: "masculino" },
+  { id: "mamilos-cera-masc", name: "Mamilos – Cera", duration: "10 min • Avulso", originalCents: 3290, skipDiscount: true, category: "torax", image: catalogImage("mamilos-cera-masc", "masculino"), imageAlt: "Mamilos – Cera Pello Menos", description: "Depilação a cera dos mamilos masculinos: remove os pelos ao redor dos mamilos.", method: "cera", audience: "masculino" },
+  { id: "sobrancelha-cera-masc", name: "Sobrancelha – Cera", duration: "15 min • Avulso", originalCents: 5290, skipDiscount: true, category: "sobrancelha", image: catalogImage("sobrancelha-cera-masc", "masculino"), imageAlt: "Sobrancelha – Cera Pello Menos", description: "Depilação de sobrancelha masculina com cera: limpeza conforme o desenho já existente.", method: "cera", audience: "masculino", badge: "Cera" },
+  { id: "design-sobrancelha-masc", name: "Design de Sobrancelha – Cera", duration: "20 min • Avulso", originalCents: 6990, skipDiscount: true, category: "sobrancelha", image: catalogImage("design-sobrancelha-masc", "masculino"), imageAlt: "Design de Sobrancelha – Cera Pello Menos", description: "Design de sobrancelha masculino com cera: remodela o desenho para valorizar o olhar.", method: "cera", audience: "masculino", badge: "Cera", highlight: true },
+  { id: "torax-abdomen-cera-masc", name: "Tórax + Abdômen – Cera", duration: "35 min • Avulso", originalCents: 8990, skipDiscount: true, category: "torax", image: catalogImage("torax-abdomen-cera-masc", "masculino"), imageAlt: "Tórax + Abdômen – Cera Pello Menos", description: "Combo peito e abdômen a cera: remove os pelos do tórax e da parede abdominal.", method: "cera", audience: "masculino", badge: "Cera", highlight: true },
+  { id: "saco-escrotal-cera-masc", name: "Saco Escrotal – Cera", duration: "15 min • Avulso", originalCents: 5890, skipDiscount: true, category: "virilha", image: catalogImage("saco-escrotal-cera-masc", "masculino"), imageAlt: "Saco Escrotal – Cera Pello Menos", description: "Depilação a cera do saco escrotal: remove os pelos da região do saco.", method: "cera", audience: "masculino", badge: "Cera" },
+  // Esfoliação masculino — tabela Rafael e-commerce (já com desconto; skipDiscount)
+  { id: "esfoliacao-faixa-masc", name: "Esfoliação Faixa 01", duration: "10 min • Avulso", originalCents: 1700, skipDiscount: true, category: "corpo", image: catalogImage("esfoliacao-faixa-masc", "masculino"), imageAlt: "Esfoliação de faixa masculina Pello Menos", method: "esfoliacao", audience: "masculino" },
+  { id: "esfoliacao-braco-masc", name: "Esfoliação de braço", duration: "20 min • Avulso", originalCents: 3700, skipDiscount: true, category: "bracos", image: catalogImage("esfoliacao-braco-masc", "masculino"), imageAlt: "Esfoliação de braço masculina Pello Menos", method: "esfoliacao", audience: "masculino" },
+  { id: "esfoliacao-meia-perna-masc", name: "Esfoliação de meia perna", duration: "20 min • Avulso", originalCents: 3095, skipDiscount: true, category: "pernas", image: catalogImage("esfoliacao-meia-perna-masc", "masculino"), imageAlt: "Esfoliação de meia perna masculina Pello Menos", method: "esfoliacao", audience: "masculino" },
+  { id: "esfoliacao-abdomen-masc", name: "Esfoliação de abdômen", duration: "15 min • Avulso", originalCents: 2895, skipDiscount: true, category: "torax", image: catalogImage("esfoliacao-abdomen-masc", "masculino"), imageAlt: "Esfoliação de abdômen masculina Pello Menos", method: "esfoliacao", audience: "masculino" },
+  { id: "esfoliacao-axilas-masc", name: "Esfoliação de axilas", duration: "15 min • Avulso", originalCents: 1945, skipDiscount: true, category: "axilas", image: catalogImage("esfoliacao-axilas-masc", "masculino"), imageAlt: "Esfoliação de axilas masculina Pello Menos", method: "esfoliacao", audience: "masculino", badge: "Pele" },
+  { id: "esfoliacao-nadegas-masc", name: "Esfoliação de nádegas", duration: "15 min • Avulso", originalCents: 2625, skipDiscount: true, category: "corpo", image: catalogImage("esfoliacao-nadegas-masc", "masculino"), imageAlt: "Esfoliação de nádegas masculina Pello Menos", method: "esfoliacao", audience: "masculino" },
+  { id: "esfoliacao-coxa-masc", name: "Esfoliação de coxa", duration: "20 min • Avulso", originalCents: 3095, skipDiscount: true, category: "pernas", image: catalogImage("esfoliacao-coxa-masc", "masculino"), imageAlt: "Esfoliação de coxa masculina Pello Menos", method: "esfoliacao", audience: "masculino" },
+  { id: "esfoliacao-costas-masc", name: "Esfoliação de costas", duration: "20 min • Avulso", originalCents: 2995, skipDiscount: true, category: "corpo", image: catalogImage("esfoliacao-costas-masc", "masculino"), imageAlt: "Esfoliação de costas masculina Pello Menos", method: "esfoliacao", audience: "masculino" },
+  { id: "esfoliacao-perna-masc", name: "Esfoliação de perna inteira", duration: "25 min • Avulso", originalCents: 5750, skipDiscount: true, category: "pernas", image: catalogImage("esfoliacao-perna-masc", "masculino"), imageAlt: "Esfoliação de perna inteira masculina Pello Menos", method: "esfoliacao", audience: "masculino", badge: "Pele", highlight: true },
+  { id: "esfoliacao-virilha-masc", name: "Esfoliação de virilha", duration: "15 min • Avulso", originalCents: 2945, skipDiscount: true, category: "virilha", image: catalogImage("esfoliacao-virilha-masc", "masculino"), imageAlt: "Esfoliação de virilha masculina Pello Menos", method: "esfoliacao", audience: "masculino" },
+
+  // Laser masculino — 10 sessões: originalCents = tabela cheia; Esquenta/Black aplica % sobre a tabela
+  { id: "axilas-laser-masc", name: "Axila Laser", duration: "15 min • até 10 sessões", originalCents: 98000, category: "axilas", image: catalogImage("axilas-laser-masc", "masculino"), imageAlt: "Homem em campanha de laser nas axilas Pello Menos", method: "laser", audience: "masculino", badge: "60% OFF", highlight: true },
   { id: "peito-laser-masc", name: "Tórax Laser", duration: "25 min • até 10 sessões", originalCents: 142000, category: "torax", image: catalogImage("peito-laser-masc", "masculino"), imageAlt: "Homem em campanha de laser no tórax Pello Menos", method: "laser", audience: "masculino", badge: "Masculino", highlight: true },
   { id: "abdomen-laser-masc", name: "Abdômen Laser", duration: "20 min • até 10 sessões", originalCents: 109000, category: "torax", image: catalogImage("abdomen-laser-masc", "masculino"), imageAlt: "Homem em campanha de laser no abdômen Pello Menos", method: "laser", audience: "masculino" },
   { id: "torax-abdomen-laser-masc", name: "Tórax + Abdômen Laser", duration: "40 min • até 10 sessões", originalCents: 236500, category: "torax", image: catalogImage("torax-abdomen-laser-masc", "masculino"), imageAlt: "Homem em campanha de laser no tórax e abdômen Pello Menos", method: "laser", audience: "masculino", badge: "Combo", highlight: true },
@@ -636,7 +834,7 @@ function defaultDescription(item: ProductSeed, method: ProductMethod, audience: 
     return `${item.name}. A compra no e-commerce é a primeira parcela: depois cadastre a recorrência na loja escolhida.`;
   }
   if (method === "presente") {
-    return "Cartão Presente Pello Menos para presentear com serviços de depilação. Informe a unidade onde o presente será usado.";
+    return "Cartão Presente Pello Menos só para depilação a cera. Não vale para laser, linha, esfoliação nem planos. Informe a unidade onde o presente será usado.";
   }
   return "Body Splash oficial da linha Pello Menos para o cuidado em casa após a depilação.";
 }
@@ -649,40 +847,87 @@ function catalogCode(id: string) {
   return `PEL-${id.replace(/-/g, "").toUpperCase()}`;
 }
 
-export const products: Product[] = catalogItems.map((item, index) => {
-  const {
-    originalCents,
-    method: explicitMethod,
-    audience: explicitAudience,
-    skipDiscount,
-    description,
-    ...rest
-  } = item;
-  const method = inferMethod(item.id, explicitMethod);
-  const audience = explicitAudience ?? "feminino";
-  const pricing = skipDiscount
-    ? { priceCents: originalCents }
-    : withEcommercePrice(originalCents);
-  return {
-    ...rest,
-    ...pricing,
-    duration: item.duration.replace(/^(\d+)/, "~$1"),
-    method,
-    audience,
-    sku: catalogSku(index),
-    code: catalogCode(item.id),
-    description: description ?? defaultDescription(item, method, audience),
-  };
-});
+
+const SHARED_CHROME_TWIN_OVERRIDES: Partial<Record<string, Partial<ProductSeed>>> = {
+  "plano-silver-masc": { originalCents: 12490, skipDiscount: true },
+  "plano-gold-masc": { originalCents: 12990, skipDiscount: true },
+};
+
+function expandCatalogWithAudienceTwins(items: ProductSeed[]): ProductSeed[] {
+  const out = items.slice();
+  for (const baseId of SHARED_CHROME_TWIN_IDS) {
+    const base = items.find((item) => item.id === baseId);
+    if (!base) continue;
+    if (out.some((item) => item.id === `${baseId}-masc`)) continue;
+    const twinId = `${baseId}-masc`;
+    out.push({
+      ...base,
+      id: twinId,
+      audience: "masculino",
+      ...(SHARED_CHROME_TWIN_OVERRIDES[twinId] ?? {}),
+    });
+  }
+  return out;
+}
+
+export const products: Product[] = expandCatalogWithAudienceTwins(catalogItems).map(
+  (item, index) => {
+    const {
+      originalCents,
+      method: explicitMethod,
+      audience: explicitAudience,
+      skipDiscount,
+      description,
+      ...rest
+    } = item;
+    const method = inferMethod(canonicalCatalogId(item.id), explicitMethod);
+    const audience = explicitAudience ?? "feminino";
+    const pricing = resolveCatalogPrice({
+      id: item.id,
+      originalCents,
+      method,
+      skipDiscount,
+      audience,
+    });
+    const charged = TEST_CHARGE_CENTS
+      ? { priceCents: TEST_CHARGE_CENTS, oldPriceCents: pricing.oldPriceCents }
+      : pricing;
+    return {
+      ...rest,
+      originalCents,
+      skipDiscount: !!skipDiscount,
+      ...charged,
+      duration: item.duration.replace(/^(\d+)/, "~$1"),
+      method,
+      audience,
+      sku: catalogSku(index),
+      code: catalogCode(item.id),
+      description: description ?? defaultDescription(item, method, audience),
+    };
+  },
+);
+
+/** Recalcula preço de um produto já montado (ex.: carrinho com ≥3 áreas). */
+export function priceProductInCart(product: Product, cartLines: CartLineLike[]) {
+  return resolveCatalogPrice(
+    {
+      id: product.id,
+      originalCents: product.originalCents,
+      method: product.method,
+      skipDiscount: product.skipDiscount,
+      audience: product.audience,
+    },
+    cartLines,
+  );
+}
 
 export function getProductById(id: string) {
   return products.find((item) => item.id === id);
 }
 
 export function productsForAudience(audience: ProductAudience) {
-  return products.filter(
-    (item) => item.audience === audience || isSharedProduct(item),
-  );
+  // Twins carry explicit audience; shared fem SKUs stay feminino-only in listings.
+  return products.filter((item) => item.audience === audience);
 }
 
 export function isServiceMethod(method: ProductMethod): method is ServiceMethod {
@@ -698,6 +943,28 @@ export function productsByMethod(audience: ProductAudience, method: ServiceMetho
   return productsForAudience(audience).filter((item) => item.method === method);
 }
 
+const SERVICE_CARD_PRODUCT: Record<ProductAudience, Partial<Record<ServiceMethod, string>>> = {
+  feminino: {
+    cera: "axila-cera",
+    laser: "axilas-laser",
+    linha: "buco-linha",
+    esfoliacao: "esfoliacao-axilas",
+  },
+  masculino: {
+    cera: "axila-cera-masc",
+    laser: "axilas-laser-masc",
+    esfoliacao: "esfoliacao-axilas-masc",
+  },
+};
+
+export function serviceMethodCardImage(audience: ProductAudience, method: ServiceMethod) {
+  const id = SERVICE_CARD_PRODUCT[audience][method];
+  const product = id ? getProductById(id) : undefined;
+  if (product?.image) return product.image;
+  const fallback = productsByMethod(audience, method)[0];
+  return fallback?.image ?? "/brand/logo-square.png";
+}
+
 export function productsByArea(audience: ProductAudience, category: AreaCategory) {
   return productsForAudience(audience).filter((item) => {
     if (!isServiceMethod(item.method)) return false;
@@ -708,8 +975,10 @@ export function productsByArea(audience: ProductAudience, category: AreaCategory
   });
 }
 
-export function retailProducts() {
-  return products.filter((item) => item.method === "produto");
+export function retailProducts(audience: ProductAudience = "feminino") {
+  return products.filter(
+    (item) => item.method === "produto" && item.audience === audience,
+  );
 }
 
 export function planProducts() {
@@ -717,16 +986,12 @@ export function planProducts() {
 }
 
 export function planProductsFor(audience: ProductAudience) {
-  const items = planProducts();
-  if (audience === "masculino") {
-    return items.filter((item) => item.id !== "plano-clube-laser");
-  }
-  return items;
+  return planProducts().filter((item) => item.audience === audience);
 }
 
-export function giftCardProducts() {
+export function giftCardProducts(audience: ProductAudience = "feminino") {
   return products
-    .filter((item) => item.method === "presente")
+    .filter((item) => item.method === "presente" && item.audience === audience)
     .sort((a, b) => a.priceCents - b.priceCents);
 }
 
@@ -794,7 +1059,6 @@ export const storeUnits: StoreUnit[] = [
   unit("MAD", "Madureira", "Rio de Janeiro", "RJ", "Madureira", true, false, false, false),
   unit("MEI", "Méier", "Rio de Janeiro", "RJ", "Méier", true, false, false, false),
   unit("SNP", "Tijuca — Saens Peña", "Rio de Janeiro", "RJ", "Praça Saens Peña, Tijuca", true, false, false, false),
-  unit("SJM", "São João de Meriti", "São João de Meriti", "RJ", "São João de Meriti", true, false, false, false),
   unit("SJO", "Centro — Rua São José", "Rio de Janeiro", "RJ", "Rua São José, Centro", true, false, false, false),
   unit("TON", "Copacabana I — Barata Ribeiro", "Rio de Janeiro", "RJ", "Av. Barata Ribeiro, Copacabana", true, false, false, false),
   unit("IPA", "Ipanema", "Rio de Janeiro", "RJ", "Ipanema", true, false, false, false),
@@ -806,7 +1070,6 @@ export const storeUnits: StoreUnit[] = [
   unit("SP-AVP", "Avenida Paulista", "São Paulo", "SP", "Av. Paulista", true, false, true, false, "sp-df"),
   // Cera e laser feminino
   unit("CEN", "Centro — Gonçalves Dias", "Rio de Janeiro", "RJ", "Rua Gonçalves Dias, Centro", true, true, false, false),
-  unit("SGO", "São Gonçalo — Partage", "São Gonçalo", "RJ", "Shopping Partage, São Gonçalo", true, true, false, false),
   unit("NIL", "Nilópolis", "Nilópolis", "RJ", "Nilópolis", true, true, false, false),
   unit("LMA", "Largo do Machado", "Rio de Janeiro", "RJ", "Largo do Machado", true, true, false, false),
   unit("SP-SJC", "São José dos Campos", "São José dos Campos", "SP", "São José dos Campos", true, true, false, false, "rj-sp"),
@@ -830,36 +1093,67 @@ export function getStoreUnitById(id: string) {
   return storeUnits.find((item) => item.id === id);
 }
 
-export function unitsForProduct(product: Pick<Product, "id" | "method" | "audience">) {
-  const needsLaser = product.method === "laser" || product.id === "plano-clube-laser";
-  const needsCera =
-    product.method === "cera" ||
-    product.method === "esfoliacao" ||
-    product.method === "linha" ||
-    (product.method === "plano" && product.id !== "plano-clube-laser");
+function sortStoreUnits(units: StoreUnit[]) {
+  return units.slice().sort(
+    (a, b) =>
+      a.state.localeCompare(b.state) || a.name.localeCompare(b.name, "pt-BR"),
+  );
+}
 
-  return storeUnits
-    .filter((store) => {
-      if (product.audience === "masculino") {
-        if (needsLaser) return store.offersLaserMasculino;
-        if (needsCera) return store.offersCeraMasculino;
-        return store.offersCeraMasculino || store.offersLaserMasculino;
-      }
-      if (needsLaser) return store.offersLaser;
-      if (needsCera) return store.offersCera;
-      return true;
-    })
-    .sort(
-      (a, b) =>
-        a.state.localeCompare(b.state) ||
-        a.name.localeCompare(b.name, "pt-BR"),
-    );
+/** Which stores can sell this SKU (capacity flags). Bridge variation pruning is done by the caller. */
+export function unitsForProduct(product: Pick<Product, "id" | "method" | "audience">) {
+  const method = inferMethod(product.id, product.method);
+  const audience = product.audience ?? "feminino";
+  const baseId = canonicalCatalogId(product.id);
+
+  // Linha / esfoliação / presente / produto: available in every unit.
+  if (
+    method === "linha" ||
+    method === "esfoliacao" ||
+    method === "presente" ||
+    method === "produto" ||
+    isBodySplashId(baseId)
+  ) {
+    return sortStoreUnits(storeUnits);
+  }
+
+  // Cera subscription plans follow cera capacity for the audience.
+  if (method === "plano") {
+    if (baseId === "plano-clube-laser") {
+      if (audience === "masculino") return [];
+      return sortStoreUnits(storeUnits.filter((unit) => unit.offersLaser));
+    }
+    // silver / gold / prepago = cera
+    if (audience === "masculino") {
+      return sortStoreUnits(storeUnits.filter((unit) => unit.offersCeraMasculino));
+    }
+    return sortStoreUnits(storeUnits.filter((unit) => unit.offersCera));
+  }
+
+  if (method === "cera") {
+    if (audience === "masculino") {
+      return sortStoreUnits(storeUnits.filter((unit) => unit.offersCeraMasculino));
+    }
+    return sortStoreUnits(storeUnits.filter((unit) => unit.offersCera));
+  }
+
+  if (method === "laser") {
+    if (audience === "masculino") {
+      return sortStoreUnits(storeUnits.filter((unit) => unit.offersLaserMasculino));
+    }
+    return sortStoreUnits(storeUnits.filter((unit) => unit.offersLaser));
+  }
+
+  return sortStoreUnits(storeUnits);
 }
 
 const CROSS_SELL: Record<string, string[]> = {
+  "axila-cera": ["meia-perna-cera", "virilha-comum-cera", "buco-cera"],
+  "abdomen-cera": ["virilha-comum-cera", "meia-perna-cera", "axila-cera"],
   "virilha-cera": ["meia-nadega-cera", "coxa-cera", "axila-cera"],
   "virilha-laser": ["virilha-comum-laser", "meia-nadega-cera", "coxa-cera"],
   "virilha-comum-laser": ["virilha-laser", "virilha-cavada-laser"],
+  "axilas-laser": ["bracos-laser", "virilha-laser", "axila-cera"],
   "peito-laser-masc": ["abdomen-laser-masc", "torax-abdomen-laser-masc", "axilas-laser-masc"],
   "barba-laser-masc": ["bigode-laser-masc", "queixo-laser-masc", "rosto-inteiro-laser-masc"],
   "virilha-laser-masc": ["virilha-total-laser-masc", "intergluteos-laser-masc", "nadegas-laser-masc"],
@@ -886,131 +1180,162 @@ export function relatedProducts(product: Product, limit = 4) {
       !mapped.some((related) => related.id === item.id) &&
       !sameMethod.some((related) => related.id === item.id),
   );
-  return [...mapped, ...sameMethod, ...sameCategory].slice(0, limit);
+  return [...mapped, ...sameMethod, ...sameCategory]
+    .filter((item) => !isComingSoon(item.id))
+    .slice(0, limit);
 }
 
-const pernaCeraHero = formatHeroPrice(8590);
-const axilasLaserHero = formatHeroPrice(89990);
-const axilasLaserMascHero = formatHeroPrice(98000);
-const virilhaLaserHero = formatHeroPrice(209000);
-const bracosLaserHero = formatHeroPrice(144000);
-const peitoHero = formatHeroPrice(142000);
-const costasHero = formatHeroPrice(158000);
-const barbaHero = formatHeroPrice(107000);
+/** Até `limit` sugestões a partir dos itens do carrinho (exclui o que já está no pedido). */
+export function cartRecommendations(
+  cartProductIds: string[],
+  limit = 3,
+): Product[] {
+  const inCart = new Set(cartProductIds);
+  const seen = new Set<string>();
+  const out: Product[] = [];
+  for (const id of cartProductIds) {
+    const product = getProductById(id);
+    if (!product) continue;
+    for (const candidate of relatedProducts(product, 6)) {
+      if (inCart.has(candidate.id) || seen.has(candidate.id)) continue;
+      seen.add(candidate.id);
+      out.push(candidate);
+      if (out.length >= limit) return out;
+    }
+  }
+  return out;
+}
+
+const pernaCeraHero = formatHeroCampaignPrice(8590, "cera");
+const axilasLaserHero = formatHeroCampaignPrice(89990, "laser");
+const axilasLaserMascHero = formatHeroCampaignPrice(98000, "laser");
+const virilhaLaserHero = formatHeroCampaignPrice(209000, "laser");
+const bracosLaserHero = formatHeroCampaignPrice(144000, "laser");
+const peitoHero = formatHeroCampaignPrice(142000, "laser");
+const costasHero = formatHeroCampaignPrice(158000, "laser");
+const barbaHero = formatHeroCampaignPrice(107000, "laser");
 
 export const heroSlides: HeroSlide[] = [
   {
     id: "verao",
-    badge: "Cera 5% OFF",
+    badge: "Cera 15% OFF",
     title: "Pernas prontas pra viver",
     ...pernaCeraHero,
     cta: "Ver cera",
     ctaHref: "/servicos/cera",
-    image: "/images/hero/hero-campaign-low.png",
-    imageMobile: "/images/hero/hero-campaign-low-m.jpg",
-    imagePosition: "50% 82%",
-    imagePositionMobile: "50% 78%",
+    image: "/images/hero/examples/banner-perna-desktop-fw.jpg",
+    imageTablet: "/images/hero/examples/banner-exemplo-avatar-esquerda-tablet.jpg",
+    imageMobile: "/images/hero/examples/banner-exemplo-avatar-esquerda.jpg",
+    imagePosition: "50% 50%",
+    imagePositionMobile: "50% 42%",
     imageAlt: "Mulher na campanha de pernas com cera Pello Menos",
     layout: "copy-top",
+    bakedText: true,
   },
   {
     id: "laser-10",
-    badge: "5% OFF no e-commerce",
+    badge: "Laser 60% OFF",
     title: "10 sessões de laser nas axilas",
     ...axilasLaserHero,
     cta: "Ver laser",
     ctaHref: "/servicos/laser",
-    image: "/images/hero/hero-campaign-center.png",
-    imageMobile: "/images/hero/hero-campaign-center-m.jpg",
-    imagePosition: "50% 40%",
-    imagePositionMobile: "50% 38%",
+    image: "/images/hero/examples/banner-axilas-desktop-fw.jpg",
+    imageTablet: "/images/hero/examples/banner-exemplo-avatar-direita-tablet.jpg",
+    imageMobile: "/images/hero/examples/banner-exemplo-avatar-direita.jpg",
+    imagePosition: "50% 50%",
+    imagePositionMobile: "50% 42%",
     imageAlt: "Mulher no centro da campanha de laser nas axilas Pello Menos",
     layout: "split",
+    bakedText: true,
   },
   {
     id: "virilha",
-    badge: "Mais vendido",
+    badge: "Esquenta Black",
     title: "Virilha total a laser",
     ...virilhaLaserHero,
     cta: "Ver serviços",
     ctaHref: "/servicos",
-    image: "/images/hero/hero-campaign-left.png",
-    imageMobile: "/images/hero/hero-campaign-left-m.jpg",
-    imagePosition: "22% 40%",
-    imagePositionMobile: "28% 38%",
+    image: "/images/hero/examples/banner-virilha-desktop-fw.jpg",
+    imageTablet: "/images/hero/examples/banner-virilha-tablet.jpg",
+    imageMobile: "/images/hero/examples/banner-virilha-mobile.jpg",
+    imagePosition: "50% 50%",
+    imagePositionMobile: "50% 42%",
     imageAlt: "Mulher à esquerda na campanha de virilha a laser Pello Menos",
     layout: "copy-right",
+    bakedText: true,
   },
   {
     id: "bracos",
-    badge: "Novo no laser",
+    badge: "Laser 60% OFF",
     title: "Braços inteiros a laser",
     ...bracosLaserHero,
     cta: "Ver braços",
     ctaHref: "/servicos/laser",
-    image: "/images/hero/hero-campaign-right.png",
-    imageMobile: "/images/hero/hero-campaign-right-m.jpg",
-    imagePosition: "78% 40%",
-    imagePositionMobile: "72% 38%",
+    image: "/images/hero/examples/banner-bracos-desktop-fw.jpg",
+    imageTablet: "/images/hero/examples/banner-bracos-tablet.jpg",
+    imageMobile: "/images/hero/examples/banner-bracos-mobile.jpg",
+    imagePosition: "50% 50%",
+    imagePositionMobile: "50% 42%",
     imageAlt: "Mulher à direita na campanha de braços a laser Pello Menos",
     layout: "copy-left",
+    bakedText: true,
   },
 ];
 
 export const heroSlidesMasculino: HeroSlide[] = [
   {
     id: "peito",
-    badge: "Laser 5% OFF",
+    badge: "Laser 60% OFF",
     title: "Tórax liso, rotina leve",
     ...peitoHero,
     cta: "Ver laser",
     ctaHref: "/masculino/servicos/laser",
     image: M.heroPeito,
-    imageMobile: M.heroPeitoM,
+    imageMobile: M.heroPeito,
     imagePosition: "48% 28%",
-    imagePositionMobile: "50% 26%",
+    imagePositionMobile: "48% 28%",
     imageAlt: "Homem na campanha de laser no tórax Pello Menos",
-    layout: "copy-top",
+    layout: "copy-right",
   },
   {
     id: "costas",
-    badge: "Masculino",
+    badge: "Esquenta Black",
     title: "Costas a laser",
     ...costasHero,
     cta: "Ver costas",
     ctaHref: "/masculino/servicos/laser",
     image: M.heroCostas,
-    imageMobile: M.heroCostasM,
+    imageMobile: M.heroCostas,
     imagePosition: "50% 26%",
-    imagePositionMobile: "50% 24%",
+    imagePositionMobile: "50% 26%",
     imageAlt: "Homem na campanha de laser nas costas Pello Menos",
-    layout: "split",
+    layout: "copy-left",
   },
   {
     id: "axilas-m",
-    badge: "5% OFF no e-commerce",
+    badge: "Laser 60% OFF",
     title: "10 sessões de laser nas axilas",
     ...axilasLaserMascHero,
     cta: "Ver axilas",
     ctaHref: "/masculino/servicos",
     image: M.heroAxilas,
-    imageMobile: M.heroAxilasM,
+    imageMobile: M.heroAxilas,
     imagePosition: "42% 32%",
-    imagePositionMobile: "50% 28%",
+    imagePositionMobile: "42% 32%",
     imageAlt: "Homem na campanha de laser nas axilas Pello Menos",
     layout: "copy-right",
   },
   {
     id: "barba",
-    badge: "Rosto",
+    badge: "Esquenta Black",
     title: "Barba a laser",
     ...barbaHero,
     cta: "Ver barba",
     ctaHref: "/masculino/servicos/laser",
     image: M.heroBarba,
-    imageMobile: M.heroBarbaM,
+    imageMobile: M.heroBarba,
     imagePosition: "58% 28%",
-    imagePositionMobile: "55% 22%",
+    imagePositionMobile: "58% 28%",
     imageAlt: "Homem na campanha de laser na barba Pello Menos",
     layout: "copy-left",
   },
@@ -1034,7 +1359,8 @@ export const categoriesMasculino: Category[] = [
 
 const female = products.filter((item) => item.audience === "feminino");
 const male = products.filter((item) => item.audience === "masculino");
-const officialProducts = products.filter((item) => item.method === "produto");
+const officialProducts = retailProducts("feminino");
+const officialProductsMasc = retailProducts("masculino");
 
 export const productRails = {
   ceraOfertas: female.filter((item) => item.method === "cera"),
@@ -1065,6 +1391,7 @@ export const productRails = {
   esfoliacao: female.filter((item) => item.method === "esfoliacao"),
   linha: female.filter((item) => item.method === "linha"),
   produtos: officialProducts,
+  produtosMasc: officialProductsMasc,
   masculino: male,
   ceraOfertasMasc: male.filter((item) => item.method === "cera"),
   ceraAreasMasc: male.filter((item) =>
@@ -1082,6 +1409,12 @@ export const productRails = {
       "queixo-cera-masc",
       "costas-cera-masc",
       "abdomen-cera-masc",
+      "barba-cera-masc",
+      "bigode-cera-masc",
+      "torax-abdomen-cera-masc",
+      "saco-escrotal-cera-masc",
+      "sobrancelha-cera-masc",
+      "design-sobrancelha-masc",
     ].includes(item.id),
   ),
   esfoliacaoMasc: male.filter((item) => item.method === "esfoliacao"),
@@ -1096,14 +1429,14 @@ export const productRails = {
 export const rectangularBanners: PromoBannerData[] = [
   {
     id: "semana",
-    badge: "Novidade",
-    title: "Semana da Beleza",
-    subtitle: "5% OFF em todos os serviços no e-commerce.",
+    badge: "Esquenta Black",
+    title: "Esquenta Black",
+    subtitle: "Cera e esfoliação com 15% OFF. Laser com 60% OFF no site.",
     image: "/images/hero/promo-semana-v2.png",
     imageMobile: "/images/hero/promo-semana-v2-m.jpg",
     imagePosition: "50% 38%",
-    imagePositionMobile: "50% 32%",
-    imageAlt: "Mulher com axilas lisas na Semana da Beleza",
+    imagePositionMobile: "28% 32%",
+    imageAlt: "Mulher com axilas lisas na Esquenta Black",
   },
   {
     id: "olhar",
@@ -1113,7 +1446,7 @@ export const rectangularBanners: PromoBannerData[] = [
     image: "/images/hero/promo-olhar-v2.png",
     imageMobile: "/images/hero/promo-olhar-v2-m.jpg",
     imagePosition: "50% 32%",
-    imagePositionMobile: "50% 28%",
+    imagePositionMobile: "72% 28%",
     imageAlt: "Mulher com design de sobrancelha em spa com luz e textura",
     overlay: "purple",
   },
@@ -1122,14 +1455,14 @@ export const rectangularBanners: PromoBannerData[] = [
 export const rectangularBannersMasculino: PromoBannerData[] = [
   {
     id: "laser-m",
-    badge: "Tecnologia",
+    badge: "Esquenta Black",
     title: "Laser masculino",
-    subtitle: "Peito, costas, barba e corpo com 5% OFF no site.",
-    image: M.promoLaser,
-    imageMobile: M.promoLaserM,
-    imagePosition: "38% 40%",
-    imagePositionMobile: "42% 32%",
-    imageAlt: "Sessão de laser masculino na clínica Pello Menos",
+    subtitle: "Peito, costas, barba e corpo com 60% OFF no site.",
+    image: M.heroPeito,
+    imageMobile: M.heroPeito,
+    imagePosition: "48% 28%",
+    imagePositionMobile: "48% 28%",
+    imageAlt: "Homem na campanha de laser no tórax Pello Menos",
     textSide: "right",
     overlay: "purple",
   },
@@ -1137,11 +1470,11 @@ export const rectangularBannersMasculino: PromoBannerData[] = [
     id: "corpo-m",
     badge: "Corpo",
     title: "Costas e peito",
-    subtitle: "As áreas mais pedidas do público masculino.",
+    subtitle: "As áreas mais pedidas do público masculino na Esquenta Black.",
     image: M.promoCorpo,
     imageMobile: M.promoCorpoM,
-    imagePosition: "78% 40%",
-    imagePositionMobile: "50% 28%",
+    imagePosition: "62% 42%",
+    imagePositionMobile: "72% 40%",
     imageAlt: "Homem na campanha de costas e peito Pello Menos",
     overlay: "purple",
   },
@@ -1149,66 +1482,70 @@ export const rectangularBannersMasculino: PromoBannerData[] = [
 
 export const squareBanners: SquareBannerData[] = [
   {
-    id: "verao",
-    title: "Combos Verão",
-    subtitle: "5% OFF no site",
-    image: "/images/hero/destaque-verao.png",
-    imagePosition: "50% 30%",
-    imageAlt: "Mulher alisando as pernas para o verão",
+    id: "cera",
+    title: "Cera",
+    subtitle: "Sessão avulsa, resultado no mesmo dia",
+    image: catalogImage("axila-cera"),
+    imagePosition: "62% 42%",
+    imageAlt: "Depilação a cera na axila — área marcada",
+    href: "/servicos/cera",
   },
   {
-    id: "presente",
-    title: "Cartão Presente",
-    subtitle: "Surpreenda quem você ama",
-    image: "/images/hero/destaque-presente.png",
-    imagePosition: "50% 28%",
-    imageAlt: "Mulher com cartão presente Pello Menos",
-    href: giftCardHref(),
+    id: "linha",
+    title: "Linha",
+    subtitle: "Precisão no contorno do rosto",
+    image: catalogImage("buco-linha"),
+    imagePosition: "50% 38%",
+    imageAlt: "Depilação com linha no buço — área marcada",
+    href: "/servicos/linha",
   },
   {
-    id: "combo",
-    title: "Combos de laser",
-    subtitle: "Rosto, braços e corpo",
-    badge: "Combos",
-    image: "/images/hero/destaque-combo.png",
-    imagePosition: "50% 28%",
-    imageAlt: "Mulher cuidando da pele após sessão de laser",
+    id: "laser",
+    title: "Laser",
+    subtitle: "Pacotes de até 10 sessões",
+    image: catalogImage("axilas-laser"),
+    imagePosition: "62% 42%",
+    imageAlt: "Depilação a laser na axila — área marcada",
+    href: "/servicos/laser",
   },
   {
-    id: "olhar",
-    title: "Sobrancelhas",
-    subtitle: "Design e henna",
-    image: "/images/hero/destaque-olhar.png",
-    imagePosition: "50% 22%",
-    imageAlt: "Mulher com design de sobrancelha",
+    id: "esfoliacao",
+    title: "Esfoliação",
+    subtitle: "Pele pronta para a cera",
+    image: catalogImage("esfoliacao-axilas"),
+    imagePosition: "62% 42%",
+    imageAlt: "Esfoliação na axila — área marcada",
+    href: "/servicos/esfoliacao",
   },
 ];
 
 export const squareBannersMasculino: SquareBannerData[] = [
   {
-    id: "peito",
-    title: "Peito a laser",
-    subtitle: "5% OFF no site",
-    badge: "Destaque",
-    image: M.destaquePeito,
-    imagePosition: "50% 22%",
-    imageAlt: "Destaque de laser no peito masculino",
+    id: "cera-m",
+    title: "Cera",
+    subtitle: "Sessão avulsa, resultado no mesmo dia",
+    image: catalogImage("peito-cera-masc", "masculino"),
+    imagePosition: "50% 34%",
+    imageAlt: "Depilação a cera no peito masculino — área marcada",
+    href: "/masculino/servicos/cera",
   },
   {
-    id: "verao-m",
-    title: "Pernas e corpo",
-    subtitle: "Combos verão",
-    image: M.destaqueVerao,
-    imagePosition: "50% 30%",
-    imageAlt: "Destaque de pernas no catálogo masculino",
+    id: "laser-m",
+    title: "Laser",
+    subtitle: "Pacotes de até 10 sessões",
+    image: catalogImage("barba-laser-masc", "masculino"),
+    imagePosition: "50% 36%",
+    imageAlt: "Depilação a laser na barba — área marcada",
+    href: "/masculino/servicos/laser",
   },
   {
-    id: "barba",
-    title: "Barba a laser",
-    subtitle: "Rosto definido",
-    image: M.destaqueBarba,
-    imagePosition: "50% 22%",
-    imageAlt: "Destaque de barba a laser",
+    id: "esfoliacao-m",
+    title: "Esfoliação",
+    subtitle: "Pele pronta para a cera",
+    image: catalogImage("esfoliacao-axilas-masc", "masculino"),
+    imagePosition: "58% 40%",
+    imageAlt: "Esfoliação masculina na axila — área marcada",
+    href: "/masculino/servicos/esfoliacao",
   },
 ];
 
@@ -1315,13 +1652,13 @@ export const audienceLinks = [
 
 export function navItems(audience: ProductAudience): NavItem[] {
   const planChildren: NavChild[] = [
-    { label: "Silver - Cera", href: "/produto/plano-silver" },
-    { label: "Gold - Cera", href: "/produto/plano-gold" },
+    { label: "Silver - Cera", href: productHref(audience, "plano-silver") },
+    { label: "Gold - Cera", href: productHref(audience, "plano-gold") },
   ];
   if (audience === "feminino") {
-    planChildren.push({ label: "Clube de Laser", href: "/produto/plano-clube-laser" });
+    planChildren.push({ label: "Clube de Laser", href: productHref(audience, "plano-clube-laser") });
   }
-  planChildren.push({ label: "Pré Pago", href: "/produto/plano-prepago" });
+  planChildren.push({ label: "Pré Pago", href: productHref(audience, "plano-prepago") });
 
   return [
     {
@@ -1339,10 +1676,10 @@ export function navItems(audience: ProductAudience): NavItem[] {
     },
     {
       label: "Cartão Presente",
-      href: giftCardHref(),
-      children: giftCardProducts().map((item) => ({
-        label: item.name.replace("Cartão Presente ", ""),
-        href: `/produto/${item.id}`,
+      href: giftCardHref(audience),
+      children: giftCardProducts(audience).map((item) => ({
+        label: item.name,
+        href: productHref(audience, item.id),
       })),
     },
     { label: "Produtos", href: retailHref(audience) },

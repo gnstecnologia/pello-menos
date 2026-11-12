@@ -4,7 +4,13 @@ import { BadgeTag } from "@/components/BadgeTag";
 import { BannerCover } from "@/components/BannerCover";
 import type { PromoBannerData } from "@/lib/data";
 
-export function PromoBanner({ banner }: { banner: PromoBannerData }) {
+export function PromoBanner({
+  banner,
+  panel,
+}: {
+  banner: PromoBannerData;
+  panel?: string;
+}) {
   const textOnRight = banner.textSide === "right";
   const purple = banner.overlay === "purple";
 
@@ -27,7 +33,7 @@ export function PromoBanner({ banner }: { banner: PromoBannerData }) {
   );
 
   return (
-    <section className="js-reveal mx-auto max-w-7xl px-container-margin py-4">
+    <section data-home-panel={panel} className="js-reveal mx-auto max-w-7xl px-container-margin py-4">
       <div className="group relative aspect-[4/5] overflow-hidden rounded-3xl md:aspect-auto md:h-[360px] lg:h-[420px]">
         <BannerCover
           src={banner.image}

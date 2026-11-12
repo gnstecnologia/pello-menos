@@ -15,7 +15,7 @@ const nextConfig: NextConfig = {
       }
     : {}),
   images: {
-    unoptimized: isGithubPages,
+    unoptimized: isGithubPages || process.env.PM_STATIC_HOME === "1",
     remotePatterns: [
       {
         protocol: "https",

@@ -8,6 +8,7 @@ import { Icon } from "@/components/Icon";
 import { SearchPanel } from "@/components/SearchPanel";
 import { useStore } from "@/components/StoreProvider";
 import { TrustBar } from "@/components/TrustBar";
+import { isCheckoutFunnelPath } from "@/lib/checkoutPaths";
 import {
   audienceFromPath,
   audienceLinks,
@@ -16,7 +17,7 @@ import {
 } from "@/lib/data";
 
 const iconBtn =
-  "btn-lux btn-lux-ghost relative flex h-11 w-11 items-center justify-center rounded-full border border-primary/20 text-primary hover:text-secondary";
+  "btn-lux btn-lux-ghost btn-lux-icon relative flex h-11 w-11 items-center justify-center rounded-full border border-primary/20 text-primary hover:text-secondary";
 
 type Props = {
   onOpenAuth: () => void;
@@ -76,6 +77,7 @@ function NavMenu({
               <Link
                 key={item.label}
                 href={item.href}
+                data-pm-menu-item
                 onClick={onNavigate}
                 className={
                   active
@@ -88,9 +90,10 @@ function NavMenu({
             );
           }
           return (
-            <div key={item.label}>
+            <div key={item.label} data-pm-menu-item>
               <button
                 type="button"
+                data-pm-subtoggle
                 className={
                   active
                     ? "flex w-full items-center justify-between rounded-xl bg-primary px-4 py-3 text-sm font-semibold text-on-primary"
@@ -102,20 +105,21 @@ function NavMenu({
                 {item.label}
                 <Icon name="chevronDown" size={16} className={expanded ? "rotate-180" : ""} />
               </button>
-              {expanded ? (
-                <div className="ml-3 flex flex-col gap-1 border-l border-outline/40 py-1 pl-3">
-                  {item.children.map((child) => (
-                    <Link
-                      key={child.href}
-                      href={child.href}
-                      onClick={onNavigate}
-                      className="rounded-lg px-3 py-2 text-sm text-on-surface-variant hover:bg-primary/8 hover:text-primary"
-                    >
-                      {child.label}
-                    </Link>
-                  ))}
-                </div>
-              ) : null}
+              <div
+                data-pm-sub
+                className={`${expanded ? "" : "hidden"} ml-3 flex flex-col gap-1 border-l border-outline/40 py-1 pl-3`}
+              >
+                {item.children.map((child) => (
+                  <Link
+                    key={child.href}
+                    href={child.href}
+                    onClick={onNavigate}
+                    className="rounded-lg px-3 py-2 text-sm text-on-surface-variant hover:bg-primary/8 hover:text-primary"
+                  >
+                    {child.label}
+                  </Link>
+                ))}
+              </div>
             </div>
           );
         })}
@@ -180,34 +184,55 @@ export function Header({ onOpenAuth }: Props) {
     setMenuOpen(false);
   }, [pathname]);
 
+  useEffect(() => {
+    const nodes = Array.from(
+      document.querySelectorAll<HTMLElement>("[data-pm-shine]"),
+    );
+    if (!nodes.length) return;
+    const delays = [0, 3.2, 6.4];
+    for (let i = delays.length - 1; i > 0; i -= 1) {
+      const j = Math.floor(Math.random() * (i + 1));
+      const tmp = delays[i]!;
+      delays[i] = delays[j]!;
+      delays[j] = tmp;
+    }
+    nodes.forEach((node, index) => {
+      node.style.setProperty("--shine-delay", `${delays[index % delays.length]}s`);
+    });
+  }, []);
+
+  const hideAudienceSwitch = isCheckoutFunnelPath(pathname);
+
   return (
     <>
       <header className="fixed top-0 z-[80] w-full border-b border-outline/40 bg-white/95 backdrop-blur-md">
         <TrustBar audience={audience} />
-        <div className="border-b border-outline/30 bg-white">
-          <div
-            className="mx-auto flex max-w-7xl items-center justify-center gap-1 px-container-margin py-1.5"
-            role="navigation"
-            aria-label="Público"
-          >
-            {audienceLinks.map((link) => {
-              const active = audience === link.audience;
-              return (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  className={
-                    active
-                      ? "rounded-full bg-primary px-5 py-1.5 text-xs font-semibold tracking-wide text-on-primary uppercase"
-                      : "rounded-full px-5 py-1.5 text-xs font-semibold tracking-wide text-primary uppercase hover:bg-primary/10"
-                  }
-                >
-                  {link.label}
-                </Link>
-              );
-            })}
+        {!hideAudienceSwitch ? (
+          <div className="border-b border-outline/30 bg-white">
+            <div
+              className="mx-auto flex max-w-7xl items-center justify-center gap-1 px-container-margin py-1.5"
+              role="navigation"
+              aria-label="Público"
+            >
+              {audienceLinks.map((link) => {
+                const active = audience === link.audience;
+                return (
+                  <Link
+                    key={link.href}
+                    href={link.href}
+                    className={
+                      active
+                        ? "rounded-full bg-primary px-5 py-1.5 text-xs font-semibold tracking-wide text-on-primary uppercase"
+                        : "rounded-full px-5 py-1.5 text-xs font-semibold tracking-wide text-primary uppercase hover:bg-primary/10"
+                    }
+                  >
+                    {link.label}
+                  </Link>
+                );
+              })}
+            </div>
           </div>
-        </div>
+        ) : null}
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-container-margin py-2.5">
           <Link href={audience === "masculino" ? "/masculino" : "/"} className="flex flex-col items-start leading-none">
             <Image
@@ -225,6 +250,7 @@ export function Header({ onOpenAuth }: Props) {
           <div className="flex items-center gap-2">
             <button
               type="button"
+              data-pm-menu-toggle
               className={`${iconBtn} lg:hidden`}
               aria-label={menuOpen ? "Fechar menu" : "Abrir menu"}
               aria-expanded={menuOpen}
@@ -233,10 +259,17 @@ export function Header({ onOpenAuth }: Props) {
                 setMenuOpen((open) => !open);
               }}
             >
-              <Icon name={menuOpen ? "close" : "menu"} size={20} />
+              <span className={menuOpen ? "hidden" : ""} data-pm-icon="menu">
+                <Icon name="menu" size={20} />
+              </span>
+              <span className={menuOpen ? "" : "hidden"} data-pm-icon="close">
+                <Icon name="close" size={20} />
+              </span>
             </button>
             <button
               type="button"
+              data-pm-search
+              data-pm-shine
               className={iconBtn}
               aria-label="Buscar serviços"
               onClick={() => {
@@ -248,6 +281,8 @@ export function Header({ onOpenAuth }: Props) {
             </button>
             <button
               type="button"
+              data-pm-account
+              data-pm-shine
               className={iconBtn}
               aria-label={user ? "Minha conta" : "Entrar ou criar conta"}
               onClick={() => {
@@ -258,33 +293,48 @@ export function Header({ onOpenAuth }: Props) {
             >
               <Icon name="user" size={20} />
             </button>
-            <Link
-              href="/carrinho"
-              className={iconBtn}
-              aria-label={`Carrinho com ${cartCount} itens`}
-            >
-              <Icon name="shoppingCart" size={20} />
+            <span data-pm-cart-wrap>
+              <Link
+                href="/carrinho"
+                data-pm-shine
+                className={iconBtn}
+                aria-label={`Carrinho com ${cartCount} itens`}
+              >
+                <Icon name="shoppingCart" size={20} />
+              </Link>
               {cartCount > 0 ? (
-                <span className="absolute -top-1 -right-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-bold text-white">
+                <span data-pm-badge className="flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-bold text-white">
                   {cartCount}
                 </span>
               ) : null}
-            </Link>
+            </span>
           </div>
         </div>
-        {menuOpen ? (
-          <div className="border-t border-outline/30 bg-white lg:hidden">
-            <nav className="mx-auto max-w-7xl px-container-margin py-2" aria-label="Principal mobile">
-              <NavMenu
-                items={items}
-                pathname={pathname}
-                mobile
-                onNavigate={() => setMenuOpen(false)}
-              />
-            </nav>
-          </div>
-        ) : null}
+        <div
+          data-pm-menu
+          className={`pm-menu-panel border-t border-outline/30 bg-white lg:hidden ${
+            menuOpen ? "is-open" : ""
+          }`}
+          aria-hidden={!menuOpen}
+        >
+          <nav className="mx-auto max-w-7xl px-container-margin py-2" aria-label="Principal mobile">
+            <NavMenu
+              items={items}
+              pathname={pathname}
+              mobile
+              onNavigate={() => setMenuOpen(false)}
+            />
+          </nav>
+        </div>
       </header>
+      <button
+        type="button"
+        className={`pm-menu-overlay lg:hidden ${menuOpen ? "is-open" : ""}`}
+        aria-label="Fechar menu"
+        tabIndex={menuOpen ? 0 : -1}
+        aria-hidden={!menuOpen}
+        onClick={() => setMenuOpen(false)}
+      />
       <SearchPanel open={searchOpen} onClose={() => setSearchOpen(false)} />
     </>
   );

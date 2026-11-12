@@ -2,10 +2,15 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Icon } from "@/components/Icon";
 import { useStore } from "@/components/StoreProvider";
-import { formatBRL } from "@/lib/data";
+import {
+  campaignDiscountLabel,
+  formatBRL,
+  priceProductInCart,
+  type CartLineLike,
+} from "@/lib/data";
 
 function Steps({ current }: { current: 1 | 2 | 3 }) {
   const steps = ["Carrinho", "Pagamento", "Confirmação"];
@@ -45,15 +50,53 @@ function Steps({ current }: { current: 1 | 2 | 3 }) {
 }
 
 export function CheckoutView() {
-  const { cartItems, subtotalCents } = useStore();
+  const { cartItems } = useStore();
   const [done, setDone] = useState(false);
   const unit = cartItems[0]?.unit;
-  const qtyInvalid = cartItems.some((item) => item.qty > 1);
+
+  const linesCamp: CartLineLike[] = useMemo(
+    () =>
+      cartItems.map((item) => ({
+        id: item.product.id,
+        method: item.product.method,
+      })),
+    [cartItems],
+  );
+  const summary = useMemo(() => {
+    let list = 0;
+    let sale = 0;
+    for (const item of cartItems) {
+      if (item.product.id.includes("body-splash")) {
+        list += 8590 * item.qty;
+        sale += (item.product.priceCents || 8161) * item.qty;
+        continue;
+      }
+      const campaign = priceProductInCart(item.product, linesCamp);
+      const saleUnit = campaign.priceCents > 0 ? campaign.priceCents : item.product.priceCents;
+      const listUnit =
+        campaign.oldPriceCents && campaign.oldPriceCents > 0
+          ? campaign.oldPriceCents
+          : item.product.originalCents || saleUnit;
+      list += listUnit * item.qty;
+      sale += saleUnit * item.qty;
+    }
+    const campaignSavings = Math.max(0, list - sale);
+    const campaignLabel =
+      campaignDiscountLabel() ||
+      (campaignSavings > 0 ? "Desconto e-commerce (5%)" : null);
+    return {
+      listSubtotal: list,
+      saleSubtotal: sale,
+      campaignSavings,
+      campaignLabel,
+    };
+  }, [cartItems, linesCamp]);
 
   const hasPlan = cartItems.some((item) => item.product.method === "plano");
+  const hasRetail = cartItems.some((item) => item.product.method === "produto");
   const paymentNote = hasPlan
     ? "Planos são cobrados no valor cheio, sem parcelamento."
-    : "Parcela mínima de R$ 50. Em cera, 10x só acima de R$ 180.";
+    : "Parcela mínima de R$ 50. Em cera e esfoliação, até 3x; demais serviços, até 10x (igual à loja).";
 
   if (cartItems.length === 0 && !done) {
     return (
@@ -72,27 +115,6 @@ export function CheckoutView() {
           className="btn-lux btn-lux-primary mt-8 inline-flex items-center gap-2 rounded-full px-8 py-3 font-label-md text-label-md text-on-primary uppercase"
         >
           Ver produtos
-          <Icon name="arrowRight" size={16} />
-        </Link>
-      </main>
-    );
-  }
-
-  if (qtyInvalid) {
-    return (
-      <main className="mx-auto flex max-w-lg flex-col items-center px-container-margin py-20 text-center">
-        <h1 className="font-[family-name:var(--font-display)] text-headline-md text-primary">
-          Ajuste a quantidade
-        </h1>
-        <p className="mt-2 text-on-surface-variant">
-          Não dá para pagar com mais de 1 unidade por serviço. Volte ao carrinho
-          e altere todos os itens de uma vez.
-        </p>
-        <Link
-          href="/carrinho"
-          className="btn-lux btn-lux-primary mt-8 inline-flex items-center gap-2 rounded-full px-8 py-3 font-label-md text-label-md text-on-primary uppercase"
-        >
-          Ir ao carrinho
           <Icon name="arrowRight" size={16} />
         </Link>
       </main>
@@ -230,11 +252,35 @@ export function CheckoutView() {
               </li>
             ))}
           </ul>
-          <div className="mt-5 flex justify-between border-t border-outline/40 pt-4">
-            <span className="font-semibold">Total</span>
-            <span className="font-[family-name:var(--font-display)] text-2xl text-primary">
-              {formatBRL(subtotalCents)}
-            </span>
+          {hasRetail ? (
+            <p
+              data-pm-pickup-note
+              className="mt-4 inline-flex items-start gap-2 rounded-xl bg-secondary-container/60 px-3 py-2 text-xs text-on-secondary-container"
+            >
+              <Icon name="mapPin" size={14} className="mt-0.5 shrink-0" />
+              <span>
+                <strong>Body Splash: retirada na loja.</strong> Compra online com retirada na
+                unidade {unit?.name ?? "escolhida"} — não enviamos pelos Correios.
+              </span>
+            </p>
+          ) : null}
+          <div className="mt-5 space-y-3 border-t border-outline/40 pt-4 text-sm">
+            <div className="flex justify-between">
+              <span className="text-on-surface-variant">Subtotal</span>
+              <span className="font-semibold">{formatBRL(summary.listSubtotal)}</span>
+            </div>
+            {summary.campaignSavings > 0 && summary.campaignLabel ? (
+              <div className="flex justify-between text-primary">
+                <span>{summary.campaignLabel}</span>
+                <span className="font-semibold">−{formatBRL(summary.campaignSavings)}</span>
+              </div>
+            ) : null}
+            <div className="flex justify-between border-t border-outline/40 pt-4">
+              <span className="font-semibold">Total</span>
+              <span className="font-[family-name:var(--font-display)] text-2xl text-primary">
+                {formatBRL(summary.saleSubtotal)}
+              </span>
+            </div>
           </div>
         </aside>
       </div>

@@ -2,7 +2,6 @@
 
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useMemo, useRef, useState } from "react";
 import { CategoryCircles } from "@/components/CategoryCircles";
 import { GoogleReviews } from "@/components/GoogleReviews";
@@ -12,6 +11,7 @@ import { PromoBanner } from "@/components/PromoBanner";
 import { SplitOffer } from "@/components/SplitOffer";
 import { SquareBannerRail } from "@/components/SquareBannerRail";
 import {
+  BODY_SPLASH_LAUNCH_LABEL,
   categories,
   categoriesMasculino,
   formatBRL,
@@ -28,7 +28,7 @@ import {
   type ProductMethod,
 } from "@/lib/data";
 
-gsap.registerPlugin(useGSAP, ScrollTrigger);
+gsap.registerPlugin(useGSAP);
 
 const femaleFilters: { id: "todos" | ProductMethod; label: string }[] = [
   { id: "todos", label: "Todos" },
@@ -69,32 +69,52 @@ export function HomeExperience({ audience = "feminino" }: Props) {
 
   useGSAP(
     () => {
-      const mm = gsap.matchMedia();
-      mm.add("(prefers-reduced-motion: no-preference)", () => {
-        gsap.utils.toArray<HTMLElement>(".js-reveal").forEach((section) => {
-          gsap.from(section, {
-            y: 36,
-            opacity: 0,
-            duration: 0.8,
-            ease: "power3.out",
-            scrollTrigger: {
-              trigger: section,
-              start: "top 88%",
-            },
+      let cancelled = false;
+      let mm: gsap.MatchMedia | undefined;
+
+      const start = () => {
+        void import("gsap/ScrollTrigger").then(({ ScrollTrigger }) => {
+          if (cancelled) return;
+          gsap.registerPlugin(ScrollTrigger);
+          mm = gsap.matchMedia();
+          mm.add("(prefers-reduced-motion: no-preference)", () => {
+            gsap.utils.toArray<HTMLElement>(".js-reveal").forEach((section) => {
+              gsap.from(section, {
+                y: 36,
+                opacity: 0,
+                duration: 0.8,
+                ease: "power3.out",
+                scrollTrigger: {
+                  trigger: section,
+                  start: "top 88%",
+                },
+              });
+            });
+            gsap.from(".js-cat", {
+              y: 18,
+              opacity: 0,
+              stagger: 0.07,
+              duration: 0.55,
+              ease: "power2.out",
+              scrollTrigger: {
+                trigger: ".js-cats",
+                start: "top 90%",
+              },
+            });
           });
         });
-        gsap.from(".js-cat", {
-          y: 18,
-          opacity: 0,
-          stagger: 0.07,
-          duration: 0.55,
-          ease: "power2.out",
-          scrollTrigger: {
-            trigger: ".js-cats",
-            start: "top 90%",
-          },
-        });
-      });
+      };
+
+      if (typeof window !== "undefined" && "requestIdleCallback" in window) {
+        window.requestIdleCallback(start, { timeout: 2500 });
+      } else {
+        window.setTimeout(start, 1200);
+      }
+
+      return () => {
+        cancelled = true;
+        mm?.revert();
+      };
     },
     { scope: root },
   );
@@ -111,6 +131,7 @@ export function HomeExperience({ audience = "feminino" }: Props) {
           <button
             key={item.id}
             type="button"
+            data-home-filter={item.id}
             onClick={() => setFilter(item.id)}
             className={
               filter === item.id
@@ -125,15 +146,17 @@ export function HomeExperience({ audience = "feminino" }: Props) {
       {show.cera ? (
         <ProductGrid
           id="cera"
-          eyebrow="Cera 5% OFF"
+          panel="cera"
+          eyebrow="Cera 15% OFF"
           title="Cera em destaque"
-          subtitle="Preço da tabela com 5% de desconto no e-commerce"
+          subtitle="Esquenta Black: preço da tabela com 15% de desconto no site"
           items={isMale ? productRails.ceraOfertasMasc : productRails.ceraOfertas}
           muted
         />
       ) : null}
       {show.cera ? (
         <ProductGrid
+          panel="cera"
           eyebrow="Áreas mais pedidas"
           title="Cera por região"
           subtitle={
@@ -146,6 +169,7 @@ export function HomeExperience({ audience = "feminino" }: Props) {
       ) : null}
       {show.extra ? (
         <SplitOffer
+          panel="extra"
           eyebrow="Assinatura VIP Cera"
           title="Cera todo mês"
           subtitle={
@@ -159,28 +183,30 @@ export function HomeExperience({ audience = "feminino" }: Props) {
               ? "Recepcionista atendendo um cliente na assinatura VIP Cera Pello Menos"
               : "Recepcionista atendendo uma cliente na assinatura VIP Cera Pello Menos"
           }
-          ctaHref="/produto/plano-silver"
+          ctaHref={isMale ? "/produto/plano-silver-masc" : "/produto/plano-silver"}
           ctaLabel="Ver Silver - Cera"
         />
       ) : null}
       {show.extra && !isMale ? (
         <SplitOffer
+          panel="extra"
           eyebrow="Clube de Laser"
           title="Laser todo mês"
           subtitle="A cliente assina o Clube de Laser e faz a sessão no mês, no horário dela — até 8 áreas, sem hora marcada."
-          image="/images/hero/promo-laser-v3.png"
-          imageAlt="Sessão de laser no Clube de Laser Pello Menos"
+          image="/images/hero/promo-laser-v5.jpg"
+          imageAlt="Aplicador 4D em sessão de laser axila no Clube de Laser Pello Menos"
           ctaHref="/produto/plano-clube-laser"
           ctaLabel="Ver Clube de Laser"
           textSide="right"
         />
       ) : null}
       {show.laser && isMale ? (
-        <PromoBanner banner={rectangularBannersMasculino[0]!} />
+        <PromoBanner panel="laser" banner={rectangularBannersMasculino[0]!} />
       ) : null}
       {show.laser ? (
         <ProductGrid
           id="laser"
+          panel="laser"
           eyebrow="Laser"
           title={isMale ? "Laser no rosto" : "Laser no rosto"}
           subtitle={
@@ -193,6 +219,7 @@ export function HomeExperience({ audience = "feminino" }: Props) {
       ) : null}
       {show.laser ? (
         <ProductGrid
+          panel="laser"
           eyebrow="Laser"
           title={isMale ? "Laser no corpo" : "Laser no corpo"}
           subtitle={
@@ -206,6 +233,7 @@ export function HomeExperience({ audience = "feminino" }: Props) {
       ) : null}
       {show.extra ? (
         <SquareBannerRail
+          panel="extra"
           banners={isMale ? squareBannersMasculino : squareBanners}
           productsHref={catalogHref}
         />
@@ -213,6 +241,7 @@ export function HomeExperience({ audience = "feminino" }: Props) {
       {show.esfoliacao ? (
         <ProductGrid
           id="esfoliacao"
+          panel="esfoliacao"
           eyebrow="Esfoliação"
           title="Pele pronta para a cera"
           subtitle={
@@ -226,9 +255,10 @@ export function HomeExperience({ audience = "feminino" }: Props) {
       {show.linha ? (
         <ProductGrid
           id="linha"
+          panel="linha"
           eyebrow="Linha"
           title="Depilação com linha"
-          subtitle="Buço, queixo e faixa — valores da tabela com 5% OFF"
+          subtitle="Buço, queixo e faixa — valores da tabela na Esquenta Black"
           items={productRails.linha}
           muted
         />
@@ -236,21 +266,29 @@ export function HomeExperience({ audience = "feminino" }: Props) {
       {show.extra ? (
         <SplitOffer
           id="produtos-loja"
+          panel="extra"
           eyebrow="Produto oficial"
           title="Body Splash Pello Menos"
-          subtitle="Fragrância oficial para usar em casa depois da sessão."
-          image="/images/hero/splash-banner.jpg"
-          imageAlt="Body Splash oficial Pello Menos"
-          ctaHref="/produtos"
+          subtitle={`Livre, Marcante e Autêntica — fragrâncias oficiais para usar em casa depois da sessão. Lançamento em ${BODY_SPLASH_LAUNCH_LABEL}: compra no site, retirada na unidade.`}
+          image="/images/hero/splash-collection.jpg"
+          imageAlt="Body Splash Autêntica, Marcante e Livre da coleção Pello Menos"
+          ctaHref={isMale ? "/masculino/produtos" : "/produtos"}
           ctaLabel="Ver produtos"
           price={
-            productRails.produtos[0]
-              ? formatBRL(productRails.produtos[0].priceCents)
+            (isMale ? productRails.produtosMasc[0] : productRails.produtos[0])
+              ? formatBRL(
+                  (isMale ? productRails.produtosMasc[0] : productRails.produtos[0])!
+                    .priceCents,
+                )
               : undefined
           }
           oldPrice={
-            productRails.produtos[0]?.oldPriceCents
-              ? formatBRL(productRails.produtos[0].oldPriceCents)
+            (isMale ? productRails.produtosMasc[0] : productRails.produtos[0])
+              ?.oldPriceCents
+              ? formatBRL(
+                  (isMale ? productRails.produtosMasc[0] : productRails.produtos[0])!
+                    .oldPriceCents!,
+                )
               : undefined
           }
         />

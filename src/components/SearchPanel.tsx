@@ -2,17 +2,18 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Icon } from "@/components/Icon";
+import { productCopy } from "@/lib/product-copy";
 import {
   audienceFromPath,
   categories,
   categoriesMasculino,
   formatBRL,
   productsForAudience,
-  productsHref,
 } from "@/lib/data";
+import { buildSearchHref } from "@/lib/search";
 
 type Props = {
   open: boolean;
@@ -21,6 +22,7 @@ type Props = {
 
 export function SearchPanel({ open, onClose }: Props) {
   const pathname = usePathname();
+  const router = useRouter();
   const audience = audienceFromPath(pathname);
   const catalog = useMemo(() => productsForAudience(audience), [audience]);
   const categoryList = audience === "masculino" ? categoriesMasculino : categories;
@@ -62,6 +64,8 @@ export function SearchPanel({ open, onClose }: Props) {
         product.sku,
         product.code,
         product.description,
+        productCopy(product.id).short,
+        productCopy(product.id).long,
         product.badge || "",
       ]
         .join(" ")
@@ -85,13 +89,12 @@ export function SearchPanel({ open, onClose }: Props) {
     localStorage.setItem("pello-menos-recent-search", JSON.stringify(next));
   }
 
-  function goToProducts() {
+  function goToResults(term = query) {
+    const clean = term.trim();
+    if (!clean) return;
+    remember(clean);
     onClose();
-    if (pathname === "/" || pathname === "/masculino") {
-      document.getElementById("produtos")?.scrollIntoView({ behavior: "smooth" });
-      return;
-    }
-    window.location.href = productsHref(audience);
+    router.push(buildSearchHref({ q: clean, audience }));
   }
 
   if (!open) return null;
@@ -113,7 +116,10 @@ export function SearchPanel({ open, onClose }: Props) {
               value={query}
               onChange={(event) => setQuery(event.target.value)}
               onKeyDown={(event) => {
-                if (event.key === "Enter" && query.trim()) remember(query);
+                if (event.key === "Enter" && query.trim()) {
+                  event.preventDefault();
+                  goToResults(query);
+                }
               }}
               placeholder="Buscar axila, virilha, laser, cera..."
               className="w-full bg-transparent text-base text-on-surface outline-none placeholder:text-on-surface-variant"
@@ -128,6 +134,14 @@ export function SearchPanel({ open, onClose }: Props) {
                 <Icon name="close" size={18} />
               </button>
             ) : null}
+            <button
+              type="button"
+              onClick={() => goToResults(query)}
+              disabled={!query.trim()}
+              className="btn-lux btn-lux-primary shrink-0 rounded-full px-4 py-2 text-xs font-semibold tracking-wide text-on-primary uppercase disabled:opacity-40"
+            >
+              Buscar
+            </button>
           </div>
 
           {!normalized ? (
@@ -197,11 +211,22 @@ export function SearchPanel({ open, onClose }: Props) {
                 </div>
               ) : null}
               <div>
-                <p className="font-label-md text-label-md text-primary uppercase">
-                  {results.length} serviço{results.length === 1 ? "" : "s"}
-                </p>
+                <div className="flex items-center justify-between gap-3">
+                  <p className="font-label-md text-label-md text-primary uppercase">
+                    {results.length} serviço{results.length === 1 ? "" : "s"}
+                  </p>
+                  {results.length > 0 ? (
+                    <button
+                      type="button"
+                      onClick={() => goToResults(query)}
+                      className="text-sm font-semibold text-primary hover:underline"
+                    >
+                      Ver todos os resultados
+                    </button>
+                  ) : null}
+                </div>
                 <ul className="mt-3 divide-y divide-outline/40">
-                  {results.map((product) => (
+                  {results.slice(0, 8).map((product) => (
                     <li
                       key={product.id}
                       className="flex items-center gap-3 py-3"

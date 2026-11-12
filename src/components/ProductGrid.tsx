@@ -5,11 +5,19 @@ import Link from "next/link";
 import { CarouselArrows } from "@/components/CarouselArrows";
 import { Icon } from "@/components/Icon";
 import { BadgeTag } from "@/components/BadgeTag";
+import { ComingSoonOverlay } from "@/components/ComingSoonOverlay";
 import { useCardCarousel } from "@/lib/carousel";
-import { formatBRL, getInstallment, type Product } from "@/lib/data";
+import {
+  BODY_SPLASH_LAUNCH_LABEL,
+  formatBRL,
+  getInstallment,
+  isComingSoon,
+  type Product,
+} from "@/lib/data";
 
 type Props = {
   id?: string;
+  panel?: string;
   eyebrow: string;
   title: string;
   subtitle: string;
@@ -19,6 +27,7 @@ type Props = {
 
 export function ProductGrid({
   id,
+  panel,
   eyebrow,
   title,
   subtitle,
@@ -30,6 +39,7 @@ export function ProductGrid({
   return (
     <section
       id={id}
+      data-home-panel={panel}
       className={`js-reveal relative scroll-mt-24 py-12 ${muted ? "bg-surface-container-low" : "bg-background"}`}
     >
       <div className="mx-auto mb-8 max-w-7xl px-container-margin">
@@ -51,11 +61,14 @@ export function ProductGrid({
         />
 
         <div ref={scroller} className="carousel-track hide-scrollbar pb-4">
-          {items.map((product) => (
+          {items.map((product) => {
+            const comingSoon = isComingSoon(product.id);
+            return (
             <article
               key={product.id}
               data-carousel-card
               data-product-card
+              data-coming-soon={comingSoon ? "1" : undefined}
               className="carousel-card group overflow-hidden rounded-2xl bg-surface shadow-[0_18px_40px_rgba(58,10,60,0.08)]"
             >
               <Link href={`/produto/${product.id}`} className="block">
@@ -67,11 +80,12 @@ export function ProductGrid({
                     src={product.image}
                     alt={product.imageAlt}
                     fill
-                    className="object-cover object-center transition-transform duration-700 group-hover:scale-105"
+                    className={`object-cover object-center transition-transform duration-700 group-hover:scale-105${comingSoon ? " grayscale" : ""}`}
                     sizes="(max-width: 640px) 78vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
                   />
+                  {comingSoon ? <ComingSoonOverlay /> : null}
                   {product.badge ? (
-                    <div className="absolute top-3 left-3">
+                    <div className="absolute top-3 left-3 z-20">
                       <BadgeTag label={product.badge} />
                     </div>
                   ) : null}
@@ -114,16 +128,24 @@ export function ProductGrid({
                     </span>
                   ) : null}
                 </div>
-                <Link
-                  href={`/produto/${product.id}`}
-                  className="btn-lux btn-lux-primary mt-2 inline-flex w-full items-center justify-center gap-2 rounded-full py-2.5 text-xs font-semibold tracking-wide text-on-primary uppercase"
-                >
-                  <Icon name="shoppingBag" size={15} />
-                  Ver produto
-                </Link>
+                {comingSoon ? (
+                  <span className="mt-2 inline-flex w-full items-center justify-center gap-2 rounded-full border border-outline/40 bg-surface-container-low py-2.5 text-xs font-semibold tracking-wide text-on-surface-variant uppercase">
+                    <Icon name="clock" size={15} />
+                    Em breve · {BODY_SPLASH_LAUNCH_LABEL}
+                  </span>
+                ) : (
+                  <Link
+                    href={`/produto/${product.id}`}
+                    className="btn-lux btn-lux-primary mt-2 inline-flex w-full items-center justify-center gap-2 rounded-full py-2.5 text-xs font-semibold tracking-wide text-on-primary uppercase"
+                  >
+                    <Icon name="shoppingBag" size={15} />
+                    Ver produto
+                  </Link>
+                )}
               </div>
             </article>
-          ))}
+            );
+          })}
         </div>
       </div>
     </section>

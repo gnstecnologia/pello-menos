@@ -99,21 +99,9 @@ type Props = {
 export function HeroBanner({ slides }: Props) {
   const root = useRef<HTMLElement>(null);
   const [index, setIndex] = useState(0);
-  const slide = slides[index] ?? slides[0];
 
   useGSAP(
     () => {
-      const mm = gsap.matchMedia();
-      mm.add("(prefers-reduced-motion: no-preference)", () => {
-        gsap.to(".js-hero-bg", {
-          scale: 1.06,
-          duration: 14,
-          ease: "none",
-          repeat: -1,
-          yoyo: true,
-        });
-      });
-
       const timer = window.setInterval(() => {
         setIndex((current) => (current + 1) % slides.length);
       }, 6400);
@@ -128,7 +116,7 @@ export function HeroBanner({ slides }: Props) {
       const mm = gsap.matchMedia();
       mm.add("(prefers-reduced-motion: no-preference)", () => {
         gsap.fromTo(
-          ".js-hero-copy",
+          "[data-hero-slide].opacity-100 .js-hero-copy",
           { opacity: 0, y: 18 },
           { opacity: 1, y: 0, duration: 0.6, ease: "power2.out" },
         );
@@ -137,37 +125,61 @@ export function HeroBanner({ slides }: Props) {
     { scope: root, dependencies: [index] },
   );
 
-  if (!slide) return null;
+  if (!slides.length) return null;
 
   const arrowClass =
-    "absolute top-1/2 z-20 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-secondary-container/50 bg-black/25 text-secondary-container backdrop-blur-sm md:h-12 md:w-12";
+    "absolute top-1/2 z-20 hidden h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-secondary-container/50 bg-black/25 text-secondary-container backdrop-blur-sm md:flex md:h-12 md:w-12";
 
   return (
     <section
       ref={root}
       id="inicio"
-      className="relative aspect-[4/5] w-full overflow-hidden bg-primary md:aspect-auto md:h-[560px] lg:h-[640px] xl:h-[720px]"
+      className="relative aspect-[3/4] w-full overflow-hidden bg-primary md:aspect-auto md:h-[480px] lg:h-[min(680px,calc(100dvh-10.5rem))]"
     >
       {slides.map((item, slideIndex) => (
         <div
           key={item.id}
-          className={`absolute inset-0 transition-opacity duration-700 ${slideIndex === index ? "opacity-100" : "opacity-0"}`}
+          data-hero-slide={slideIndex}
+          className={`absolute inset-0 transition-opacity duration-700 ${slideIndex === index ? "opacity-100" : "pointer-events-none opacity-0"}`}
         >
           <BannerCover
             src={item.image}
             srcMobile={item.imageMobile}
+            srcTablet={item.imageTablet}
             alt={item.imageAlt}
             position={item.imagePosition}
             positionMobile={item.imagePositionMobile}
             priority={slideIndex === 0}
             className="js-hero-bg"
             sizes="100vw"
+            contain={false}
+            containMobile={false}
           />
+          {item.bakedText ? (
+            <a
+              href={item.ctaHref}
+              className="absolute inset-0 z-10"
+              aria-label={item.cta}
+            />
+          ) : item.bakedTextMobile ? (
+            <>
+              <a
+                href={item.ctaHref}
+                className="absolute inset-0 z-10 md:hidden"
+                aria-label={item.cta}
+              />
+              <div className="hidden h-full md:block">
+                <HeroCopy slide={item} />
+              </div>
+            </>
+          ) : (
+            <HeroCopy slide={item} />
+          )}
         </div>
       ))}
-      <HeroCopy slide={slide} />
       <button
         type="button"
+        data-hero-prev
         aria-label="Banner anterior"
         onClick={() => setIndex((current) => (current - 1 + slides.length) % slides.length)}
         className={`${arrowClass} left-2 md:left-5`}
@@ -176,6 +188,7 @@ export function HeroBanner({ slides }: Props) {
       </button>
       <button
         type="button"
+        data-hero-next
         aria-label="Próximo banner"
         onClick={() => setIndex((current) => (current + 1) % slides.length)}
         className={`${arrowClass} right-2 md:right-5`}
@@ -187,6 +200,7 @@ export function HeroBanner({ slides }: Props) {
           <button
             key={item.id}
             type="button"
+            data-hero-dot={slideIndex}
             aria-label={`Ir para slide ${slideIndex + 1}`}
             onClick={() => setIndex(slideIndex)}
             className={

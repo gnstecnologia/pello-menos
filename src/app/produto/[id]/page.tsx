@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { ProductPageView } from "@/components/ProductPageView";
 import { getProductById, products } from "@/lib/data";
+import { productCopy } from "@/lib/product-copy";
 
 type Props = {
   params: Promise<{ id: string }>;
@@ -19,7 +20,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   }
   return {
     title: `${product.name} | Pello Menos`,
-    description: product.description,
+    description: productCopy(product.id).short || product.description,
   };
 }
 
