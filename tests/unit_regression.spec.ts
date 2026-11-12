@@ -32,7 +32,7 @@ test('unit SP stays valid after clicking Finalizar', async ({ page }) => {
 
   // abre a aba de dados (Iniciar) e depois pagamento, como a cliente
   const state1 = await page.evaluate(() => {
-    const s = document.querySelector('select[name="unit"]');
+    const s = document.querySelector('select[name="unit"]') as HTMLSelectElement | null;
     if (!s) return { found: false };
     const valid = Array.from(s.options).some((o) => o.value === s.value);
     return { found: true, value: s.value, text: (s.options[s.selectedIndex] || {}).text, valid };
@@ -47,7 +47,7 @@ test('unit SP stays valid after clicking Finalizar', async ({ page }) => {
   await page.waitForTimeout(2500);
 
   const state2 = await page.evaluate(() => {
-    const s = document.querySelector('select[name="unit"]');
+    const s = document.querySelector('select[name="unit"]') as HTMLSelectElement | null;
     if (!s) return { found: false };
     const valid = Array.from(s.options).some((o) => o.value === s.value);
     const injected = Array.from(s.options).filter((o) => /Avenida Paulista/.test(o.text));

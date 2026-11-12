@@ -105,10 +105,13 @@ export function HomeExperience({ audience = "feminino" }: Props) {
         });
       };
 
-      if (typeof window !== "undefined" && "requestIdleCallback" in window) {
-        window.requestIdleCallback(start, { timeout: 2500 });
+      const w = window as typeof window & {
+        requestIdleCallback?: (cb: IdleRequestCallback, opts?: IdleRequestOptions) => number;
+      };
+      if (typeof window !== "undefined" && typeof w.requestIdleCallback === "function") {
+        w.requestIdleCallback(start, { timeout: 2500 });
       } else {
-        window.setTimeout(start, 1200);
+        w.setTimeout(start, 1200);
       }
 
       return () => {

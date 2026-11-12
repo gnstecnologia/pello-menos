@@ -17,6 +17,7 @@ on:
   push:
     branches: [main]
     paths:
+      - "wordpress-loja/pm-home/**"
       - "wordpress-loja/snippets/**"
       - "scripts/sync_oficialteste.py"
       - ".github/workflows/sync-oficialteste.yml"
