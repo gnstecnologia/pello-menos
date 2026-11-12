@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { CatalogHub } from "@/components/CatalogHub";
-import { productsByMethod, serviceHref, serviceMethodsFor } from "@/lib/data";
+import { serviceHref, serviceMethodCardImage, serviceMethodsFor } from "@/lib/data";
 
 export const metadata: Metadata = {
   title: "Serviços masculinos | Pello Menos",
@@ -13,7 +13,7 @@ export default function ServicosMasculinoPage() {
     href: serviceHref(audience, method.id),
     label: method.label,
     subtitle: method.subtitle,
-    image: productsByMethod(audience, method.id)[0]?.image ?? "/brand/logo-square.png",
+    image: serviceMethodCardImage(audience, method.id),
   }));
 
   return (

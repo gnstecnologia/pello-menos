@@ -13,13 +13,16 @@ export function AuthModal({ open, onClose }: Props) {
   const { user, login, register, logout } = useStore();
   const [mode, setMode] = useState<"login" | "register">("login");
   const [name, setName] = useState("");
+  const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [busy, setBusy] = useState(false);
 
   useEffect(() => {
     if (!open) return;
     setError("");
+    setBusy(false);
     const onKey = (event: KeyboardEvent) => {
       if (event.key === "Escape") onClose();
     };
@@ -31,17 +34,23 @@ export function AuthModal({ open, onClose }: Props) {
 
   function submit(event: FormEvent) {
     event.preventDefault();
+    if (busy) return;
+    setBusy(true);
+    setError("");
     const message =
       mode === "login"
         ? login(email, password)
-        : register(name, email, password);
+        : register(name, email, password, phone);
     if (message) {
       setError(message);
+      setBusy(false);
       return;
     }
     setName("");
+    setPhone("");
     setEmail("");
     setPassword("");
+    setBusy(false);
     onClose();
   }
 
@@ -57,12 +66,12 @@ export function AuthModal({ open, onClose }: Props) {
         role="dialog"
         aria-modal="true"
         aria-labelledby="auth-title"
-        className="relative w-full max-w-md rounded-3xl bg-white p-6 shadow-2xl"
+        className="pm-account-card relative w-full max-w-md p-6"
       >
         <button
           type="button"
           onClick={onClose}
-          className="absolute top-4 right-4 text-on-surface-variant hover:text-primary"
+          className="absolute top-4 right-4 text-white/70 hover:text-[#e8b86d]"
           aria-label="Fechar"
         >
           <Icon name="close" size={20} />
@@ -70,41 +79,45 @@ export function AuthModal({ open, onClose }: Props) {
 
         {user ? (
           <div>
-            <p className="font-label-md text-label-md text-primary uppercase">
+            <p className="font-label-md text-label-md uppercase tracking-[0.18em] text-[#e8b86d]">
               Minha conta
             </p>
             <h2
               id="auth-title"
-              className="mt-2 font-[family-name:var(--font-display)] text-3xl text-primary"
+              className="mt-2 font-[family-name:var(--font-display)] text-3xl text-white"
             >
               Olá, {user.name}
             </h2>
-            <p className="mt-1 text-sm text-on-surface-variant">{user.email}</p>
+            <p className="mt-1 text-sm text-white/70">{user.email}</p>
+            <div className="mt-5 h-px bg-gradient-to-r from-transparent via-[#e8b86d]/55 to-transparent" />
             <button
               type="button"
               onClick={() => {
                 logout();
                 onClose();
               }}
-              className="btn-lux btn-lux-ghost mt-6 w-full rounded-full border border-primary px-4 py-3 text-sm font-semibold text-primary uppercase"
+              className="btn-lux btn-lux-ghost mt-6 w-full rounded-full border border-[#e8b86d]/45 px-4 py-3 text-sm font-semibold text-[#e8b86d] uppercase"
             >
               Sair
             </button>
           </div>
         ) : (
           <>
+            <p className="font-label-md text-label-md uppercase tracking-[0.18em] text-[#e8b86d]">
+              Minha conta
+            </p>
             <h2
               id="auth-title"
-              className="pr-8 font-[family-name:var(--font-display)] text-3xl text-primary"
+              className="mt-2 pr-8 font-[family-name:var(--font-display)] text-3xl text-white"
             >
               {mode === "login" ? "Entrar" : "Criar conta"}
             </h2>
-            <p className="mt-1 text-sm text-on-surface-variant">
+            <p className="mt-1 text-sm text-white/70">
               {mode === "login"
                 ? "Acesse para acompanhar pedidos e ofertas."
                 : "Cadastre-se para comprar mais rápido."}
             </p>
-            <div className="mt-5 grid grid-cols-2 gap-2 rounded-full bg-surface-container-low p-1">
+            <div className="mt-5 grid grid-cols-2 gap-2 rounded-full border border-white/15 bg-white/10 p-1">
               <button
                 type="button"
                 onClick={() => {
@@ -113,8 +126,8 @@ export function AuthModal({ open, onClose }: Props) {
                 }}
                 className={
                   mode === "login"
-                    ? "btn-lux btn-lux-primary rounded-full py-2 text-sm font-semibold text-white"
-                    : "rounded-full py-2 text-sm text-on-surface-variant"
+                    ? "btn-lux btn-lux-gold rounded-full py-2 text-sm font-semibold text-on-secondary-container"
+                    : "rounded-full py-2 text-sm text-white/70"
                 }
               >
                 Entrar
@@ -127,8 +140,8 @@ export function AuthModal({ open, onClose }: Props) {
                 }}
                 className={
                   mode === "register"
-                    ? "btn-lux btn-lux-primary rounded-full py-2 text-sm font-semibold text-white"
-                    : "rounded-full py-2 text-sm text-on-surface-variant"
+                    ? "btn-lux btn-lux-gold rounded-full py-2 text-sm font-semibold text-on-secondary-container"
+                    : "rounded-full py-2 text-sm text-white/70"
                 }
               >
                 Cadastrar
@@ -136,46 +149,93 @@ export function AuthModal({ open, onClose }: Props) {
             </div>
             <form onSubmit={submit} className="mt-5 space-y-3">
               {mode === "register" ? (
-                <label className="block text-sm">
-                  Nome
-                  <input
-                    value={name}
-                    onChange={(event) => setName(event.target.value)}
-                    className="mt-1 w-full rounded-2xl border border-outline/50 px-4 py-3 outline-none focus:border-primary"
-                    autoComplete="name"
-                  />
-                </label>
+                <>
+                  <label className="block text-sm text-white/85">
+                    Nome
+                    <input
+                      value={name}
+                      onChange={(event) => setName(event.target.value)}
+                      className="mt-1 w-full rounded-2xl border border-white/20 bg-white/8 px-4 py-3 text-white outline-none focus:border-[#e8b86d]"
+                      autoComplete="name"
+                      required
+                    />
+                  </label>
+                  <label className="block text-sm text-white/85">
+                    Telefone
+                    <input
+                      type="tel"
+                      inputMode="tel"
+                      value={phone}
+                      onChange={(event) => setPhone(event.target.value)}
+                      className="mt-1 w-full rounded-2xl border border-white/20 bg-white/8 px-4 py-3 text-white outline-none focus:border-[#e8b86d]"
+                      autoComplete="tel"
+                      required
+                    />
+                  </label>
+                </>
               ) : null}
-              <label className="block text-sm">
+              <label className="block text-sm text-white/85">
                 E-mail
                 <input
                   type="email"
                   value={email}
                   onChange={(event) => setEmail(event.target.value)}
-                  className="mt-1 w-full rounded-2xl border border-outline/50 px-4 py-3 outline-none focus:border-primary"
+                  className="mt-1 w-full rounded-2xl border border-white/20 bg-white/8 px-4 py-3 text-white outline-none focus:border-[#e8b86d]"
                   autoComplete="email"
+                  required
                 />
               </label>
-              <label className="block text-sm">
+              <label className="block text-sm text-white/85">
                 Senha
                 <input
                   type="password"
                   value={password}
                   onChange={(event) => setPassword(event.target.value)}
-                  className="mt-1 w-full rounded-2xl border border-outline/50 px-4 py-3 outline-none focus:border-primary"
+                  className="mt-1 w-full rounded-2xl border border-white/20 bg-white/8 px-4 py-3 text-white outline-none focus:border-[#e8b86d]"
                   autoComplete={
                     mode === "login" ? "current-password" : "new-password"
                   }
+                  required
                 />
               </label>
               {error ? (
-                <p className="text-sm text-primary">{error}</p>
+                <p className="text-sm text-[#e8b86d]">{error}</p>
               ) : null}
               <button
                 type="submit"
-                className="btn-lux btn-lux-primary w-full rounded-full py-3 text-sm font-semibold tracking-wide text-white uppercase"
+                disabled={busy}
+                className="btn-lux btn-lux-gold inline-flex w-full items-center justify-center gap-2 rounded-full py-3 text-sm font-semibold tracking-wide text-on-secondary-container uppercase disabled:opacity-80"
               >
-                {mode === "login" ? "Entrar" : "Criar conta"}
+                {busy ? (
+                  <svg
+                    className="h-4 w-4 animate-spin"
+                    viewBox="0 0 24 24"
+                    aria-hidden="true"
+                    fill="none"
+                  >
+                    <circle
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeOpacity="0.25"
+                      strokeWidth="3"
+                    />
+                    <path
+                      d="M22 12a10 10 0 0 1-10 10"
+                      stroke="currentColor"
+                      strokeWidth="3"
+                      strokeLinecap="round"
+                    />
+                  </svg>
+                ) : null}
+                {busy
+                  ? mode === "login"
+                    ? "Entrando…"
+                    : "Cadastrando…"
+                  : mode === "login"
+                    ? "Entrar"
+                    : "Criar conta"}
               </button>
             </form>
           </>

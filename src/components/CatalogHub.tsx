@@ -23,7 +23,7 @@ type Props = {
 
 export function CatalogHub({ audience, eyebrow, title, subtitle, cards }: Props) {
   return (
-    <main className="mx-auto max-w-7xl px-container-margin py-8 md:py-12">
+    <main className="mx-auto w-full max-w-7xl px-container-margin py-8 md:py-12">
       <nav className="text-xs text-on-surface-variant">
         <Link href={homeHref(audience)} className="hover:text-primary">
           Início
@@ -38,7 +38,11 @@ export function CatalogHub({ audience, eyebrow, title, subtitle, cards }: Props)
         {title}
       </h1>
       <p className="mt-2 max-w-2xl text-on-surface-variant">{subtitle}</p>
-      <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+      <div
+        className={`mt-8 grid w-full gap-5 sm:grid-cols-2 ${
+          cards.length > 3 ? "lg:grid-cols-4" : "lg:grid-cols-3"
+        }`}
+      >
         {cards.map((card) => (
           <Link
             key={card.href}

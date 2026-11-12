@@ -2,7 +2,7 @@ import { Icon, type IconName } from "@/components/Icon";
 import type { ProductAudience } from "@/lib/data";
 
 const femaleItems: { icon: IconName; label: string; detail: string }[] = [
-  { icon: "badgePercent", label: "5% OFF no site", detail: "Sobre o preço da tabela" },
+  { icon: "badgePercent", label: "Esquenta Black", detail: "Cera 15% · Laser 60%" },
   { icon: "sparkles", label: "Cera em primeiro", detail: "O carro-chefe da marca" },
   { icon: "clock", label: "Sem agendamento", detail: "Atendimento por ordem de chegada" },
   { icon: "shieldCheck", label: "Compra segura", detail: "Cartão protegido" },
@@ -14,7 +14,7 @@ const femaleItems: { icon: IconName; label: string; detail: string }[] = [
 ];
 
 const maleItems: { icon: IconName; label: string; detail: string }[] = [
-  { icon: "badgePercent", label: "5% OFF no site", detail: "Sobre o preço da tabela" },
+  { icon: "badgePercent", label: "Esquenta Black", detail: "Cera 15% · Laser 60%" },
   { icon: "sparkles", label: "Cera em primeiro", detail: "Peito, costas e corpo" },
   { icon: "clock", label: "Sem agendamento", detail: "Atendimento por ordem de chegada" },
   { icon: "shieldCheck", label: "Compra segura", detail: "Cartão protegido" },

@@ -6,7 +6,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { audienceFromPath } from "@/lib/data";
+import { audienceFromPath, catalogImage } from "@/lib/data";
 
 gsap.registerPlugin(useGSAP);
 
@@ -16,7 +16,7 @@ const femalePurchases = [
     city: "Copacabana, RJ",
     product: "Axilas Laser",
     href: "/produto/axilas-laser",
-    image: "/images/social/cliente-1.png",
+    image: catalogImage("axilas-laser"),
     when: "há 2 minutos",
   },
   {
@@ -24,7 +24,7 @@ const femalePurchases = [
     city: "Tijuca, RJ",
     product: "Virilha Total Laser",
     href: "/produto/virilha-laser",
-    image: "/images/social/cliente-2.png",
+    image: catalogImage("virilha-laser"),
     when: "há 6 minutos",
   },
   {
@@ -32,7 +32,7 @@ const femalePurchases = [
     city: "Barra da Tijuca, RJ",
     product: "Perna Inteira – Cera",
     href: "/produto/perna-cera",
-    image: "/images/social/cliente-3.png",
+    image: catalogImage("perna-cera"),
     when: "há 11 minutos",
   },
   {
@@ -40,7 +40,7 @@ const femalePurchases = [
     city: "Avenida Paulista, SP",
     product: "Design de Sobrancelha",
     href: "/produto/design-sobrancelha",
-    image: "/images/social/cliente-4.png",
+    image: catalogImage("design-sobrancelha"),
     when: "há 18 minutos",
   },
   {
@@ -48,7 +48,7 @@ const femalePurchases = [
     city: "Campo Grande, RJ",
     product: "Braços Inteiros Laser",
     href: "/produto/bracos-laser",
-    image: "/images/social/cliente-5.png",
+    image: catalogImage("bracos-laser"),
     when: "há 24 minutos",
   },
 ];
@@ -59,7 +59,7 @@ const malePurchases = [
     city: "Copacabana, RJ",
     product: "Tórax Laser",
     href: "/produto/peito-laser-masc",
-    image: "/images/products/male/peito-laser-masc.png",
+    image: "/images/products/male/peito-laser-masc.webp",
     when: "há 2 minutos",
   },
   {
@@ -67,7 +67,7 @@ const malePurchases = [
     city: "Tijuca, RJ",
     product: "Costas Laser",
     href: "/produto/costas-laser-masc",
-    image: "/images/products/male/costas-laser-masc.png",
+    image: "/images/products/male/costas-laser-masc.webp",
     when: "há 6 minutos",
   },
   {
@@ -75,7 +75,7 @@ const malePurchases = [
     city: "Barra da Tijuca, RJ",
     product: "Axila Laser",
     href: "/produto/axilas-laser-masc",
-    image: "/images/products/male/axilas-laser-masc.png",
+    image: "/images/products/male/axilas-laser-masc.webp",
     when: "há 11 minutos",
   },
   {
@@ -83,7 +83,7 @@ const malePurchases = [
     city: "Avenida Paulista, SP",
     product: "Barba Laser",
     href: "/produto/barba-laser-masc",
-    image: "/images/products/male/barba-laser-masc.png",
+    image: "/images/products/male/barba-laser-masc.webp",
     when: "há 18 minutos",
   },
   {
@@ -91,13 +91,19 @@ const malePurchases = [
     city: "Copacabana, RJ",
     product: "Queixo Laser",
     href: "/produto/queixo-laser-masc",
-    image: "/images/products/male/queixo-laser-masc.png",
+    image: "/images/products/male/queixo-laser-masc.webp",
     when: "há 24 minutos",
   },
 ];
 
-const CYCLE_MS = 13000;
-const VISIBLE_MS = 8000;
+const VISIBLE_MS = 6000;
+const OUT_MS = 400;
+const GAP_MIN_MS = 4000;
+const GAP_MAX_MS = 7000;
+
+function randomGapMs() {
+  return GAP_MIN_MS + Math.floor(Math.random() * (GAP_MAX_MS - GAP_MIN_MS + 1));
+}
 
 export function PurchasePopup() {
   const pathname = usePathname();
@@ -106,6 +112,13 @@ export function PurchasePopup() {
   const [index, setIndex] = useState(0);
   const [visible, setVisible] = useState(true);
   const cardRef = useRef<HTMLAnchorElement>(null);
+  const reduceMotion = useRef(false);
+
+  useEffect(() => {
+    reduceMotion.current = window.matchMedia(
+      "(prefers-reduced-motion: reduce)",
+    ).matches;
+  }, []);
 
   useEffect(() => {
     setIndex(0);
@@ -113,15 +126,21 @@ export function PurchasePopup() {
   }, [audience]);
 
   useEffect(() => {
-    const hide = window.setTimeout(() => setVisible(false), VISIBLE_MS);
-    const next = window.setTimeout(() => {
-      setIndex((current) => (current + 1) % purchases.length);
-      setVisible(true);
-    }, CYCLE_MS);
+    const timers: number[] = [];
+    const outMs = reduceMotion.current ? 0 : OUT_MS;
+
+    timers.push(
+      window.setTimeout(() => setVisible(false), VISIBLE_MS),
+    );
+    timers.push(
+      window.setTimeout(() => {
+        setIndex((current) => (current + 1) % purchases.length);
+        setVisible(true);
+      }, VISIBLE_MS + outMs + randomGapMs()),
+    );
 
     return () => {
-      window.clearTimeout(hide);
-      window.clearTimeout(next);
+      timers.forEach((id) => window.clearTimeout(id));
     };
   }, [index, purchases.length]);
 
@@ -129,7 +148,12 @@ export function PurchasePopup() {
     () => {
       const node = cardRef.current;
       if (!node) return;
+      const reduce = reduceMotion.current;
       if (visible) {
+        if (reduce) {
+          gsap.set(node, { x: 0, y: 0, opacity: 1, scale: 1 });
+          return;
+        }
         gsap.fromTo(
           node,
           { x: -28, y: 12, opacity: 0, scale: 0.96 },
@@ -142,6 +166,8 @@ export function PurchasePopup() {
             ease: "power3.out",
           },
         );
+      } else if (reduce) {
+        gsap.set(node, { opacity: 0 });
       } else {
         gsap.to(node, {
           x: -20,
@@ -160,11 +186,18 @@ export function PurchasePopup() {
   if (!item) return null;
 
   return (
-    <div className="fixed bottom-24 left-4 z-[60] w-[min(calc(100vw-2rem),320px)] md:bottom-8">
+    <div
+      data-pm-purchase
+      className={`fixed bottom-24 left-4 z-[60] hidden w-max max-w-[min(calc(100vw-2rem),22rem)] md:bottom-8 md:block ${
+        visible ? "" : "pointer-events-none"
+      }`}
+      aria-hidden={!visible}
+    >
       <Link
         ref={cardRef}
         href={item.href}
-        className="flex items-center gap-3 rounded-2xl border border-primary/15 bg-white p-2.5 shadow-[0_18px_40px_rgba(58,10,60,0.18)]"
+        tabIndex={visible ? 0 : -1}
+        className="inline-flex items-center gap-3 rounded-2xl border border-primary/15 bg-white p-2.5 shadow-[0_18px_40px_rgba(58,10,60,0.18)]"
       >
         <span className="relative h-14 w-14 shrink-0 overflow-hidden rounded-xl bg-surface-container-high">
           <Image
@@ -176,13 +209,13 @@ export function PurchasePopup() {
           />
         </span>
         <span className="min-w-0">
-          <span className="block truncate text-sm font-semibold text-on-surface">
+          <span className="block text-sm font-semibold text-on-surface">
             {item.name}
           </span>
-          <span className="block truncate text-xs text-on-surface-variant">
+          <span className="block text-xs whitespace-normal text-on-surface-variant">
             comprou {item.product}
           </span>
-          <span className="mt-0.5 block truncate text-[11px] text-primary">
+          <span className="mt-0.5 block text-[11px] whitespace-normal text-primary">
             {item.city} · {item.when}
           </span>
         </span>

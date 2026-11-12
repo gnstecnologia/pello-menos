@@ -6,6 +6,7 @@ import { Icon } from "@/components/Icon";
 
 type Props = {
   id?: string;
+  panel?: string;
   eyebrow: string;
   title: string;
   subtitle: string;
@@ -20,6 +21,7 @@ type Props = {
 
 export function SplitOffer({
   id,
+  panel,
   eyebrow,
   title,
   subtitle,
@@ -34,22 +36,27 @@ export function SplitOffer({
   const textOnRight = textSide === "right";
 
   return (
-    <section id={id} className="js-reveal mx-auto max-w-7xl scroll-mt-24 px-container-margin py-8">
+    <section id={id} data-home-panel={panel} className="js-reveal mx-auto max-w-7xl scroll-mt-24 px-container-margin py-8">
       <div className="group relative overflow-hidden rounded-3xl bg-primary text-on-primary">
         <div className="relative min-h-[340px] md:min-h-[400px] lg:min-h-[440px]">
-          <Image
-            src={image}
-            alt={imageAlt}
-            fill
-            className={`object-cover transition-transform duration-700 group-hover:scale-[1.03] ${
-              textOnRight
-                ? "object-left md:object-[24%_center]"
-                : "object-[68%_center] md:object-[62%_center]"
-            }`}
-            sizes="(max-width: 768px) 100vw, 1280px"
-          />
+          <div className="absolute inset-0 transition-transform duration-700 group-hover:scale-[1.03]">
+            <Image
+              src={image}
+              alt={imageAlt}
+              fill
+              className={`object-cover ${
+                textOnRight
+                  ? "object-left md:object-[24%_center]"
+                  : "object-[68%_center] md:object-[62%_center]"
+              }`}
+              sizes="(max-width: 768px) 100vw, 1280px"
+            />
+          </div>
           {textOnRight ? (
-            <div className="absolute inset-0 bg-[linear-gradient(to_right,transparent_0%,transparent_40%,rgb(112_0_83_/_0.5)_64%,var(--brand-primary)_100%)]" />
+            <>
+              <div className="absolute inset-0 bg-[linear-gradient(to_right,transparent_0%,transparent_0%,#70005380_0%,var(--brand-primary)_100%)] md:hidden" />
+              <div className="absolute inset-0 hidden bg-[linear-gradient(to_right,transparent_0%,transparent_40%,rgb(112_0_83_/_0.5)_64%,var(--brand-primary)_100%)] md:block" />
+            </>
           ) : (
             <>
               <div className="absolute inset-0 bg-gradient-to-b from-primary via-primary/75 to-primary/20 md:hidden" />

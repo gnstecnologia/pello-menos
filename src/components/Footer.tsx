@@ -4,11 +4,14 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Icon } from "@/components/Icon";
+import {
+  WHATSAPP_DISPLAY,
+  WHATSAPP_SAC_TEXT,
+  whatsappHref,
+} from "@/lib/contact";
 import { audienceFromPath, homeHref } from "@/lib/data";
 
-const WHATSAPP_SAC =
-  "https://wa.me/?text=" +
-  encodeURIComponent("Olá! Gostaria de falar com o SAC Pello Menos.");
+const WHATSAPP_SAC = whatsappHref(WHATSAPP_SAC_TEXT);
 
 const socials = [
   {
@@ -98,15 +101,10 @@ export function Footer({ onOpenAuth }: Props) {
                 src={isMale ? "/brand/logo-male-footer.png" : "/brand/logo-footer.png"}
                 alt="pello menos"
                 width={1024}
-                height={576}
+                height={802}
                 className="h-16 w-auto object-contain md:h-24"
               />
             </Link>
-            {isMale ? null : (
-              <p className="mt-1 text-xs tracking-[0.2em] text-secondary-container uppercase">
-                depilação avançada
-              </p>
-            )}
             <p className="mt-4 max-w-sm text-sm leading-relaxed text-white/70">
               Compras realizadas na loja on-line, são pessoais e
               intransferíveis. Utilização somente após 24h, a contar da
@@ -141,6 +139,7 @@ export function Footer({ onOpenAuth }: Props) {
               </Link>
               <button
                 type="button"
+                data-pm-account
                 onClick={onOpenAuth}
                 className="text-left hover:text-secondary-container"
               >
@@ -168,22 +167,13 @@ export function Footer({ onOpenAuth }: Props) {
               </li>
               <li>
                 <a
-                  href="tel:08002821233"
-                  className="inline-flex items-center gap-2 hover:text-secondary-container"
-                >
-                  <Icon name="phone" size={16} />
-                  SAC 0800 282 1233
-                </a>
-              </li>
-              <li>
-                <a
                   href={WHATSAPP_SAC}
                   target="_blank"
                   rel="noreferrer"
                   className="inline-flex items-center gap-2 hover:text-secondary-container"
                 >
                   <SocialGlyph name="whatsapp" size={16} />
-                  Whatsapp Sac Pello Menos
+                  SAC WhatsApp {WHATSAPP_DISPLAY}
                 </a>
               </li>
             </ul>

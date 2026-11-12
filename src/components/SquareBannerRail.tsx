@@ -9,13 +9,14 @@ import type { SquareBannerData } from "@/lib/data";
 type Props = {
   banners: SquareBannerData[];
   productsHref: string;
+  panel?: string;
 };
 
-export function SquareBannerRail({ banners, productsHref }: Props) {
+export function SquareBannerRail({ banners, productsHref, panel }: Props) {
   const { scroller, scrollByCard } = useCardCarousel();
 
   return (
-    <section className="js-reveal relative py-6">
+    <section data-home-panel={panel} className="js-reveal relative py-6">
       <div className="mx-auto mb-5 max-w-7xl px-container-margin">
         <h2 className="font-[family-name:var(--font-display)] text-headline-md text-primary">
           Em destaque
@@ -37,13 +38,16 @@ export function SquareBannerRail({ banners, productsHref }: Props) {
               data-square-banner
               className="carousel-card group relative aspect-square overflow-hidden rounded-2xl"
             >
-              <div data-carousel-media className="absolute inset-0">
+              <div
+                data-carousel-media
+                className="absolute inset-0 transition-transform duration-700 group-hover:scale-105"
+              >
                 <Image
                   src={banner.image}
                   alt={banner.imageAlt}
                   fill
-                  className="object-cover transition-transform duration-700 group-hover:scale-105"
-                  style={{ objectPosition: banner.imagePosition ?? "50% 28%" }}
+                  className="object-cover"
+                  style={{ objectPosition: banner.imagePosition ?? "50% 40%" }}
                   sizes="(max-width: 640px) 72vw, (max-width: 1024px) 50vw, 33vw"
                 />
               </div>

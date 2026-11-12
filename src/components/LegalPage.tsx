@@ -15,7 +15,7 @@ export function LegalPage({ title, children }: Props) {
       <h1 className="mt-2 font-[family-name:var(--font-display)] text-headline-md text-primary md:text-headline-lg">
         {title}
       </h1>
-      <div className="mt-8 space-y-4 text-sm leading-relaxed text-on-surface-variant">
+      <div className="legal-prose mt-8 space-y-4 text-sm leading-relaxed text-on-surface-variant [&_h2]:mt-8 [&_h2]:text-base [&_h2]:font-semibold [&_h2]:tracking-wide [&_h2]:text-on-surface [&_h2]:uppercase [&_h3]:mt-6 [&_h3]:text-sm [&_h3]:font-semibold [&_h3]:text-on-surface [&_ul]:list-disc [&_ul]:space-y-2 [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:space-y-2 [&_ol]:pl-5 [&_strong]:font-semibold [&_strong]:text-on-surface [&_a]:text-primary [&_a]:underline">
         {children}
       </div>
       <Link
