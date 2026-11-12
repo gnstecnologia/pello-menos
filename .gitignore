@@ -50,8 +50,6 @@ wordpress-loja/*.html
 wordpress-loja/*.json
 wordpress-loja/pm-home/media/
 wordpress-loja/pm-home/fonts/
-wordpress-loja/pm-home/*.css
-wordpress-loja/pm-home/woo-slugs.json
 
 # Hostinger/OT dumps (podem conter API keys Accesstage)
 scripts/_hostinger_ot_dumps/
