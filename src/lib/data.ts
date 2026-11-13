@@ -1364,13 +1364,16 @@ const officialProductsMasc = retailProducts("masculino");
 
 export const productRails = {
   ceraOfertas: female.filter((item) => item.method === "cera"),
-  ceraAreas: female.filter((item) =>
-    [
-      "virilha-cera",
-      "axila-cera",
-      "perna-cera",
-      "buco-cera",
-      "meia-nadega-cera",
+  // Ordem = ranking real de itens vendidos (relatorio de vendas, nov/2026).
+  // `filter` preserva a ordem alfabetica do catalogo, entao a ordem e aplicada
+  // por sort — sem o sort, a lista de ids nao tem efeito nenhum.
+  ceraAreas: (() => {
+    const ranking = [
+      "virilha-cera", // 81 itens · R$ 5.348,35
+      "perna-cera", // 32 · R$ 2.163,69
+      "buco-cera", // 28 · R$ 608,30
+      "axila-cera", // 25 · R$ 660,12
+      "meia-nadega-cera", // 5o no relatorio
       "design-sobrancelha",
       "meia-perna-cera",
       "coxa-cera",
@@ -1380,8 +1383,11 @@ export const productRails = {
       "queixo-cera",
       "costas-cera",
       "virilha-cavada-cera",
-    ].includes(item.id),
-  ),
+    ];
+    return female
+      .filter((item) => ranking.includes(item.id))
+      .sort((a, b) => ranking.indexOf(a.id) - ranking.indexOf(b.id));
+  })(),
   laserRosto: female.filter(
     (item) => item.method === "laser" && item.category === "rosto",
   ),

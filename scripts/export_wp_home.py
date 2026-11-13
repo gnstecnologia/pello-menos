@@ -10,7 +10,8 @@ import urllib.request
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-OUT = ROOT / "wordpress-loja" / "pm-home"
+# PM_OUT permite exportar para uma pasta temporária e comparar antes de publicar.
+OUT = Path(os.environ.get("PM_OUT") or (ROOT / "wordpress-loja" / "pm-home"))
 PUBLIC = ROOT / "public"
 ORIGIN = os.environ.get("PM_HOME_ORIGIN", "http://127.0.0.1:3456")
 ASSET_BASE = os.environ.get(
