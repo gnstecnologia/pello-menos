@@ -4777,3 +4777,11 @@ a.scrollup:after {
   padding-top: 0.7rem !important;
   padding-bottom: 0.7rem !important;
 }
+
+/* 1px a menos do tablet para cima: iguala exatamente a altura do header do
+   carrinho (123 -> 122). */
+@media (min-width: 1024px) {
+  :host header > div:nth-child(2) {
+    padding-bottom: calc(0.7rem - 1px) !important;
+  }
+}

@@ -6,7 +6,7 @@
   var base =
     (window.location.origin || "https://loja.pellomenos.com.br") +
     "/wp-content/uploads/pm-home/";
-  var shell = { css: base + "home.css?v=premium6" };
+  var shell = { css: base + "home.css?v=premium7" };
 
   function bind(root) {
     var menuButton = root.querySelector("[data-pm-menu-toggle]");
