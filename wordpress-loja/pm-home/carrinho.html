@@ -92,11 +92,13 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 .pm-pay-btn{display:flex;width:100%;align-items:center;justify-content:center;gap:8px;border-radius:999px;padding:12px;font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase}
 @media (min-width:1024px){.pm-pay-inline{display:block}}
 
-.pm-paybar{position:fixed;left:0;right:0;bottom:0;z-index:65;border-top:1px solid rgba(112,0,83,.14);background:rgba(255,255,255,.97);box-shadow:0 -12px 32px rgba(58,10,60,.12);padding:10px max(16px,env(safe-area-inset-left,0px)) calc(10px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-right,0px));-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px)}
+/* Barra de pagamento em rosa institucional; total em sans, botao dourado */
+.pm-paybar{position:fixed;left:0;right:0;bottom:0;z-index:65;border-top:1px solid rgba(112,0,83,.18);background:linear-gradient(175deg,#fbe0ef 0%,#f5cade 100%);box-shadow:0 -14px 34px rgba(112,0,83,.2);padding:10px max(16px,env(safe-area-inset-left,0px)) calc(10px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-right,0px))}
 .pm-paybar__inner{display:flex;max-width:56rem;margin:0 auto;align-items:center;gap:14px}
 .pm-paybar__total{display:flex;min-width:0;flex-direction:column;line-height:1.1}
 .pm-paybar__total span{font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:#7c6b76}
-.pm-paybar__total strong{font-family:var(--font-display,"Cormorant Garamond",serif);font-size:22px;font-weight:700;color:#700053}
+.pm-paybar__total span{color:#8a2b63}
+.pm-paybar__total strong{font-family:var(--font-manrope,"Manrope",ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif);font-size:24px;font-weight:800;line-height:1.05;letter-spacing:-.02em;color:#5c0046;font-variant-numeric:tabular-nums}
 .pm-paybar__btn{display:inline-flex;min-height:52px;flex:1;align-items:center;justify-content:center;gap:8px;border-radius:999px;font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#3d2e00;padding:0 16px}
 .pm-paybar__btn.is-busy,.pm-pay-btn.is-busy{pointer-events:none;opacity:.7}
 @media (min-width:1024px){.pm-paybar{display:none}}
@@ -111,20 +113,24 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 .pm-rail__nav button{display:flex;height:36px;width:36px;align-items:center;justify-content:center;border:1px solid rgba(112,0,83,.2);border-radius:999px;background:#fff;color:#700053}
 @media (min-width:768px){.pm-rail__nav{display:flex}}
 
-.pm-rail{--pm-rail-n:1;--pm-rail-gap:10px;width:100%;max-width:100%;min-width:0;margin-top:12px;overflow-x:auto;overflow-y:hidden;overscroll-behavior-x:contain;scroll-snap-type:x proximity;scrollbar-width:none;-ms-overflow-style:none;-webkit-overflow-scrolling:touch}
+.pm-rail{--pm-rail-n:1;--pm-rail-gap:10px;--pm-rail-peek:26px;width:100%;max-width:100%;min-width:0;margin-top:12px;overflow-x:auto;overflow-y:hidden;overscroll-behavior-x:contain;scroll-snap-type:x proximity;scrollbar-width:none;-ms-overflow-style:none;-webkit-overflow-scrolling:touch}
 .pm-rail::-webkit-scrollbar{display:none}
 .pm-rail__track{display:flex;align-items:stretch;gap:var(--pm-rail-gap)}
-.pm-rail__card{display:flex;min-width:0;flex:0 0 calc((100% - (var(--pm-rail-n) - 1) * var(--pm-rail-gap)) / var(--pm-rail-n));flex-direction:column;overflow:hidden;border-radius:16px;background:#fff;box-shadow:0 10px 26px rgba(58,10,60,.07);scroll-snap-align:start}
+/* Largura do card desconta o "peek": o proximo card fica cortado de proposito,
+   deixando claro que ha mais conteudo para deslizar (estilo Netflix). */
+.pm-rail__card{display:flex;min-width:0;flex:0 0 calc((100% - (var(--pm-rail-n) - 1) * var(--pm-rail-gap) - var(--pm-rail-peek)) / var(--pm-rail-n));flex-direction:column;overflow:hidden;border-radius:16px;background:#fff;box-shadow:0 10px 26px rgba(58,10,60,.07);scroll-snap-align:start}
 @media (min-width:360px){.pm-rail{--pm-rail-n:2}}
-@media (min-width:768px){.pm-rail{--pm-rail-n:3;--pm-rail-gap:12px}}
-@media (min-width:1024px){.pm-rail{--pm-rail-n:4}}
+@media (min-width:560px){.pm-rail{--pm-rail-peek:30px}}
+@media (min-width:768px){.pm-rail{--pm-rail-n:3;--pm-rail-gap:12px;--pm-rail-peek:38px}}
+@media (min-width:1024px){.pm-rail{--pm-rail-n:4;--pm-rail-peek:46px}}
 .pm-rail__media{position:relative;display:block;aspect-ratio:4/5;overflow:hidden;background:#f3ece7}
 .pm-rail__media img{position:absolute;inset:0;display:block;height:100%;width:100%;object-fit:cover}
 .pm-rail__body{display:flex;flex:1;flex-direction:column;gap:2px;padding:8px}
 .pm-rail__name{margin:0;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;font-family:var(--font-display,"Cormorant Garamond",serif);font-size:15px;line-height:1.2;color:#2a1a24;min-height:2.4em}
 .pm-rail__meta{margin:0;font-size:10px;color:#9a8b95}
 .pm-rail__price{margin:2px 0 0;font-size:13px;font-weight:700;color:#700053}
-.pm-rail__add{margin-top:6px;display:inline-flex;min-height:34px;align-items:center;justify-content:center;gap:5px;border-radius:999px;padding:8px 10px;font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase}
+.pm-rail__add{margin-top:6px;display:inline-flex;min-height:40px;align-items:center;justify-content:center;gap:5px;border-radius:999px;padding:9px 10px;font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#fff}
+.pm-rail__add svg{color:#fff}
 @media (prefers-reduced-motion:reduce){.pm-rail{scroll-behavior:auto}}
 </style>
 <body class="min-h-full bg-background font-sans text-on-background pm-cart-page">
@@ -139,7 +145,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <script src="https://loja.pellomenos.com.br/wp-content/uploads/pm-home/promo-popup.js?v=promo3"></script>
 <script src="https://loja.pellomenos.com.br/wp-content/uploads/pm-home/product.js?v=units6"></script>
 <script src="https://loja.pellomenos.com.br/wp-content/uploads/pm-home/black-nov-campaign.js?v=black2"></script>
-<script src="https://loja.pellomenos.com.br/wp-content/uploads/pm-home/cart.js?v=cart30"></script>
+<script src="https://loja.pellomenos.com.br/wp-content/uploads/pm-home/cart.js?v=cart31"></script>
 
 </body>
 </html>

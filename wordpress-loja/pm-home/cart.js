@@ -14,6 +14,7 @@
     forSale: false,
   };
   var relatedData = { crossSell: {}, products: {} };
+  var affinityData = null; // combinacoes reais de compra (cart-affinity.json)
   var relatedReady = false;
   var root = document.querySelector("[data-pm-cart-page]");
   if (!root) return;
@@ -648,43 +649,73 @@
       return path;
     }
 
-    function pickRelated(list, limit) {
+    // Disponivel na unidade = existe variacao daquele produto para ela.
+    function unitHasProduct(row, unitId) {
+      var units = row && row.units;
+      if (!units) return false;
+      var meta = units[unitId];
+      return !!(meta && meta.variationId);
+    }
+
+    function pickRelated(list, limit, unitId) {
+      if (!relatedData.products || !unitId) return [];
       var inCart = {};
       list.forEach(function (item) {
         inCart[String(item.id || "")] = true;
       });
-      var seen = {};
-      var out = [];
-      function pushId(id) {
-        if (!id || inCart[id] || seen[id]) return;
-        if (!SPLASH.forSale && String(id).indexOf("body-splash") === 0) return;
-        var row = relatedData.products[id];
-        if (!row) return;
-        seen[id] = true;
-        out.push(row);
-      }
-      list.forEach(function (item) {
-        var id = String(item.id || "");
-        var mapped = relatedData.crossSell[id] || [];
-        mapped.forEach(pushId);
-        if (out.length >= limit) return;
-        var seed = relatedData.products[id];
-        Object.keys(relatedData.products).forEach(function (pid) {
-          if (out.length >= limit) return;
-          var cand = relatedData.products[pid];
-          if (!seed || !cand) return;
-          if (cand.audience !== seed.audience) return;
-          if (cand.method && seed.method && cand.method === seed.method) {
-            pushId(pid);
+      var seeds = list
+        .map(function (item) {
+          return relatedData.products[String(item.id || "")];
+        })
+        .filter(Boolean);
+      if (!seeds.length) return [];
+      var audience = seeds[0].audience;
+
+      var unitTop = (affinityData && affinityData.unitTop && affinityData.unitTop[unitId]) || [];
+      var globalTop = (affinityData && affinityData.top) || [];
+      var pairs = (affinityData && affinityData.pairs) || {};
+
+      var scored = [];
+      Object.keys(relatedData.products).forEach(function (pid) {
+        if (inCart[pid]) return;
+        if (!SPLASH.forSale && pid.indexOf("body-splash") === 0) return;
+        var cand = relatedData.products[pid];
+        if (!cand) return;
+        if (cand.audience !== audience) return;
+        // Nunca sugerir o que a unidade do carrinho nao vende.
+        if (!unitHasProduct(cand, unitId)) return;
+
+        var score = 0;
+        seeds.forEach(function (seed) {
+          var n = pairs[seed.id] && pairs[seed.id][pid];
+          if (n) score += 1000 + Math.min(Number(n) || 0, 200) * 5;
+          if (seed.category && seed.category === cand.category) {
+            var complementa =
+              (cand.method === "esfoliacao" && seed.method !== "esfoliacao") ||
+              (seed.method === "esfoliacao" && cand.method === "cera");
+            score += complementa ? 400 : 120;
           }
         });
+        var posUnit = unitTop.indexOf(pid);
+        if (posUnit >= 0) score += 200 - posUnit * 5;
+        var posGlobal = globalTop.indexOf(pid);
+        if (posGlobal >= 0) score += 100 - posGlobal * 2;
+
+        scored.push({ row: cand, score: score });
       });
-      return out.slice(0, limit);
+
+      scored.sort(function (a, b) {
+        if (b.score !== a.score) return b.score - a.score;
+        return String(a.row.name).localeCompare(String(b.row.name), "pt-BR");
+      });
+      return scored.slice(0, limit).map(function (entry) {
+        return entry.row;
+      });
     }
 
     function relatedUpsellHtml(list, lockedUnit) {
       if (!lockedUnit || !relatedReady) return "";
-      var picks = pickRelated(list, 6);
+      var picks = pickRelated(list, 6, lockedUnit.unitId);
       if (!picks.length) return "";
       var setHtml = picks
         .map(function (product) {
@@ -1193,15 +1224,27 @@
   }
 
   paintLoading();
-  var relatedUrl =
+  var mediaRoot =
     (window.location && window.location.origin ? window.location.origin : "") +
-    "/wp-content/uploads/pm-home/cart-related.json";
+    "/wp-content/uploads/pm-home/";
+  var relatedUrl = mediaRoot + "cart-related.json";
+  // Opcional: se nao existir, a recomendacao usa so regiao + mais vendidos.
+  var affinityPromise = fetch(mediaRoot + "cart-affinity.json", {
+    credentials: "same-origin",
+    cache: "no-cache",
+  })
+    .then(function (resp) {
+      return resp && resp.ok ? resp.json() : null;
+    })
+    .then(function (data) {
+      if (data && data.pairs) affinityData = data;
+    })
+    .catch(function () {});
   var boot = Promise.resolve();
   if (window.pmBlackNov && typeof window.pmBlackNov.load === "function") {
     boot = window.pmBlackNov.load();
   }
-  boot
-    .catch(function () {})
+  Promise.all([boot.catch(function () {}), affinityPromise])
     .then(function () {
       return fetch(relatedUrl, { credentials: "same-origin", cache: "no-cache" });
     })
