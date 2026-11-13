@@ -95,3 +95,6 @@ scripts/_audit_loja_cache_headers*.json
 # bytecode python
 __pycache__/
 *.pyc
+
+# backups locais do reordenamento
+wordpress-loja/pm-home/*.bak-rail
