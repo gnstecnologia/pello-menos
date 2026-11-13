@@ -29,6 +29,7 @@ import json
 import os
 import re
 import sys
+import time
 import urllib.request
 import zipfile
 from concurrent.futures import ThreadPoolExecutor
@@ -46,6 +47,9 @@ SKIP_DIRS = {"media", "fonts"}
 BATCH_BYTES = 4 * 1024 * 1024
 UA = {"User-Agent": "pm-sync-oficialteste"}
 FORCE_RETRY = 3
+# O CDN do destino pode servir o arquivo anterior por alguns segundos
+VERIFY_RETRY = 3
+VERIFY_RETRY_DELAY = 8
 
 
 # ---------------------------------------------------------------- credenciais
@@ -225,7 +229,21 @@ def verify(base: str, dados: dict[str, bytes]) -> list[dict]:
 
     with ThreadPoolExecutor(max_workers=8) as ex:
         res = list(ex.map(checa, dados.items()))
-    return [r for r in res if r]
+    falhas = [r for r in res if r]
+
+    # CDN do destino pode servir a versao anterior por alguns segundos depois do
+    # upload; reconfere so os divergentes antes de dar o sync como falho.
+    for tentativa in range(1, VERIFY_RETRY + 1):
+        if not falhas:
+            break
+        print(f"  reconferindo {len(falhas)} arquivo(s) — tentativa {tentativa}/{VERIFY_RETRY}")
+        time.sleep(VERIFY_RETRY_DELAY * tentativa)
+        por_nome = {r["arquivo"]: r for r in falhas}
+        pendentes = [(rel, dados[rel]) for rel in por_nome if rel in dados]
+        with ThreadPoolExecutor(max_workers=8) as ex:
+            novas = [r for r in ex.map(checa, pendentes) if r]
+        falhas = novas
+    return falhas
 
 
 def public_shell_version() -> str:
