@@ -4763,3 +4763,60 @@ a.scrollup:after {
 }
 
 /*# sourceMappingURL=%5Broot-of-the-server%5D__1816lq5._.css.map*/
+/* ==========================================================================
+   Checkout: header compacto (somente logo + conta + carrinho).
+   Estas regras usam :host e so valem dentro do shadow root de
+   #pm-shell-header (montado pelo checkout). Em qualquer outra pagina sao
+   inertes, entao o header da home/carrinho/ofertas nao muda.
+   ========================================================================== */
+:host {
+  display: block;
+}
+
+/* Faixa roxa de beneficios: sai, o checkout ganha altura util */
+:host header > div:first-child {
+  display: none !important;
+}
+
+/* Menu de navegacao (Servicos/Planos/Presente/Produtos) e painel mobile */
+:host header nav.hidden,
+:host header [data-pm-menu],
+:host header [data-pm-menu-toggle] {
+  display: none !important;
+}
+
+/* Busca: o checkout nao precisa dela no topo */
+:host header [data-pm-search] {
+  display: none !important;
+}
+
+/* Barra enxuta: a linha visivel e a 2a div do header (1a = faixa de beneficios) */
+:host header {
+  border-bottom: 1px solid rgba(42, 26, 36, 0.08) !important;
+  box-shadow: 0 1px 0 rgba(42, 26, 36, 0.04);
+}
+
+:host header > div:nth-child(2) {
+  padding-top: 0.45rem !important;
+  padding-bottom: 0.45rem !important;
+  gap: 0.5rem !important;
+}
+
+/* Logo menor e botoes justos, sem area morta */
+:host header > div:nth-child(2) img {
+  height: 2rem !important;
+  width: auto !important;
+}
+
+:host header [data-pm-account],
+:host header a[href="/carrinho/"] {
+  width: 2.5rem !important;
+  height: 2.5rem !important;
+  min-width: 2.5rem !important;
+}
+
+:host header [data-pm-account] svg,
+:host header a[href="/carrinho/"] svg {
+  width: 18px !important;
+  height: 18px !important;
+}

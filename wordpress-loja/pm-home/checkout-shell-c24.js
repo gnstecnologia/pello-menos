@@ -1,7 +1,12 @@
 (function () {
   window.__pmShellBoot = Date.now();
-  var base = "https://loja.pellomenos.com.br/wp-content/uploads/pm-home/";
-  var shell = { css: base + "home.css?v=premium1" };
+  // Same-origin: em producao resolve para a propria loja; no espelho de teste
+  // resolve para o teste (antes era fixo em producao e o CORS barrava o
+  // header/footer, deixando o checkout do teste sem cabecalho).
+  var base =
+    (window.location.origin || "https://loja.pellomenos.com.br") +
+    "/wp-content/uploads/pm-home/";
+  var shell = { css: base + "home.css?v=premium3" };
 
   function bind(root) {
     var menuButton = root.querySelector("[data-pm-menu-toggle]");

@@ -1632,3 +1632,181 @@ html.pm-ck-loading-lock body {
     padding-bottom: 1.5rem;
   }
 }
+
+/* ==========================================================================
+   Header enxuto + card preenchendo a tela.
+   O header do checkout (#pm-shell-header) e um shadow root montado por
+   checkout-shell; a compactacao dele vive no home.css (:host ...).
+   Aqui so ajustamos o espaco reservado e a altura do card.
+   ========================================================================== */
+body.pm-checkout-brand {
+  --pm-ck-head-h: 56px;
+  /* Altura entre o topo da pagina e o card (header + folgas do tema) */
+  --pm-ck-card-top: 131px;
+}
+
+/* Reserva apenas a altura real do header compacto (o tema usava 176px) */
+body.pm-checkout-brand .main_content {
+  margin-top: var(--pm-ck-head-h) !important;
+}
+
+body.pm-checkout-brand #pm-checkout-layout {
+  margin-top: 0.55rem !important;
+}
+
+/* Passo Dados no mobile: campos mais baixos e espacamento curto, para caber
+   quase tudo sem rolar. So densidade visual — nenhum campo/logica muda. */
+@media (max-width: 1023px) {
+  body.pm-checkout-brand .pm-checkout-layout:not(.is-pay-step) .pm-checkout-step-title {
+    margin-bottom: 0.5rem !important;
+    font-size: 1.05rem;
+  }
+
+  body.pm-checkout-brand .pm-checkout-layout:not(.is-pay-step) .wpcf7-form p,
+  body.pm-checkout-brand .pm-checkout-layout:not(.is-pay-step) .wpcf7-form .form-group {
+    margin-bottom: 0.35rem !important;
+  }
+
+  body.pm-checkout-brand .pm-checkout-layout:not(.is-pay-step) .wpcf7-form input[type="text"],
+  body.pm-checkout-brand .pm-checkout-layout:not(.is-pay-step) .wpcf7-form input[type="email"],
+  body.pm-checkout-brand .pm-checkout-layout:not(.is-pay-step) .wpcf7-form input[type="tel"],
+  body.pm-checkout-brand .pm-checkout-layout:not(.is-pay-step) .wpcf7-form input[type="number"],
+  body.pm-checkout-brand .pm-checkout-layout:not(.is-pay-step) .wpcf7-form select {
+    height: 2.7rem !important;
+    min-height: 2.7rem !important;
+    padding-top: 0.3rem !important;
+    padding-bottom: 0.3rem !important;
+    font-size: 1rem !important;
+  }
+
+  body.pm-checkout-brand .pm-checkout-layout:not(.is-pay-step) .wpcf7-form label {
+    margin-bottom: 0 !important;
+    font-size: 0.72rem !important;
+    line-height: 1.15 !important;
+  }
+
+  body.pm-checkout-brand .pm-checkout-layout:not(.is-pay-step) .nav-pills {
+    margin-bottom: 0.5rem !important;
+  }
+}
+
+/* Passo Dados: o card ocupa a altura util restante, sem vazio embaixo */
+@media (max-width: 1023px) {
+  body.pm-checkout-brand #pm-checkout-layout:not(.is-pay-step) {
+    align-items: stretch;
+    min-height: calc(100dvh - var(--pm-ck-card-top) - 60px - env(safe-area-inset-bottom, 0px));
+    margin-bottom: 0.35rem !important;
+  }
+
+  body.pm-checkout-brand #pm-checkout-layout:not(.is-pay-step) .pm-checkout-form-col {
+    min-height: calc(100dvh - var(--pm-ck-card-top) - 60px - env(safe-area-inset-bottom, 0px));
+  }
+}
+
+/* Passo Dados: "Comprar Agora" vira a barra fixa de baixo (mesma ideia do
+   botao de pagamento), liberando altura no card. */
+@media (max-width: 1023px) {
+  body.pm-checkout-brand .pm-checkout-layout:not(.is-pay-step) .wpcf7-form p:has(> .pm-checkout-buy-now) {
+    margin: 0 !important;
+    padding: 0 !important;
+    height: 0 !important;
+  }
+
+  body.pm-checkout-brand .pm-checkout-layout:not(.is-pay-step) .pm-checkout-buy-now {
+    position: fixed !important;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 70;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    width: auto !important;
+    max-width: none !important;
+    height: calc(60px + env(safe-area-inset-bottom, 0px));
+    margin: 0 !important;
+    padding: 0 1rem env(safe-area-inset-bottom, 0px) !important;
+    border-radius: 0 !important;
+    box-shadow: 0 -10px 26px rgba(112, 0, 83, 0.14);
+    font-size: 0.82rem !important;
+    letter-spacing: 0.06em;
+    white-space: nowrap;
+  }
+
+  /* A barra e fixa (fora do fluxo): basta uma folga curta no fim */
+  body.pm-checkout-brand #pm-checkout-layout:not(.is-pay-step) {
+    margin-bottom: calc(env(safe-area-inset-bottom, 0px) + 0.35rem) !important;
+  }
+}
+
+/* Dados no mobile: pares curtos na mesma linha (email/telefone, CPF/CEP,
+   cidade/UF, endereco/bairro, numero/complemento). Corta metade da rolagem. */
+@media (max-width: 600px) {
+  body.pm-checkout-brand .pm-checkout-layout:not(.is-pay-step) #pills-dados .row {
+    flex-direction: row !important;
+    flex-wrap: wrap !important;
+    column-gap: 8px !important;
+  }
+
+  body.pm-checkout-brand .pm-checkout-layout:not(.is-pay-step) #pills-dados .row > [class*="col"] {
+    flex: 0 0 calc(50% - 4px) !important;
+    max-width: calc(50% - 4px) !important;
+    width: calc(50% - 4px) !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+
+  body.pm-checkout-brand .pm-checkout-layout:not(.is-pay-step) #pills-dados .row > .col:has([data-name="estado"]) {
+    flex-basis: 40% !important;
+    max-width: 40% !important;
+  }
+
+  body.pm-checkout-brand .pm-checkout-layout:not(.is-pay-step) #pills-dados .row > .col:has([data-name="cidade"]) {
+    flex-basis: calc(60% - 8px) !important;
+    max-width: calc(60% - 8px) !important;
+  }
+
+  body.pm-checkout-brand .pm-checkout-layout:not(.is-pay-step) #pills-dados .row > .col:has([data-name="numero"]) {
+    flex-basis: 40% !important;
+    max-width: 40% !important;
+  }
+
+  body.pm-checkout-brand .pm-checkout-layout:not(.is-pay-step) #pills-dados .row > .col:has([data-name="complemento"]) {
+    flex-basis: calc(60% - 8px) !important;
+    max-width: calc(60% - 8px) !important;
+  }
+}
+
+/* Menos area morta entre o header e o card (o tema deixava 30px de padding) */
+@media (max-width: 1023px) {
+  body.pm-checkout-brand .pm-checkout-span {
+    padding-top: 0.35rem !important;
+  }
+}
+
+/* Passo Pagamento no mobile: campos na mesma altura dos de Dados */
+@media (max-width: 1023px) {
+  body.pm-checkout-brand .pm-checkout-layout.is-pay-step .wpcf7-form input[type="text"],
+  body.pm-checkout-brand .pm-checkout-layout.is-pay-step .wpcf7-form input[type="email"],
+  body.pm-checkout-brand .pm-checkout-layout.is-pay-step .wpcf7-form input[type="tel"],
+  body.pm-checkout-brand .pm-checkout-layout.is-pay-step .wpcf7-form input[type="number"],
+  body.pm-checkout-brand .pm-checkout-layout.is-pay-step .wpcf7-form select {
+    height: 2.7rem !important;
+    min-height: 2.7rem !important;
+    padding-top: 0.3rem !important;
+    padding-bottom: 0.3rem !important;
+    font-size: 1rem !important;
+  }
+
+  body.pm-checkout-brand .pm-checkout-layout.is-pay-step .wpcf7-form .form-group,
+  body.pm-checkout-brand .pm-checkout-layout.is-pay-step .wpcf7-form p {
+    margin-bottom: 0.35rem !important;
+  }
+
+  body.pm-checkout-brand .pm-checkout-layout.is-pay-step .wpcf7-form label {
+    margin-bottom: 0 !important;
+    font-size: 0.72rem !important;
+    line-height: 1.15 !important;
+  }
+}
