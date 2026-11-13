@@ -16,7 +16,118 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 })(window,document,'script','dataLayer','GTM-52G8XVQ8');</script>
 <!-- End Google Tag Manager -->
 </head>
-<body class="min-h-full bg-background font-sans text-on-background">
+<style id="pm-cart-redesign">
+/* ===== Carrinho Pello Menos — layout compacto =====
+   Escopo: body.pm-cart-page (somente /carrinho/). O header superior nao e
+   tocado: nenhuma regra aqui alcanca <header>. */
+
+/* 1. Footer institucional e menu inferior mobile ocultos so no carrinho */
+.pm-cart-page .site-footer{display:none!important}
+.pm-cart-page nav.fixed.bottom-0{display:none!important}
+.pm-cart-page [data-audience]{padding-bottom:0!important}
+
+/* WhatsApp acima da barra de pagamento (volta ao normal no desktop) */
+.pm-cart-page [data-pm-whatsapp]{bottom:calc(106px + env(safe-area-inset-bottom,0px))!important}
+@media (min-width:1024px){.pm-cart-page [data-pm-whatsapp]{bottom:32px!important}}
+
+/* 2. Area de conteudo reserva espaco para a barra fixa */
+.pm-cart-main{padding-bottom:calc(100px + env(safe-area-inset-bottom,0px))}
+@media (min-width:1024px){.pm-cart-main{padding-bottom:2.5rem}}
+
+/* 3. Cabecalho do pedido compacto */
+.pm-cart-head{display:grid;gap:2px}
+.pm-cart-head__eyebrow{margin:0;font-size:11px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:#b8860b}
+.pm-cart-head__row{display:flex;align-items:baseline;justify-content:space-between;gap:12px}
+.pm-cart-head__title{margin:0;font-family:var(--font-display,"Cormorant Garamond",serif);font-size:30px;line-height:1.1;color:#700053}
+.pm-cart-head__count{white-space:nowrap;border-radius:999px;background:#f3e6ee;padding:3px 10px;font-size:12px;font-weight:600;color:#700053}
+.pm-cart-head__unit{margin:2px 0 0;font-size:12px;color:#7c6b76}
+@media (min-width:768px){
+  .pm-cart-head__title{font-size:38px}
+  .pm-cart-head__unit{font-size:14px}
+}
+
+.pm-cart-mixed{margin:12px 0 0;border:1px solid rgba(112,0,83,.3);border-radius:16px;background:#fbf4f8;padding:10px 14px;font-size:13px;color:#700053}
+.pm-cart-note{margin:12px 0 0;border-radius:14px;background:#f7f1ec;padding:10px;text-align:center;font-size:12px;color:#700053}
+
+/* 4. Linha do produto compacta */
+.pm-line{display:flex;gap:12px;border-radius:18px;background:#fff;padding:10px;box-shadow:0 10px 26px rgba(58,10,60,.07)}
+.pm-line__media{position:relative;display:block;height:96px;width:76px;flex:0 0 auto;overflow:hidden;border-radius:12px;background:#f3ece7}
+.pm-line__media img{position:absolute;inset:0;display:block;height:100%;width:100%;object-fit:cover}
+.pm-line__body{display:flex;min-width:0;flex:1;flex-direction:column;gap:6px}
+.pm-line__top{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
+.pm-line__name{margin:0;font-family:var(--font-display,"Cormorant Garamond",serif);font-size:18px;line-height:1.2;color:#2a1a24}
+.pm-line__unit{margin:2px 0 0;font-size:11px;line-height:1.35;color:#7c6b76}
+.pm-line__sku{display:none;margin:2px 0 0;font-size:11px;color:#9a8b95}
+.pm-line__remove{display:flex;height:32px;width:32px;flex:0 0 auto;align-items:center;justify-content:center;border:0;border-radius:999px;background:#f7f1ec;font-size:20px;line-height:1;color:#7c6b76}
+.pm-line__foot{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:auto}
+.pm-line__price{display:flex;align-items:baseline;gap:6px;margin:0;font-size:15px;font-weight:700;color:#700053}
+.pm-line__old{font-size:12px;font-weight:400;color:#9a8b95;text-decoration:line-through}
+.pm-line__qty{display:inline-flex;align-items:center;border:1px solid rgba(112,0,83,.25);border-radius:999px}
+.pm-line__qty button{display:flex;height:34px;width:34px;align-items:center;justify-content:center;border:0;background:transparent;font-size:16px;color:#700053}
+.pm-line__qty span{min-width:22px;text-align:center;font-size:13px;font-weight:700}
+@media (min-width:768px){
+  .pm-line{gap:16px;padding:14px}
+  .pm-line__media{height:120px;width:96px}
+  .pm-line__name{font-size:22px}
+  .pm-line__unit{font-size:13px}
+  .pm-line__sku{display:block}
+}
+
+/* 4b. Grid principal: sem min-width:0 o trilho do carrossel estica a coluna */
+.pm-cart-grid{display:grid;grid-template-columns:minmax(0,1fr);gap:24px}
+.pm-cart-grid>*{min-width:0}
+@media (min-width:1024px){.pm-cart-grid{grid-template-columns:minmax(0,1fr) 340px;gap:32px}}
+
+/* 5. Resumo compacto */
+.pm-cart-summary{border-radius:18px;background:#fff;padding:16px;box-shadow:0 10px 26px rgba(58,10,60,.07)}
+.pm-cart-summary__title{margin:0;font-family:var(--font-display,"Cormorant Garamond",serif);font-size:22px;color:#700053}
+.pm-cart-summary__total{font-family:var(--font-display,"Cormorant Garamond",serif);font-size:22px;font-weight:700;color:#700053}
+.pm-cart-summary__continue{margin-top:10px;display:flex;width:100%;align-items:center;justify-content:center;border:1px solid rgba(112,0,83,.3);border-radius:999px;padding:10px;font-size:12px;font-weight:600;text-transform:uppercase;color:#700053}
+@media (min-width:1024px){
+  .pm-cart-summary{padding:24px;position:sticky;top:9rem}
+}
+
+/* 6. Botao de pagamento: no mobile/tablet vive na barra fixa */
+.pm-pay-inline{display:none}
+.pm-pay-btn{display:flex;width:100%;align-items:center;justify-content:center;gap:8px;border-radius:999px;padding:12px;font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase}
+@media (min-width:1024px){.pm-pay-inline{display:block}}
+
+.pm-paybar{position:fixed;left:0;right:0;bottom:0;z-index:65;border-top:1px solid rgba(112,0,83,.14);background:rgba(255,255,255,.97);box-shadow:0 -12px 32px rgba(58,10,60,.12);padding:10px max(16px,env(safe-area-inset-left,0px)) calc(10px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-right,0px));-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px)}
+.pm-paybar__inner{display:flex;max-width:56rem;margin:0 auto;align-items:center;gap:14px}
+.pm-paybar__total{display:flex;min-width:0;flex-direction:column;line-height:1.1}
+.pm-paybar__total span{font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:#7c6b76}
+.pm-paybar__total strong{font-family:var(--font-display,"Cormorant Garamond",serif);font-size:22px;font-weight:700;color:#700053}
+.pm-paybar__btn{display:inline-flex;min-height:52px;flex:1;align-items:center;justify-content:center;gap:8px;border-radius:999px;font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#3d2e00;padding:0 16px}
+.pm-paybar__btn.is-busy,.pm-pay-btn.is-busy{pointer-events:none;opacity:.7}
+@media (min-width:1024px){.pm-paybar{display:none}}
+
+/* 7. Carrossel "Adicione também" */
+.pm-rail-section{margin-top:24px;border-top:1px solid rgba(112,0,83,.12);padding-top:18px}
+.pm-rail__head{display:flex;align-items:flex-end;justify-content:space-between;gap:12px}
+.pm-rail__eyebrow{margin:0;font-size:10px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:#b8860b}
+.pm-rail__title{margin:2px 0 0;font-family:var(--font-display,"Cormorant Garamond",serif);font-size:24px;line-height:1.15;color:#700053}
+.pm-rail__sub{margin:2px 0 0;font-size:12px;color:#7c6b76}
+.pm-rail__nav{display:none;gap:6px}
+.pm-rail__nav button{display:flex;height:36px;width:36px;align-items:center;justify-content:center;border:1px solid rgba(112,0,83,.2);border-radius:999px;background:#fff;color:#700053}
+@media (min-width:768px){.pm-rail__nav{display:flex}}
+
+.pm-rail{--pm-rail-n:1;--pm-rail-gap:10px;width:100%;max-width:100%;min-width:0;margin-top:12px;overflow-x:auto;overflow-y:hidden;overscroll-behavior-x:contain;scroll-snap-type:x proximity;scrollbar-width:none;-ms-overflow-style:none;-webkit-overflow-scrolling:touch}
+.pm-rail::-webkit-scrollbar{display:none}
+.pm-rail__track{display:flex;align-items:stretch;gap:var(--pm-rail-gap)}
+.pm-rail__card{display:flex;min-width:0;flex:0 0 calc((100% - (var(--pm-rail-n) - 1) * var(--pm-rail-gap)) / var(--pm-rail-n));flex-direction:column;overflow:hidden;border-radius:16px;background:#fff;box-shadow:0 10px 26px rgba(58,10,60,.07);scroll-snap-align:start}
+@media (min-width:360px){.pm-rail{--pm-rail-n:2}}
+@media (min-width:768px){.pm-rail{--pm-rail-n:3;--pm-rail-gap:12px}}
+@media (min-width:1024px){.pm-rail{--pm-rail-n:4}}
+.pm-rail__media{position:relative;display:block;aspect-ratio:4/5;overflow:hidden;background:#f3ece7}
+.pm-rail__media img{position:absolute;inset:0;display:block;height:100%;width:100%;object-fit:cover}
+.pm-rail__body{display:flex;flex:1;flex-direction:column;gap:2px;padding:8px}
+.pm-rail__name{margin:0;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;font-family:var(--font-display,"Cormorant Garamond",serif);font-size:15px;line-height:1.2;color:#2a1a24;min-height:2.4em}
+.pm-rail__meta{margin:0;font-size:10px;color:#9a8b95}
+.pm-rail__price{margin:2px 0 0;font-size:13px;font-weight:700;color:#700053}
+.pm-rail__add{margin-top:6px;display:inline-flex;min-height:34px;align-items:center;justify-content:center;gap:5px;border-radius:999px;padding:8px 10px;font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase}
+@media (prefers-reduced-motion:reduce){.pm-rail{scroll-behavior:auto}}
+</style>
+<body class="min-h-full bg-background font-sans text-on-background pm-cart-page">
 <!-- Google Tag Manager (noscript) -->
 <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-52G8XVQ8"
 height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
@@ -28,7 +139,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <script src="https://loja.pellomenos.com.br/wp-content/uploads/pm-home/promo-popup.js?v=promo3"></script>
 <script src="https://loja.pellomenos.com.br/wp-content/uploads/pm-home/product.js?v=units6"></script>
 <script src="https://loja.pellomenos.com.br/wp-content/uploads/pm-home/black-nov-campaign.js?v=black2"></script>
-<script src="https://loja.pellomenos.com.br/wp-content/uploads/pm-home/cart.js?v=cart29"></script>
+<script src="https://loja.pellomenos.com.br/wp-content/uploads/pm-home/cart.js?v=cart30"></script>
 
 </body>
 </html>

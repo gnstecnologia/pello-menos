@@ -19,15 +19,29 @@ def env() -> dict:
         if "=" in line and not line.strip().startswith("#"):
             k, v = line.split("=", 1)
             e[k.strip().lstrip("﻿")] = v.strip()
+    for line in (ROOT / "projeto-migracao" / ".secrets" / "oficialteste.env").read_text(encoding="utf-8").splitlines():
+        if "=" in line and not line.strip().startswith("#"):
+            k, v = line.split("=", 1)
+            e[k.strip().lstrip("﻿")] = v.strip()
     return e
 
 
 def main() -> None:
-    files = sys.argv[1:] or ["home.html"]
+    args = [a for a in sys.argv[1:] if not a.startswith("--")]
+    target = "ot" if "--target" in sys.argv and sys.argv[sys.argv.index("--target") + 1] == "ot" else "loja"
+    files = [a for a in args if a != "ot"] or ["home.html"]
     e = env()
-    base = e["PM_LOJA_URL"].rstrip("/")
-    tok = base64.b64encode(f"{e['PM_LOJA_USER']}:{e['PM_LOJA_APP_PASSWORD']}".encode()).decode()
+    if target == "ot":
+        base = e["PM_OFICIALTESTE_URL"].rstrip("/")
+        user, pwd = e["PM_OFICIALTESTE_USER"], e["PM_OFICIALTESTE_APP_PASSWORD"]
+        if "loja.pellomenos.com.br" in base:
+            raise SystemExit("ABORTADO: destino de teste aponta para producao")
+    else:
+        base = e["PM_LOJA_URL"].rstrip("/")
+        user, pwd = e["PM_LOJA_USER"], e["PM_LOJA_APP_PASSWORD"]
+    tok = base64.b64encode(f"{user}:{pwd}".encode()).decode()
     auth = {"Authorization": "Basic " + tok, "User-Agent": "pm-home-deploy"}
+    print(f"destino: {base} | {len(files)} arquivo(s): {files}")
 
     buf = io.BytesIO()
     with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as z:

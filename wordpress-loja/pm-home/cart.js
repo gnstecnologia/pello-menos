@@ -24,6 +24,7 @@
   var payBusy = false;
   var couponError = "";
   var couponBusy = false;
+  var railResizeBound = false;
   var wooSnapshot = null; // { coupons: string[], subtotal, discount, total }
   var BAG_SVG =
     '<svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-shopping-bag shrink-0" aria-hidden="true"><path d="M16 10a4 4 0 0 1-8 0"></path><path d="M3.103 6.034h17.794"></path><path d="M3.4 5.467a2 2 0 0 0-.4 1.2V20a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6.667a2 2 0 0 0-.4-1.2l-2-2.667A2 2 0 0 0 17 2H7a2 2 0 0 0-1.6.8z"></path></svg>';
@@ -43,6 +44,12 @@
   function btnPayHtml() {
     return CART_SVG + "<span>Ir para o pagamento</span>";
   }
+  var LOCK_SVG =
+    '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="18" height="11" x="3" y="11" rx="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>';
+  var ARROW_L_SVG =
+    '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"></path></svg>';
+  var ARROW_R_SVG =
+    '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"></path></svg>';
 
   function readCart() {
     try {
@@ -418,53 +425,49 @@
     var canPay = !mixed;
     var cards = items
       .map(function (item) {
+        var pricedCard = catalogPriced(item);
+        var saleCard = pricedCard.priceCents;
+        if (!saleCard) saleCard = isBodySplash(item) ? SPLASH.priceCents : Number(item.priceCents) || 0;
+        var listCard = pricedCard.oldPriceCents;
+        var priceHtml =
+          listCard > saleCard && saleCard > 0
+            ? '<span class="pm-line__old">' +
+              money(listCard) +
+              "</span> <span>" +
+              money(saleCard) +
+              "</span>"
+            : money(saleCard);
         return (
-          '<article class="flex gap-4 rounded-2xl bg-surface p-4 shadow-[0_18px_40px_rgba(58,10,60,0.08)]" data-line="' +
+          '<article class="pm-line" data-line="' +
           escapeHtml(item.lineId) +
           '"><a href="/produto/' +
           escapeHtml(item.id) +
-          '/" class="relative h-28 w-24 shrink-0 overflow-hidden rounded-xl"><img src="' +
+          '/" class="pm-line__media"><img src="' +
           escapeHtml(productImageUrl(item.image)) +
-          '" alt="" class="h-full w-full object-cover"></a><div class="min-w-0 flex-1"><div class="flex items-start justify-between gap-3"><div><a href="/produto/' +
+          '" alt="" width="76" height="96" decoding="async"></a><div class="pm-line__body"><div class="pm-line__top"><div class="min-w-0"><a href="/produto/' +
           escapeHtml(item.id) +
-          '/"><h2 class="font-[family-name:var(--font-display)] text-xl text-on-surface">' +
+          '/"><h2 class="pm-line__name">' +
           escapeHtml(item.name) +
-          '</h2></a><p class="mt-0.5 text-sm text-on-surface-variant">' +
-          escapeHtml(item.duration) +
-          '</p><p class="mt-1 text-xs text-on-surface-variant">Unidade: ' +
+          '</h2></a><p class="pm-line__unit">Unidade: ' +
           escapeHtml(item.unitName) +
           " · " +
           escapeHtml(item.city) +
           "/" +
           escapeHtml(item.stateName) +
-          '</p><p class="text-[11px] text-on-surface-variant">SKU ' +
+          '</p><p class="pm-line__sku">SKU ' +
           escapeHtml(item.sku) +
+          (item.duration ? " · " + escapeHtml(item.duration) : "") +
           '</p></div><button type="button" data-remove="' +
           escapeHtml(item.lineId) +
-          '" class="relative z-10 flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-lg leading-none text-on-surface-variant" aria-label="Remover">×</button></div><p class="mt-2 font-semibold text-primary">' +
-          (function () {
-            var priced = catalogPriced(item);
-            var sale = priced.priceCents;
-            if (!sale) sale = isBodySplash(item) ? SPLASH.priceCents : Number(item.priceCents) || 0;
-            var list = priced.oldPriceCents;
-            if (list > sale && sale > 0) {
-              return (
-                '<span class="text-sm font-normal text-on-surface-variant line-through">' +
-                money(list) +
-                '</span> <span>' +
-                money(sale) +
-                "</span>"
-              );
-            }
-            return money(sale);
-          })() +
-          '</p><div class="mt-3 inline-flex items-center rounded-full border border-outline/50"><button type="button" data-dec="' +
+          '" class="pm-line__remove" aria-label="Remover">×</button></div><div class="pm-line__foot"><p class="pm-line__price">' +
+          priceHtml +
+          '</p><div class="pm-line__qty"><button type="button" data-dec="' +
           escapeHtml(item.lineId) +
-          '" class="flex h-9 w-9 items-center justify-center text-primary" aria-label="Diminuir">−</button><span class="min-w-6 text-center text-sm font-semibold">' +
+          '" aria-label="Diminuir">−</button><span>' +
           item.qty +
           '</span><button type="button" data-inc="' +
           escapeHtml(item.lineId) +
-          '" class="flex h-9 w-9 items-center justify-center text-primary" aria-label="Aumentar">+</button></div></div></article>'
+          '" aria-label="Aumentar">+</button></div></div></div></article>'
         );
       })
       .join("");
@@ -494,25 +497,32 @@
         "</p>"
       : "";
 
-    root.className = "mx-auto max-w-6xl px-container-margin py-10";
+    root.className = "pm-cart-main mx-auto w-full max-w-6xl px-container-margin pt-6 md:pt-10";
     root.innerHTML =
-      '<p class="font-label-md text-label-md text-secondary uppercase">Pedido</p>' +
-      '<h1 class="mt-2 font-[family-name:var(--font-display)] text-headline-md text-primary md:text-headline-lg">Carrinho</h1>' +
-      '<p class="mt-1 text-on-surface-variant">' +
+      '<header class="pm-cart-head">' +
+      '<p class="pm-cart-head__eyebrow">Pedido</p>' +
+      '<div class="pm-cart-head__row">' +
+      '<h1 class="pm-cart-head__title">Carrinho</h1>' +
+      '<span class="pm-cart-head__count">' +
       totalQty +
       (totalQty === 1 ? " item" : " itens") +
-      " · " +
+      "</span></div>" +
+      '<p class="pm-cart-head__unit">Unidade: ' +
       escapeHtml(unit.unitName) +
-      "</p>" +
+      " · " +
+      escapeHtml(unit.city) +
+      "/" +
+      escapeHtml(unit.stateName) +
+      "</p></header>" +
       (mixed
-        ? '<p class="mt-4 rounded-2xl border border-primary/30 bg-surface-container-low px-4 py-3 text-sm text-primary">Há serviços de unidades diferentes. Esvazie o carrinho ou mantenha só uma loja para finalizar.</p>'
+        ? '<p class="pm-cart-mixed">Há serviços de unidades diferentes. Esvazie o carrinho ou mantenha só uma loja para finalizar.</p>'
         : "") +
       blackHintHtml +
-      '<div class="mt-8 grid gap-8 lg:grid-cols-[minmax(0,1fr)_340px]"><div class="space-y-4">' +
+      '<div class="pm-cart-grid mt-6"><div class="space-y-3 md:space-y-4">' +
       cards +
       relatedUpsellHtml(items, unit) +
-      '</div><aside class="h-fit rounded-2xl bg-surface p-6 shadow-[0_18px_40px_rgba(58,10,60,0.08)] lg:sticky lg:top-40"><h2 class="font-[family-name:var(--font-display)] text-2xl text-primary">Resumo</h2>' +
-      '<div class="mt-5 space-y-3 text-sm"><div class="flex justify-between"><span class="text-on-surface-variant">Subtotal</span><span class="font-semibold">' +
+      '</div><aside class="pm-cart-summary h-fit"><h2 class="pm-cart-summary__title">Resumo</h2>' +
+      '<div class="mt-4 space-y-2 text-sm"><div class="flex justify-between"><span class="text-on-surface-variant">Subtotal</span><span class="font-semibold">' +
       money(subtotal) +
       "</span></div>" +
       (campaignSavings > 0 && campaignLabel
@@ -529,28 +539,44 @@
           money(couponDiscount) +
           "</span></div>"
         : "") +
-      '</div><div class="mt-5 flex justify-between border-t border-outline/40 pt-5"><span class="font-semibold">Total</span><span class="font-[family-name:var(--font-display)] text-2xl text-primary">' +
+      '</div><div class="mt-4 flex items-center justify-between border-t border-outline/40 pt-4"><span class="font-semibold">Total</span><span class="pm-cart-summary__total">' +
       money(total) +
       "</span></div>" +
       couponHtml(appliedCoupons) +
       '<button type="button" data-clear class="mt-3 w-full text-sm text-primary underline">Esvaziar carrinho</button>' +
-      '<a href="/" class="mt-4 flex w-full items-center justify-center rounded-full border border-primary/30 py-3 text-sm font-semibold text-primary uppercase">Continuar comprando</a>' +
+      '<a href="/" class="pm-cart-summary__continue">Continuar comprando</a>' +
       upsellHtml(items, unit) +
       (payError
         ? '<p class="mt-3 rounded-2xl border border-primary/30 bg-surface-container-low px-3 py-3 text-center text-xs text-primary" data-pm-pay-error>' +
           escapeHtml(payError) +
           "</p>"
         : "") +
+      '<div class="pm-pay-inline">' +
       (canPay
-        ? '<a href="/finalizar-pagamento/" class="btn-lux btn-lux-gold mt-3 flex w-full items-center justify-center gap-2 rounded-full py-3.5 font-label-md text-label-md text-on-secondary-container uppercase' +
-          (payBusy ? " pointer-events-none opacity-70" : "") +
+        ? '<a href="/finalizar-pagamento/" class="btn-lux btn-lux-gold pm-pay-btn' +
+          (payBusy ? " is-busy" : "") +
           '" aria-busy="' +
           (payBusy ? "true" : "false") +
           '">' +
           (payBusy ? btnBusyHtml("carregando") : btnPayHtml()) +
           "</a>"
-        : '<p class="mt-3 rounded-2xl bg-surface-container-low px-3 py-3 text-center text-xs text-primary">Mantenha só uma unidade para ir ao pagamento.</p>') +
-      "</aside></div>";
+        : '<p class="pm-cart-note">Mantenha só uma unidade para ir ao pagamento.</p>') +
+      "</div></aside></div>" +
+      (canPay
+        ? '<div class="pm-paybar" data-pm-paybar role="region" aria-label="Finalizar compra"><div class="pm-paybar__inner">' +
+          '<div class="pm-paybar__total"><span>Total</span><strong>' +
+          money(total) +
+          "</strong></div>" +
+          '<a href="/finalizar-pagamento/" class="btn-lux btn-lux-gold pm-paybar__btn' +
+          (payBusy ? " is-busy" : "") +
+          '" aria-busy="' +
+          (payBusy ? "true" : "false") +
+          '">' +
+          LOCK_SVG +
+          "<span>" +
+          (payBusy ? "Carregando…" : "Ir para o pagamento") +
+          "</span></a></div></div>"
+        : "");
 
     function couponHtml(codes) {
       var list =
@@ -658,49 +684,142 @@
 
     function relatedUpsellHtml(list, lockedUnit) {
       if (!lockedUnit || !relatedReady) return "";
-      var picks = pickRelated(list, 3);
+      var picks = pickRelated(list, 6);
       if (!picks.length) return "";
-      var cardsHtml = picks
-        .map(function (product, idx) {
-          var hideMobile = idx > 0 ? " hidden sm:flex" : "";
+      var setHtml = picks
+        .map(function (product) {
           return (
-            '<article class="flex flex-col overflow-hidden rounded-2xl bg-surface shadow-[0_12px_28px_rgba(58,10,60,0.08)]' +
-            hideMobile +
-            '">' +
+            '<article class="pm-rail__card">' +
             '<a href="/produto/' +
             encodeURIComponent(product.id) +
-            '/" class="relative aspect-[4/5] overflow-hidden bg-surface-container-high">' +
+            '/" class="pm-rail__media" tabindex="-1">' +
             '<img src="' +
             escapeHtml(productImageUrl(product.image)) +
-            '" alt="" class="h-full w-full object-cover" loading="lazy" /></a>' +
-            '<div class="flex flex-1 flex-col gap-2 p-3">' +
+            '" alt="" width="400" height="500" decoding="async" /></a>' +
+            '<div class="pm-rail__body">' +
             '<a href="/produto/' +
             encodeURIComponent(product.id) +
-            '/"><h3 class="font-[family-name:var(--font-display)] text-base leading-snug text-on-surface">' +
+            '/"><h3 class="pm-rail__name">' +
             escapeHtml(product.name) +
             "</h3></a>" +
-            '<p class="text-xs text-on-surface-variant">' +
+            '<p class="pm-rail__meta">' +
             escapeHtml(product.duration || "") +
-            '</p><p class="mt-auto font-semibold text-primary">' +
+            '</p><p class="pm-rail__price">' +
             money(product.priceCents || 0) +
             '</p><button type="button" data-pm-related-add="' +
             escapeHtml(product.id) +
-            '" class="btn-lux btn-lux-primary mt-1 inline-flex w-full items-center justify-center gap-2 rounded-full px-3 py-2 text-xs font-semibold text-on-primary uppercase">' +
+            '" class="btn-lux btn-lux-primary pm-rail__add">' +
             btnBagHtml("Adicionar") +
             "</button></div></article>"
           );
         })
         .join("");
+      // Tres copias do mesmo conjunto: o trilho comeca na copia do meio e, ao
+      // chegar nas pontas, o scroll e deslocado em exatamente um conjunto —
+      // como as copias sao identicas, o salto e invisivel (loop infinito).
+      // As copias sao so visualizacao; nenhum item e duplicado no WooCommerce.
+      var slides = setHtml + setHtml + setHtml;
       return (
-        '<section data-pm-cart-upsell class="mt-8 border-t border-outline/40 pt-8">' +
-        '<p class="font-label-md text-label-md text-secondary uppercase">Os mais pedidos</p>' +
-        '<h2 class="mt-1 font-[family-name:var(--font-display)] text-2xl text-primary">Adicione também</h2>' +
-        '<p class="mt-1 text-sm text-on-surface-variant">Sugestões com base no seu carrinho · ' +
+        '<section data-pm-cart-upsell class="pm-rail-section" aria-label="Adicione também">' +
+        '<div class="pm-rail__head"><div>' +
+        '<p class="pm-rail__eyebrow">Os mais pedidos</p>' +
+        '<h2 class="pm-rail__title">Adicione também</h2>' +
+        '<p class="pm-rail__sub">Sugestões com base no seu carrinho · ' +
         escapeHtml(lockedUnit.unitName || "") +
-        '</p><div class="mt-4 grid gap-3 sm:grid-cols-3">' +
-        cardsHtml +
-        "</div></section>"
+        "</p></div>" +
+        '<div class="pm-rail__nav"><button type="button" data-pm-rail-prev aria-label="Produto anterior">' +
+        ARROW_L_SVG +
+        '</button><button type="button" data-pm-rail-next aria-label="Próximo produto">' +
+        ARROW_R_SVG +
+        "</button></div></div>" +
+        '<div class="pm-rail" data-pm-rail tabindex="0">' +
+        '<div class="pm-rail__track" data-pm-rail-track data-set-size="' +
+        picks.length +
+        '">' +
+        slides +
+        "</div></div></section>"
       );
+    }
+
+    /**
+     * Loop infinito do carrossel "Adicione também".
+     * O trilho tem 3 copias identicas do conjunto; quando o scroll entra na
+     * primeira ou na terceira copia ele e deslocado em um conjunto inteiro.
+     */
+    function mountRail() {
+      var rail = root.querySelector("[data-pm-rail]");
+      if (!rail) return;
+      var track = rail.querySelector("[data-pm-rail-track]");
+      if (!track) return;
+      var cards = track.children;
+      var perSet = parseInt(track.getAttribute("data-set-size"), 10) || 0;
+      if (!perSet || cards.length < perSet * 2) {
+        return; // poucos itens para rolar: deixa o scroll nativo
+      }
+      var reduceMotion =
+        window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+      function setWidth() {
+        return cards[perSet].offsetLeft - cards[0].offsetLeft;
+      }
+      function recenter() {
+        var w = setWidth();
+        if (w > 0) rail.scrollLeft = w;
+      }
+      function wrap() {
+        var w = setWidth();
+        if (w <= 0) return;
+        var x = rail.scrollLeft;
+        if (x < w * 0.5) rail.scrollLeft = x + w;
+        else if (x > w * 1.5) rail.scrollLeft = x - w;
+      }
+      function step(dir) {
+        var gap = parseFloat(getComputedStyle(track).columnGap) || 0;
+        var cardW = cards[0].getBoundingClientRect().width + gap;
+        rail.scrollBy({ left: dir * cardW, behavior: reduceMotion ? "auto" : "smooth" });
+      }
+
+      recenter();
+
+      var queued = false;
+      rail.addEventListener(
+        "scroll",
+        function () {
+          if (queued) return;
+          queued = true;
+          window.requestAnimationFrame(function () {
+            queued = false;
+            wrap();
+          });
+        },
+        { passive: true },
+      );
+
+      var prev = root.querySelector("[data-pm-rail-prev]");
+      var next = root.querySelector("[data-pm-rail-next]");
+      if (prev) prev.addEventListener("click", function () { step(-1); });
+      if (next) next.addEventListener("click", function () { step(1); });
+      rail.addEventListener("keydown", function (event) {
+        if (event.key === "ArrowLeft") { event.preventDefault(); step(-1); }
+        else if (event.key === "ArrowRight") { event.preventDefault(); step(1); }
+      });
+
+      var resizeTimer = null;
+      if (!railResizeBound) {
+        railResizeBound = true;
+        window.addEventListener("resize", function () {
+          if (resizeTimer) window.clearTimeout(resizeTimer);
+          resizeTimer = window.setTimeout(function () {
+            var live = root.querySelector("[data-pm-rail]");
+            if (!live) return;
+            var tr = live.querySelector("[data-pm-rail-track]");
+            var n = parseInt(tr && tr.getAttribute("data-set-size"), 10) || 0;
+            if (!n || !tr.children[n]) return;
+            var w = tr.children[n].offsetLeft - tr.children[0].offsetLeft;
+            if (w > 0) live.scrollLeft = w;
+          }, 150);
+        });
+      }
     }
 
     function syncQty(id, nextQty) {
@@ -1027,8 +1146,10 @@
           });
       });
     });
-    var pay = root.querySelector('a[href="/finalizar-pagamento/"]');
-    if (pay) {
+    // Dois botoes de pagamento (resumo no desktop, barra fixa no mobile):
+    // ambos usam exatamente o mesmo fluxo — reconcile + redirect.
+    var payLinks = root.querySelectorAll('a[href="/finalizar-pagamento/"]');
+    Array.prototype.forEach.call(payLinks, function (pay) {
       pay.addEventListener("click", function (event) {
         event.preventDefault();
         if (payBusy) return;
@@ -1066,7 +1187,9 @@
             render();
           });
       });
-    }
+    });
+
+    if (root.querySelector("[data-pm-rail]")) mountRail();
   }
 
   paintLoading();
