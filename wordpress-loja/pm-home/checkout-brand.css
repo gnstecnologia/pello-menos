@@ -1518,7 +1518,7 @@ html.pm-ck-loading-lock body {
 
   /* Sobra espaco para a barra nao cobrir o fim do formulario */
   body.pm-checkout-brand #pm-checkout-layout {
-    margin-bottom: calc(var(--pm-ck-bar-h) + 1.25rem) !important;
+    margin-bottom: calc(var(--pm-ck-bar-h, 0px) + 1.25rem) !important;
   }
 
   body.pm-checkout-brand .scrollup {
@@ -1640,9 +1640,9 @@ html.pm-ck-loading-lock body {
    Aqui so ajustamos o espaco reservado e a altura do card.
    ========================================================================== */
 body.pm-checkout-brand {
-  --pm-ck-head-h: 56px;
+  --pm-ck-head-h: 115px;
   /* Altura entre o topo da pagina e o card (header + folgas do tema) */
-  --pm-ck-card-top: 131px;
+  --pm-ck-card-top: 211px;
 }
 
 /* Reserva apenas a altura real do header compacto (o tema usava 176px) */
@@ -1652,6 +1652,56 @@ body.pm-checkout-brand .main_content {
 
 body.pm-checkout-brand #pm-checkout-layout {
   margin-top: 0.55rem !important;
+}
+@media (min-width: 768px) {
+  body.pm-checkout-brand {
+    --pm-ck-head-h: 124px;
+    --pm-ck-card-top: 220px;
+  }
+}
+
+
+/* Passo Dados: distribui os campos na altura disponivel em vez de deixar um
+   vazio unico antes do botao. Em telas curtas o conteudo rola normalmente. */
+@media (max-width: 1023px) {
+  body.pm-checkout-brand .pm-checkout-layout:not(.is-pay-step) #pills-dados {
+    display: flex;
+    flex-direction: column;
+  }
+
+  body.pm-checkout-brand .pm-checkout-layout:not(.is-pay-step) #pills-dados > .row,
+  body.pm-checkout-brand .pm-checkout-layout:not(.is-pay-step) #pills-dados > .form-group {
+    flex: 0 0 auto;
+  }
+
+}
+
+/* Cadeia flex do passo Dados: o painel cresce junto com o card, para o
+   espaco extra virar intervalo entre campos (e nao um vazio antes do botao).
+   Só no passo Dados, só no mobile/tablet; nada de campo ou logica muda. */
+@media (max-width: 1023px) {
+  body.pm-checkout-brand .pm-checkout-layout:not(.is-pay-step) .pm-checkout-form-col,
+  body.pm-checkout-brand .pm-checkout-layout:not(.is-pay-step) .wpcf7,
+  body.pm-checkout-brand .pm-checkout-layout:not(.is-pay-step) .wpcf7-form,
+  body.pm-checkout-brand .pm-checkout-layout:not(.is-pay-step) .tab-content {
+    display: flex;
+    flex-direction: column;
+  }
+
+  body.pm-checkout-brand .pm-checkout-layout:not(.is-pay-step) .wpcf7,
+  body.pm-checkout-brand .pm-checkout-layout:not(.is-pay-step) .wpcf7-form,
+  body.pm-checkout-brand .pm-checkout-layout:not(.is-pay-step) .tab-content,
+  body.pm-checkout-brand .pm-checkout-layout:not(.is-pay-step) #pills-dados {
+    flex: 1 1 auto;
+    min-height: 0;
+  }
+}
+
+/* Telas altas: o espaco extra vai para os intervalos entre os campos */
+@media (max-width: 1023px) and (min-height: 780px) {
+  body.pm-checkout-brand .pm-checkout-layout:not(.is-pay-step) #pills-dados {
+    justify-content: space-between;
+  }
 }
 
 /* Passo Dados no mobile: campos mais baixos e espacamento curto, para caber
@@ -1694,18 +1744,22 @@ body.pm-checkout-brand #pm-checkout-layout {
 @media (max-width: 1023px) {
   body.pm-checkout-brand #pm-checkout-layout:not(.is-pay-step) {
     align-items: stretch;
-    min-height: calc(100dvh - var(--pm-ck-card-top) - 60px - env(safe-area-inset-bottom, 0px));
+    min-height: calc(100dvh - var(--pm-ck-card-top) - 0.5rem);
     margin-bottom: 0.35rem !important;
   }
 
   body.pm-checkout-brand #pm-checkout-layout:not(.is-pay-step) .pm-checkout-form-col {
-    min-height: calc(100dvh - var(--pm-ck-card-top) - 60px - env(safe-area-inset-bottom, 0px));
+    min-height: calc(100dvh - var(--pm-ck-card-top) - 0.5rem);
   }
 }
 
-/* Passo Dados: "Comprar Agora" vira a barra fixa de baixo (mesma ideia do
-   botao de pagamento), liberando altura no card. */
+/* Passo Dados: "Comprar Agora" flutua como botao arredondado no rodape.
+   Mesmo elemento, mesmo handler — so aparencia e posicao. */
 @media (max-width: 1023px) {
+  body.pm-checkout-brand {
+    --pm-ck-bar-h: 72px;
+  }
+
   body.pm-checkout-brand .pm-checkout-layout:not(.is-pay-step) .wpcf7-form p:has(> .pm-checkout-buy-now) {
     margin: 0 !important;
     padding: 0 !important;
@@ -1714,79 +1768,97 @@ body.pm-checkout-brand #pm-checkout-layout {
 
   body.pm-checkout-brand .pm-checkout-layout:not(.is-pay-step) .pm-checkout-buy-now {
     position: fixed !important;
-    left: 0;
-    right: 0;
-    bottom: 0;
+    left: 50% !important;
+    right: auto !important;
+    bottom: calc(10px + env(safe-area-inset-bottom, 0px)) !important;
+    transform: translateX(-50%) !important;
     z-index: 70;
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 0.5rem;
-    width: auto !important;
-    max-width: none !important;
-    height: calc(60px + env(safe-area-inset-bottom, 0px));
+    width: min(30rem, calc(100% - 2rem)) !important;
+    max-width: min(30rem, calc(100% - 2rem)) !important;
+    height: 56px;
+    min-height: 56px;
     margin: 0 !important;
-    padding: 0 1rem env(safe-area-inset-bottom, 0px) !important;
-    border-radius: 0 !important;
-    box-shadow: 0 -10px 26px rgba(112, 0, 83, 0.14);
-    font-size: 0.82rem !important;
+    padding: 0 1.15rem !important;
+    border-radius: 999px !important;
+    overflow: hidden;
+    isolation: isolate;
+    contain: paint;
+    box-shadow:
+      0 12px 28px rgba(201, 146, 58, 0.42),
+      0 2px 0 rgba(255, 255, 255, 0.35) inset;
+    font-size: 0.8rem !important;
     letter-spacing: 0.06em;
     white-space: nowrap;
   }
 
-  /* A barra e fixa (fora do fluxo): basta uma folga curta no fim */
+  /* Brilho branco diagonal: duas passadas por ciclo, com velocidades
+     diferentes e pausas — nada de flash continuo. */
+  body.pm-checkout-brand .pm-checkout-layout:not(.is-pay-step) .pm-checkout-buy-now::before {
+    content: "";
+    position: absolute;
+    top: -30%;
+    bottom: -30%;
+    left: 0;
+    width: 42%;
+    pointer-events: none;
+    background: linear-gradient(
+      100deg,
+      rgba(255, 255, 255, 0) 0%,
+      rgba(255, 255, 255, 0.55) 50%,
+      rgba(255, 255, 255, 0) 100%
+    );
+    transform: translateX(-220%) skewX(-16deg);
+    animation: pm-buy-sheen 11s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  }
+
+  /* A barra e fixa: o card reserva a altura dela no fim, para o ultimo
+     campo nunca ficar escondido atras do botao. */
+  body.pm-checkout-brand .pm-checkout-layout:not(.is-pay-step) .pm-checkout-form-col {
+    padding-bottom: calc(var(--pm-ck-bar-h, 72px) + 0.9rem + env(safe-area-inset-bottom, 0px)) !important;
+  }
+
   body.pm-checkout-brand #pm-checkout-layout:not(.is-pay-step) {
-    margin-bottom: calc(env(safe-area-inset-bottom, 0px) + 0.35rem) !important;
+    margin-bottom: calc(0.5rem + env(safe-area-inset-bottom, 0px));
   }
 }
 
-/* Dados no mobile: pares curtos na mesma linha (email/telefone, CPF/CEP,
-   cidade/UF, endereco/bairro, numero/complemento). Corta metade da rolagem. */
-@media (max-width: 600px) {
-  body.pm-checkout-brand .pm-checkout-layout:not(.is-pay-step) #pills-dados .row {
-    flex-direction: row !important;
-    flex-wrap: wrap !important;
-    column-gap: 8px !important;
+@keyframes pm-buy-sheen {
+  0%, 6% {
+    transform: translateX(-220%) skewX(-16deg);
   }
-
-  body.pm-checkout-brand .pm-checkout-layout:not(.is-pay-step) #pills-dados .row > [class*="col"] {
-    flex: 0 0 calc(50% - 4px) !important;
-    max-width: calc(50% - 4px) !important;
-    width: calc(50% - 4px) !important;
-    padding-left: 0 !important;
-    padding-right: 0 !important;
+  18%, 46% {
+    transform: translateX(320%) skewX(-16deg);
   }
-
-  body.pm-checkout-brand .pm-checkout-layout:not(.is-pay-step) #pills-dados .row > .col:has([data-name="estado"]) {
-    flex-basis: 40% !important;
-    max-width: 40% !important;
+  56% {
+    transform: translateX(-220%) skewX(-16deg);
   }
-
-  body.pm-checkout-brand .pm-checkout-layout:not(.is-pay-step) #pills-dados .row > .col:has([data-name="cidade"]) {
-    flex-basis: calc(60% - 8px) !important;
-    max-width: calc(60% - 8px) !important;
-  }
-
-  body.pm-checkout-brand .pm-checkout-layout:not(.is-pay-step) #pills-dados .row > .col:has([data-name="numero"]) {
-    flex-basis: 40% !important;
-    max-width: 40% !important;
-  }
-
-  body.pm-checkout-brand .pm-checkout-layout:not(.is-pay-step) #pills-dados .row > .col:has([data-name="complemento"]) {
-    flex-basis: calc(60% - 8px) !important;
-    max-width: calc(60% - 8px) !important;
+  86%, 100% {
+    transform: translateX(320%) skewX(-16deg);
   }
 }
 
-/* Menos area morta entre o header e o card (o tema deixava 30px de padding) */
+@media (prefers-reduced-motion: reduce) {
+  body.pm-checkout-brand .pm-checkout-layout:not(.is-pay-step) .pm-checkout-buy-now::before {
+    animation: none;
+    opacity: 0;
+  }
+}
+
+/* ==========================================================================
+   Densidade e colunas (mobile/tablet) — só CSS de layout.
+   Campos curtos ficam lado a lado; o resto continua empilhado.
+   ========================================================================== */
 @media (max-width: 1023px) {
+  /* Menos area morta entre header e card (o tema deixa 30px de padding) */
   body.pm-checkout-brand .pm-checkout-span {
     padding-top: 0.35rem !important;
   }
-}
 
-/* Passo Pagamento no mobile: campos na mesma altura dos de Dados */
-@media (max-width: 1023px) {
+  /* Passo Pagamento: mesma altura de campo do passo Dados */
   body.pm-checkout-brand .pm-checkout-layout.is-pay-step .wpcf7-form input[type="text"],
   body.pm-checkout-brand .pm-checkout-layout.is-pay-step .wpcf7-form input[type="email"],
   body.pm-checkout-brand .pm-checkout-layout.is-pay-step .wpcf7-form input[type="tel"],
@@ -1808,5 +1880,46 @@ body.pm-checkout-brand #pm-checkout-layout {
     margin-bottom: 0 !important;
     font-size: 0.72rem !important;
     line-height: 1.15 !important;
+  }
+}
+
+/* Pares curtos na mesma linha no passo Dados (celular).
+   Os campos longos (nome, unidade) continuam ocupando a linha inteira. */
+@media (max-width: 600px) {
+  body.pm-checkout-brand .pm-checkout-layout:not(.is-pay-step) #pills-dados .row {
+    flex-direction: row !important;
+    flex-wrap: wrap !important;
+    column-gap: 8px !important;
+  }
+
+  body.pm-checkout-brand .pm-checkout-layout:not(.is-pay-step) #pills-dados .row > [class*="col"] {
+    flex: 0 0 calc(50% - 4px) !important;
+    max-width: calc(50% - 4px) !important;
+    width: calc(50% - 4px) !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+
+  body.pm-checkout-brand .pm-checkout-layout:not(.is-pay-step) #pills-dados .row > .col:has([data-name="cidade"]) {
+    flex-basis: calc(60% - 8px) !important;
+    max-width: calc(60% - 8px) !important;
+  }
+
+  body.pm-checkout-brand .pm-checkout-layout:not(.is-pay-step) #pills-dados .row > .col:has([data-name="estado"]),
+  body.pm-checkout-brand .pm-checkout-layout:not(.is-pay-step) #pills-dados .row > .col:has([data-name="numero"]) {
+    flex-basis: 40% !important;
+    max-width: 40% !important;
+  }
+
+  body.pm-checkout-brand .pm-checkout-layout:not(.is-pay-step) #pills-dados .row > .col:has([data-name="complemento"]) {
+    flex-basis: calc(60% - 8px) !important;
+    max-width: calc(60% - 8px) !important;
+  }
+}
+
+/* Passo Pagamento: o "Comprar Agora" do passo Dados nao aparece */
+@media (max-width: 1023px) {
+  body.pm-checkout-brand .pm-checkout-layout.is-pay-step .pm-checkout-buy-now {
+    display: none !important;
   }
 }
