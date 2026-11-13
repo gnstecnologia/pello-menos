@@ -1362,38 +1362,78 @@ const male = products.filter((item) => item.audience === "masculino");
 const officialProducts = retailProducts("feminino");
 const officialProductsMasc = retailProducts("masculino");
 
+// Ranking real de itens vendidos, por unidades (pedidos de 01/08 a 13/11/2026).
+// Itens fora da lista (sem venda no periodo) ficam no fim e mantem a ordem do
+// catalogo, porque o sort e estavel. `filter` sozinho preserva a ordem
+// alfabetica do catalogo — sem o sort a lista de ids nao tem efeito nenhum.
+const salesSorter = (ranking: string[]) => (a: { id: string }, b: { id: string }) => {
+  const rank = (id: string) => {
+    const i = ranking.indexOf(id);
+    return i < 0 ? ranking.length : i;
+  };
+  return rank(a.id) - rank(b.id);
+};
+
+const CERA_SALES = [
+  "virilha-cera", // 174 un. — Virilha Total
+  "perna-cera", // 54 — Perna Inteira
+  "buco-cera", // 51 — Buço
+  "axila-cera", // 51 — Axila
+  "meia-nadega-cera", // 45 — Meia Nádega
+  "virilha-cavada-cera", // 41
+  "meia-perna-cera", // 35
+  "virilha-cavada-faixa-cera", // 28
+  "coxa-cera", // 24
+  "sobrancelha-cera", // 20
+  "virilha-comum-cera", // 19
+  "faixa-cera", // 15
+  "nariz-cera", // 13
+  "virilha-comum-faixa-cera", // 12
+];
+
+const LASER_SALES = [
+  "axilas-laser", // 38 un. no trimestre
+  "virilha-comum-laser", // 8
+  "buco-laser", // 3
+  "rosto-inteiro-laser", // 2
+  "virilha-laser", // 1
+  "virilha-cavada-laser", // 1
+  "pescoco-laser", // 1
+  "perna-laser", // 1
+  "orelhas-laser", // 1
+  "intergluteos-laser", // 1
+];
+
+const ceraAreasIds = [
+  "virilha-cavada-cera",
+  "meia-perna-cera",
+  "virilha-cavada-faixa-cera",
+  "coxa-cera",
+  "design-sobrancelha",
+  "bracos-cera",
+  "virilha-comum-cera",
+  "nadegas-cera",
+  "queixo-cera",
+  "costas-cera",
+];
+
 export const productRails = {
-  ceraOfertas: female.filter((item) => item.method === "cera"),
-  // Ordem = ranking real de itens vendidos (relatorio de vendas, nov/2026).
-  // `filter` preserva a ordem alfabetica do catalogo, entao a ordem e aplicada
-  // por sort — sem o sort, a lista de ids nao tem efeito nenhum.
-  ceraAreas: (() => {
-    const ranking = [
-      "virilha-cera", // 81 itens · R$ 5.348,35
-      "perna-cera", // 32 · R$ 2.163,69
-      "buco-cera", // 28 · R$ 608,30
-      "axila-cera", // 25 · R$ 660,12
-      "meia-nadega-cera", // 5o no relatorio
-      "design-sobrancelha",
-      "meia-perna-cera",
-      "coxa-cera",
-      "bracos-cera",
-      "virilha-comum-cera",
-      "nadegas-cera",
-      "queixo-cera",
-      "costas-cera",
-      "virilha-cavada-cera",
-    ];
-    return female
-      .filter((item) => ranking.includes(item.id))
-      .sort((a, b) => ranking.indexOf(a.id) - ranking.indexOf(b.id));
-  })(),
-  laserRosto: female.filter(
-    (item) => item.method === "laser" && item.category === "rosto",
-  ),
-  laserCorpo: female.filter(
-    (item) => item.method === "laser" && item.category !== "rosto",
-  ),
+  // "Cera em destaque": os 5 mais vendidos primeiro, na ordem do relatorio.
+  ceraOfertas: female
+    .filter((item) => item.method === "cera")
+    .sort(salesSorter(CERA_SALES)),
+  // "Cera por região": abre com os 4 seguintes mais vendidos (6o ao 9o).
+  ceraAreas: female
+    .filter((item) => ceraAreasIds.includes(item.id))
+    .sort(salesSorter(CERA_SALES)),
+  laserRosto: female
+    .filter((item) => item.method === "laser" && item.category === "rosto")
+    .sort(salesSorter(LASER_SALES)),
+  laserCorpo: female
+    .filter((item) => item.method === "laser" && item.category !== "rosto")
+    .sort(salesSorter(LASER_SALES)),
+  // Esfoliação: nenhuma venda registrada ate 13/11/2026 (produtos criados em
+  // 12/11) — nao ha ranking real, mantem a ordem do catalogo.
   esfoliacao: female.filter((item) => item.method === "esfoliacao"),
   linha: female.filter((item) => item.method === "linha"),
   produtos: officialProducts,
