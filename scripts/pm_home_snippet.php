@@ -380,7 +380,7 @@ if (!function_exists('pm_home_enqueue_shell')) {
 function pm_home_enqueue_shell($upload) {
     $src = $upload['baseurl'] . '/pm-home/checkout-shell-c24.js?v=c46';
     $loading = $upload['baseurl'] . '/pm-home/checkout-loading.js?v=load6';
-    $brand = $upload['baseurl'] . '/pm-home/checkout-brand.css?v=brand45';
+    $brand = $upload['baseurl'] . '/pm-home/checkout-brand.css?v=brand47';
     $black = $upload['baseurl'] . '/pm-home/black-nov-campaign.js?v=black2';
     add_action('wp_head', 'pm_home_print_gtm_head', 1);
     add_action('wp_body_open', 'pm_home_print_gtm_body', 1);

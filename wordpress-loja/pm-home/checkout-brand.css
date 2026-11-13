@@ -1741,7 +1741,8 @@ body.pm-checkout-brand #pm-checkout-layout {
 }
 
 /* Passo Dados: o card ocupa a altura util restante, sem vazio embaixo */
-@media (max-width: 1023px) {
+/* So no celular: no tablet o card acompanha o conteudo */
+@media (max-width: 600px) {
   body.pm-checkout-brand #pm-checkout-layout:not(.is-pay-step) {
     align-items: stretch;
     min-height: calc(100dvh - var(--pm-ck-card-top) - 0.5rem);
@@ -1759,6 +1760,9 @@ body.pm-checkout-brand #pm-checkout-layout {
   body.pm-checkout-brand {
     --pm-ck-bar-h: 72px;
   }
+}
+
+@media (max-width: 600px) {
 
   body.pm-checkout-brand .pm-checkout-layout:not(.is-pay-step) .wpcf7-form p:has(> .pm-checkout-buy-now) {
     margin: 0 !important;
@@ -1921,5 +1925,52 @@ body.pm-checkout-brand #pm-checkout-layout {
 @media (max-width: 1023px) {
   body.pm-checkout-brand .pm-checkout-layout.is-pay-step .pm-checkout-buy-now {
     display: none !important;
+  }
+}
+
+/* Tablet (601–1023px): o botao fica no fim do card, arredondado como no
+   celular, para nao abrir um vazio entre o ultimo campo e o rodape. */
+@media (min-width: 601px) and (max-width: 1023px) {
+  body.pm-checkout-brand .pm-checkout-layout:not(.is-pay-step) .pm-checkout-buy-now {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    width: min(24rem, 100%) !important;
+    max-width: min(24rem, 100%) !important;
+    height: 56px;
+    min-height: 56px;
+    margin: 1rem auto 0.25rem !important;
+    padding: 0 1.15rem !important;
+    border-radius: 999px !important;
+    overflow: hidden;
+    isolation: isolate;
+    contain: paint;
+    box-shadow: 0 12px 28px rgba(201, 146, 58, 0.42);
+  }
+
+  body.pm-checkout-brand .pm-checkout-layout:not(.is-pay-step) .pm-checkout-buy-now::before {
+    content: "";
+    position: absolute;
+    top: -30%;
+    bottom: -30%;
+    left: 0;
+    width: 42%;
+    pointer-events: none;
+    background: linear-gradient(
+      100deg,
+      rgba(255, 255, 255, 0) 0%,
+      rgba(255, 255, 255, 0.55) 50%,
+      rgba(255, 255, 255, 0) 100%
+    );
+    transform: translateX(-220%) skewX(-16deg);
+    animation: pm-buy-sheen 11s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body.pm-checkout-brand .pm-checkout-layout:not(.is-pay-step) .pm-checkout-buy-now::before {
+    animation: none;
+    opacity: 0;
   }
 }
