@@ -1499,3 +1499,136 @@ html.pm-ck-loading-lock body {
   }
 }
 
+
+/* ==========================================================================
+   Barra fixa de pagamento no mobile — mesma ideia do carrinho.
+   Apenas CSS: reaproveita o botao .pm-checkout-submit e o bloco de totais que
+   o shell ja renderiza. Nenhuma funcao/script do checkout e alterado.
+   ========================================================================== */
+@media (max-width: 1023px) {
+  body.pm-checkout-brand {
+    --pm-ck-bar-h: 68px;
+  }
+
+  /* Rodape institucional + menu inferior (Inicio/Servicos/Carrinho).
+     Ambos vivem dentro de #pm-shell-footer. */
+  body.pm-checkout-brand #pm-shell-footer {
+    display: none !important;
+  }
+
+  /* Sobra espaco para a barra nao cobrir o fim do formulario */
+  body.pm-checkout-brand #pm-checkout-layout {
+    margin-bottom: calc(var(--pm-ck-bar-h) + 1.25rem) !important;
+  }
+
+  body.pm-checkout-brand .scrollup {
+    display: none !important;
+  }
+
+  /* O paragrafo que envolve o botao nao deixa buraco no fluxo */
+  body.pm-checkout-brand .pm-checkout-layout.is-pay-step .wpcf7-form p:has(> .pm-checkout-submit) {
+    margin: 0 !important;
+    padding: 0 !important;
+    height: 0 !important;
+  }
+
+  /* "Finalizar Pagamento" vira a acao fixa da direita */
+  body.pm-checkout-brand .pm-checkout-layout.is-pay-step .pm-checkout-submit {
+    position: fixed;
+    left: min(46%, 11.5rem);
+    right: 0;
+    bottom: 0;
+    z-index: 70;
+    width: auto !important;
+    max-width: none !important;
+    height: calc(var(--pm-ck-bar-h) + env(safe-area-inset-bottom, 0px));
+    margin: 0 !important;
+    padding: 0 0.9rem env(safe-area-inset-bottom, 0px) !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    font-size: 0.75rem !important;
+    letter-spacing: 0.04em !important;
+    white-space: nowrap;
+  }
+
+  /* Sem o icone o rotulo cabe em uma linha nos celulares estreitos */
+  body.pm-checkout-brand .pm-checkout-layout.is-pay-step .pm-checkout-submit .pm-checkout-submit__icon {
+    display: none !important;
+  }
+
+  /* Total vira o lado esquerdo da barra (rosa institucional) */
+  body.pm-checkout-brand .pm-checkout-layout.is-pay-step .pm-checkout-cart__totals {
+    position: fixed;
+    left: 0;
+    bottom: 0;
+    width: min(46%, 11.5rem);
+    height: calc(var(--pm-ck-bar-h) + env(safe-area-inset-bottom, 0px));
+    z-index: 70;
+    margin: 0 !important;
+    padding: 0 0 env(safe-area-inset-bottom, 0px) max(16px, env(safe-area-inset-left, 0px)) !important;
+    border: 0 !important;
+    border-radius: 0;
+    background: linear-gradient(175deg, #fbe0ef 0%, #f5cade 100%);
+    box-shadow: 0 -10px 26px rgba(112, 0, 83, 0.14);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 0;
+  }
+
+  /* No celular a barra mostra so o total; subtotal e desconto seguem visiveis
+     nos proprios itens do pedido, acima do formulario. */
+  body.pm-checkout-brand .pm-checkout-layout.is-pay-step .pm-checkout-cart__totals > div:not(.is-total) {
+    display: none !important;
+  }
+
+  body.pm-checkout-brand .pm-checkout-layout.is-pay-step .pm-checkout-cart__totals > .is-total {
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    display: flex !important;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1px;
+    color: #5c0046;
+  }
+
+  body.pm-checkout-brand .pm-checkout-layout.is-pay-step .pm-checkout-cart__totals > .is-total span:first-child {
+    font-size: 0.6rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: #8a2b63;
+  }
+
+  body.pm-checkout-brand .pm-checkout-layout.is-pay-step .pm-checkout-cart__totals > .is-total span:last-child {
+    font-family: "Manrope", "Segoe UI", system-ui, sans-serif;
+    font-size: 1.3rem;
+    font-weight: 800;
+    line-height: 1.05;
+    letter-spacing: -0.02em;
+    color: #5c0046;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Celulares estreitos: rotulo do botao em uma linha so */
+  @media (max-width: 360px) {
+    body.pm-checkout-brand .pm-checkout-layout.is-pay-step .pm-checkout-cart__totals {
+      width: min(44%, 10.5rem);
+    }
+
+    body.pm-checkout-brand .pm-checkout-layout.is-pay-step .pm-checkout-submit {
+      left: min(44%, 10.5rem);
+      font-size: 0.66rem !important;
+      letter-spacing: 0.02em !important;
+      padding-left: 0.5rem !important;
+      padding-right: 0.5rem !important;
+    }
+  }
+
+  /* Respiro embaixo do card do pedido, ja que os totais sairam do fluxo */
+  body.pm-checkout-brand .pm-checkout-layout.is-pay-step .pm-checkout-cart {
+    padding-bottom: 1.5rem;
+  }
+}
